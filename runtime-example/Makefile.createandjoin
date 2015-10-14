@@ -1,0 +1,29 @@
+CC = gcc
+
+CSAPP_INC = .
+CSAPP_SRC = .
+
+#when compiling with -O2, make this 1
+OPT = -DCOMPILING_OPTION=0
+#DEBUGOPTS = -fno-stack-protector -O0
+LINK = -static
+CFLAGS =  -g -Wall $(OPT) -I $(CSAPP_INC) -I .
+LDLIBS = -pthread
+
+#optimization flags for user program and mythread_64
+tt_create_join.o : CFLAGS+= -O0
+mythreads_64.o : CFLAGS+= -O0
+sbuffree.o : CFLAGS+= -O0
+
+PROGS =	tt_create_join
+
+all: $(PROGS) 
+
+tt_create_join: tt_create_join.o mythreads_64.o sbuffree.o mythreads.h
+	gcc -Wall $(OPT) $(LDLIBS) -g $(DEBUGOPTS) $(LINK) -o tt_create_join tt_create_join.o mythreads_64.o sbuffree.o
+
+mythreads_64.o : mythreads_64.c mythreads.h
+sbuffree.o : sbuffree.c sbuffree.h
+
+clean:
+	rm -f $(PROGS) *.o *~

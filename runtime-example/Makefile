@@ -1,0 +1,31 @@
+CC = gcc
+
+CSAPP_INC = .
+CSAPP_SRC = .
+
+OPT = -O2 -DOPTS_ON=1
+#DEBUGOPTS = -fno-stack-protector -O0 -DOPTS_ON=0
+#LINK = -static
+CFLAGS =  -g -m32 -Wall $(OPT) -I $(CSAPP_INC) -I . 
+LDLIBS = -lpthread
+
+PROGS =	tt sm tt_fibonacci
+
+all: $(PROGS) 
+
+tt:	tt.o mythreads.o mythreads.h
+	gcc -m32 -Wall $(OPT) -g $(DEBUGOPTS) $(LINK) -o tt tt.o mythreads.o
+
+mythreads.o:	mythreads.c mythreads.h
+
+sm:	switchm.o mythreads.o util.o
+	gcc $(CFLAGS) $(LINK) -g -o $@ $^
+
+tt_fibonacci: tt_fibonacci.o mythreads.o mythreads.h
+	gcc -m32 -Wall $(OPT) -g $(DEBUGOPTS) $(LINK) -o tt_fibonacci tt_fibonacci.o mythreads.o
+
+util.o:	util.c util.h
+switchm.o:	switchm.c mythreads.h util.h
+
+clean:
+	rm -f $(PROGS) *.o *~
