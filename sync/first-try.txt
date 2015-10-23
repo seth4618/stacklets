@@ -1,0 +1,64 @@
+I DON'T THINK THIS WORKS.
+
+Shared Variable:
+
+L: contains ownerId of the tail of the lock
+
+Local Variables:
+
+trigger: boolean
+waiter: Id of next proc waiting for lock
+myID: my thread ID
+
+
+acquire:
+{
+  if (L == nil)			// see if lock is free?
+     L = myID			// try and grab it
+  
+  if (L != myID) {		// did I get it?
+     trigger = 0;		// No, so get setup to wait for it
+     sendI(&addme, myID);
+     while (trigger == 0) spin;
+     // someone told me I have the lock
+  }
+  // I have the lock
+}
+
+release:
+{
+  DUI
+  if (waiter != nil) {
+    next = waiter;
+    waiter = nil;
+    next->trigger = 1;
+  }
+  EUI
+}
+
+addme(askId)
+{
+  assert(L != nil);
+  DUI
+    if (L != myId) {
+      sendI(addme, askId);
+    } else {
+      waiter = askId;
+      L = askId;
+    }
+  EUI
+}
+
+
+Questions:
+- Who can update L?
+- Is it possible for more than on thread to have the ability to update L?
+- Deadlock possible?
+- Is it fair?
+- Is it fast when not locked?
+- worst case network traffic?  What is the condition?
+- Do we need fences? atomic operations?
+
+
+
+
