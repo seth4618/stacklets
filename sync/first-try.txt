@@ -10,15 +10,21 @@ trigger: boolean
 waiter: Id of next proc waiting for lock
 myID: my thread ID
 
+init:
+{
+	trigger = 0;
+	next = nil
+	waiter = nil;
+}
 
 acquire:
 {
   if (L == nil)			// see if lock is free?
      L = myID			// try and grab it
   
-  if (L != myID) {		// did I get it?
-     trigger = 0;		// No, so get setup to wait for it
-     sendI(&addme, myID);
+  if (L != myID && trigger == 0) {		// did I get it?
+     // trigger = 0;		// No, so get setup to wait for it
+     sendI(&addme, &L, myID);
      while (trigger == 0) spin;
      // someone told me I have the lock
   }
@@ -32,7 +38,10 @@ release:
     next = waiter;
     waiter = nil;
     next->trigger = 1;
+  } else if (trigger == 1) { // prevent malicious immature release
+  	L = nil;
   }
+  trigger = 0;	// prevent double release
   EUI
 }
 
@@ -41,7 +50,7 @@ addme(askId)
   assert(L != nil);
   DUI
     if (L != myId) {
-      sendI(addme, askId);
+      sendI(addme, &L, askId);
     } else {
       waiter = askId;
       L = askId;
