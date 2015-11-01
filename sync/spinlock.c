@@ -1,4 +1,4 @@
-#include "spinlock_type.h"
+#include "spinlock.h"
 #include "assert.h"
 #include "atomic_xchange.h"
 
