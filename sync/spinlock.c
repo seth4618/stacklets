@@ -1,6 +1,6 @@
 #include "spinlock.h"
-#include "assert.h"
 #include "atomic_xchange.h"
+#include "assert.h"
 
 void spinlock_init(spinlock_t *sl)
 {

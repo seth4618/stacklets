@@ -3,8 +3,8 @@
 #include "queue.h"
 #include "spinlock.h"
 #include "assert.h"
+#include "system.h"
 
-#define NUM_CORES 4
 static queue* msg_bufs[NUM_CORES];
 static int flags[NUM_CORES];
 
