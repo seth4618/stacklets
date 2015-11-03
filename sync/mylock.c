@@ -7,6 +7,7 @@
 #include "system.h"
 #include "mylock.h"
 
+static pthread_mutex_t l_mutex;
 
 struct mystruct {
     int my_id;  // Per-cpu id
@@ -86,7 +87,8 @@ void mylock(struct lock *L)
 retry:        
         L->owner_id = my_id;
 
-    //fence();
+   pthread_mutex_lock(&l_mutex);
+   pthread_mutex_unlock(&l_mutex);
 
     if ((L->owner_id != my_id)) {
         if (L->owner_id == -1) { // It just got freed
@@ -144,6 +146,9 @@ static void addme(void *p)
             L->owner_id = ask_id;
 
             //fence();
+               pthread_mutex_lock(&l_mutex);
+   pthread_mutex_unlock(&l_mutex);
+
 
             if (L->owner_id != ask_id) {
                 sendI(&addme, L->owner_id, p);

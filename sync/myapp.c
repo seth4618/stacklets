@@ -18,18 +18,24 @@ struct lock L;
 void * increment_counter(void *arg)
 {
     int cpu = get_myid();
-
-    while(threads_join == 0) {
+    // printf("my thread id %d\n", cpu);
+    int i = 0;
+    for (i = 0; i < 10; ++i)
+    {
         poll(cpu);
         mylock(&L);
         poll(cpu);
         count++;
+        // printf("thread %d, count %d\n", cpu, count);
         poll(cpu);
         myunlock(&L);
         poll(cpu);
         sleep(interval);
+                
     }
     poll(cpu);
+    // printf("Terminate\n");
+    pthread_exit(NULL);
     return NULL;
 }
 
@@ -47,7 +53,7 @@ int main(int argc, void *argv[])
         }
     }
     sleep(seconds);
-    threads_join = 1;
+    // threads_join = 1;
     for (i=0; i<NUM_CORES; i++) {
         rc = pthread_join(threads[i], NULL);
         if (rc < 0) {
