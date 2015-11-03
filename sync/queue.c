@@ -10,6 +10,8 @@ void init_queue(queue *q) {
 
 int is_empty(queue *q) {
 
+    if (q == NULL) return 1;
+
 	spinlock_lock(&q -> lock);
 	int result = q->tail==NULL;
 	spinlock_unlock(&q -> lock);
@@ -58,7 +60,14 @@ message *dequeue(queue *q) {
 void enqueue(queue *q, message *msg) {
 
 	node *n = (node *)malloc(sizeof(struct node_t));
-	if (q == NULL || n == NULL) return;
+	if (n == NULL) return;
+
+    /* First node to be inserted */
+    if (q == NULL) {
+        q = (queue *)malloc(sizeof(struct queue_t));
+        q->tail = NULL;
+        q->head = NULL;
+    }
 	spinlock_lock(&q -> lock);
 
 	n -> msg = msg;
