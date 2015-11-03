@@ -65,7 +65,7 @@ int get_myid()
     if ((i = put_myid(pid)) >= 0)
         return i;
     else
-        assert(1);
+        assert(0);
 
 }
 
