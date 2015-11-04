@@ -50,7 +50,7 @@ void i_handler(int core_idx) {
 	    (*c)(msg -> p);
 	    free(msg);
 	}
-	assert(is_empty(q));
+
 }
 
 void poll(int core_idx) {

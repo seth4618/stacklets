@@ -70,7 +70,6 @@ void enqueue(queue *q, message *msg) {
     // }
 	spinlock_lock(&q -> lock);
 
-    printf("Enqueued\n");
 	n -> msg = msg;
 	if (q -> tail == NULL) // q is empty
 	{
