@@ -27,9 +27,7 @@ void * increment_counter(void *arg)
         poll(cpu);
         mylock(&L);
         poll(cpu);
-        printf("Thread_id %lu entering on cpu %d\n", myid,cpu);
         count++;
-        printf("Thread_id %lu read count %d\n", myid,count);
         poll(cpu);
         myunlock(&L);
         poll(cpu);
@@ -39,7 +37,6 @@ void * increment_counter(void *arg)
     poll(cpu);
     sleep(2);   // Sleep to give time for other threads to send messages
     poll(cpu);
-    printf("Thread_id %lu exiting on cpu %d\n", myid,cpu);
     pthread_exit(NULL);
     return NULL;
 }
