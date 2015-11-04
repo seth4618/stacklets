@@ -8,7 +8,13 @@ void init() {
 	int i = 0;
 	for (i = 0; i < NUM_CORES; ++i)
 	{
-		init_queue(msg_bufs[i]);
+		queue *q = (queue*)malloc(sizeof(struct queue_t));
+		if (q == NULL)
+		{
+			return;
+		}
+		msg_bufs[i] = q;
+		init_queue(q);
 		flags[i] = 0;
 	}
 }

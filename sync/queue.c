@@ -9,12 +9,12 @@ void init_queue(queue *q) {
 }
 
 int is_empty(queue *q) {
-
     if (q == NULL) return 1;
 
 	spinlock_lock(&q -> lock);
 	int result = q->tail==NULL;
 	spinlock_unlock(&q -> lock);
+
 	return result;
 }
 // requires that n is in the q
@@ -63,11 +63,11 @@ void enqueue(queue *q, message *msg) {
 	if (n == NULL) return;
 
     /* First node to be inserted */
-    if (q == NULL) {
-        q = (queue *)malloc(sizeof(struct queue_t));
-        q->tail = NULL;
-        q->head = NULL;
-    }
+    // if (q == NULL) {
+    //     q = (queue *)malloc(sizeof(struct queue_t));
+    //     q->tail = NULL;
+    //     q->head = NULL;
+    // }
 	spinlock_lock(&q -> lock);
 
     printf("Enqueued\n");
