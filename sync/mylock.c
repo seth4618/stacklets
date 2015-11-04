@@ -41,9 +41,9 @@ static int put_myid(long pid)
 {
     int i;
 
-    for (i=0; i<NUM_CORES; i++) {
+    for (i = 0; i < NUM_CORES; i++) {
         if (pcpu[i].pid == -1) {
-            pcpu[i].pid= pid;
+            pcpu[i].pid = pid;
             return i;
         }
     }
@@ -60,7 +60,7 @@ int get_myid()
     pid = (long)pthread_self();
 
     spinlock_lock(&sl);
-    for (i=0; i<NUM_CORES; i++) {
+    for (i = 0; i < NUM_CORES; i++) {
         if (pcpu[i].pid == pid)
             goto ret;
     }
@@ -85,18 +85,18 @@ void mylock(struct lock *L)
     struct addme_cfd cfd;
 
     my_trigger = get_trigger(my_id);
-    
+
     if (L == NULL) {
         fprintf(stderr, "ERROR: mylock: Lock not allocated! \n");
         return;
     }
 
     if (L->owner_id == -1)
-retry:        
+retry:
         L->owner_id = my_id;
 
-   pthread_mutex_lock(&l_mutex);
-   pthread_mutex_unlock(&l_mutex);
+    pthread_mutex_lock(&l_mutex);
+    pthread_mutex_unlock(&l_mutex);
 
     if ((L->owner_id != my_id)) {
         if (L->owner_id == -1) { // It just got freed
@@ -105,11 +105,9 @@ retry:
             cfd.L = L;
             cfd.ask_id = my_id;
             sendI(&addme, L->owner_id, &cfd);  /* Our instruction */
-            printf("Thread id %lu waiting for lock\n",(unsigned long)pthread_self());
-            while(!(*my_trigger)) poll(my_id);
+            while (!(*my_trigger)) poll(my_id);
         }
     }
-    printf("Thread id %lu got lock\n",(unsigned long)pthread_self());
     *my_trigger = 0;
     // Got the lock
 }
@@ -129,14 +127,13 @@ void myunlock(struct lock *L)
     DUI(my_id);
     // No need to disable interrupts since we will not poll in these functions
     if (pcpu[my_id].waiter_id != -1) {
-       next_trigger = get_trigger(pcpu[my_id].waiter_id);         
-       *next_trigger = 1;
-       pcpu[my_id].waiter_id = -1;
+        next_trigger = get_trigger(pcpu[my_id].waiter_id);
+        *next_trigger = 1;
+        pcpu[my_id].waiter_id = -1;
     } else {
         L->owner_id = -1;
     }
 
-    printf("Thread id %lu released lock\n",(unsigned long)pthread_self());
     EUI(my_id);
 }
 
@@ -148,18 +145,17 @@ static void addme(void *p)
     int ask_id = (int)cfd->ask_id;
 
     if (my_id == -1) {
-        fprintf(stderr,"ERROR: mylock: Failed to get cpu id\n");
+        fprintf(stderr, "ERROR: mylock: Failed to get cpu id\n");
         return;
     }
-    printf("Thread id %lu entering addme\n",(unsigned long)pthread_self());
     DUI(my_id);  // Our instruction
     if (L->owner_id != my_id) {
         if (L->owner_id == -1) {
             L->owner_id = ask_id;
 
             //fence();
-               pthread_mutex_lock(&l_mutex);
-   pthread_mutex_unlock(&l_mutex);
+            pthread_mutex_lock(&l_mutex);
+            pthread_mutex_unlock(&l_mutex);
 
 
             if (L->owner_id != ask_id) {
@@ -182,7 +178,7 @@ void init_lock(struct lock *L)
 {
     int i;
 
-    for (i=0; i<NUM_CORES; i++) {
+    for (i = 0; i < NUM_CORES; i++) {
         pcpu[i].my_id = i;
         pcpu[i].pid = -1;
         pcpu[i].trigger = 0;
@@ -197,7 +193,7 @@ void destroy_lock(struct lock *L)
 {
     int i;
 
-    for (i=0; i<NUM_CORES; i++) {
+    for (i = 0; i < NUM_CORES; i++) {
         pcpu[i].pid = -1;
     }
 }

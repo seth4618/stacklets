@@ -36,15 +36,12 @@ void sendI(callback_t callback, int target, void* p) {
 	}
 	msg -> callback = callback;
 	msg -> p = p;
-    printf("Thread %lu enqueues message on %d\n",
-            (unsigned long)pthread_self(), target);
 	enqueue(msg_bufs[target], msg); 
 }
 
 void i_handler(int core_idx) {
 	queue *q = msg_bufs[core_idx];
 	while(!is_empty(q)) {
-        printf("Thread id %lu inspects q\n",(unsigned long)pthread_self());
 	    message *msg = dequeue(q);
 	    callback_t c = msg -> callback;
 	    (*c)(msg -> p);
