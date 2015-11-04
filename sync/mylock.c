@@ -14,6 +14,7 @@ struct mystruct {
     int my_id;  // Per-cpu id
     long pid;   // Per-process id
     bool trigger;
+    int waiter_id;
 };
 
 
@@ -127,12 +128,10 @@ void myunlock(struct lock *L)
 
     DUI(my_id);
     // No need to disable interrupts since we will not poll in these functions
-    if (L->waiter != -1) {
-       next_trigger = get_trigger(L->waiter);         
+    if (pcpu[my_id].waiter_id != -1) {
+       next_trigger = get_trigger(pcpu[my_id].waiter_id);         
        *next_trigger = 1;
-       printf("setting trigger of %lu\n",
-               pcpu[L->waiter].pid);
-       L->waiter = -1;
+       pcpu[my_id].waiter_id = -1;
     } else {
         L->owner_id = -1;
     }
@@ -173,8 +172,8 @@ static void addme(void *p)
             sendI(&addme, L->owner_id, p);
         }
     } else {
-        L->waiter = ask_id;
         L->owner_id = ask_id;
+        pcpu[my_id].waiter_id = ask_id;
     }
     EUI(my_id); // Our instruction
 }
@@ -187,10 +186,11 @@ void init_lock(struct lock *L)
         pcpu[i].my_id = i;
         pcpu[i].pid = -1;
         pcpu[i].trigger = 0;
+        pcpu[i].waiter_id = -1;
     }
 
     L->owner_id = -1;
-    L->waiter = -1;
+
 }
 
 void destroy_lock(struct lock *L)
