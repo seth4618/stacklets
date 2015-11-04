@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <pthread.h>
 #include "mylock.h"
 #include "system.h"
 
@@ -18,15 +19,16 @@ struct lock L;
 void * increment_counter(void *arg)
 {
     int cpu = get_myid();
-    // printf("my thread id %d\n", cpu);
+    unsigned long myid = (unsigned long)pthread_self();
+    printf("Thread_id %lu entering on cpu %d\n", myid,cpu);
     int i = 0;
-    for (i = 0; i < 10; ++i)
+    for (i = 0; i < 2; ++i)
     {
         poll(cpu);
         mylock(&L);
         poll(cpu);
         count++;
-        // printf("thread %d, count %d\n", cpu, count);
+        printf("Thread_id %lu read count %d\n", myid,count);
         poll(cpu);
         myunlock(&L);
         poll(cpu);
@@ -34,7 +36,9 @@ void * increment_counter(void *arg)
                 
     }
     poll(cpu);
-    // printf("Terminate\n");
+    sleep(2);
+    poll(cpu);
+    printf("Thread_id %lu exiting on cpu %d\n", myid,cpu);
     pthread_exit(NULL);
     return NULL;
 }

@@ -8,6 +8,7 @@
 #include "mylock.h"
 
 static pthread_mutex_t l_mutex;
+spinlock_t sl;
 
 struct mystruct {
     int my_id;  // Per-cpu id
@@ -57,17 +58,23 @@ int get_myid()
 
     pid = (long)pthread_self();
 
+    spinlock_lock(&sl);
     for (i=0; i<NUM_CORES; i++) {
         if (pcpu[i].pid == pid)
-            return i;
+            goto ret;
     }
 
     // First time caller
-    if ((i = put_myid(pid)) >= 0)
-        return i;
-    else
+    if ((i = put_myid(pid)) >= 0) {
+        goto ret;
+    } else {
+        spinlock_unlock(&sl);
         assert(0);
+    }
 
+ret:
+    spinlock_unlock(&sl);
+    return i;
 }
 
 void mylock(struct lock *L)
@@ -97,9 +104,11 @@ retry:
             cfd.L = L;
             cfd.ask_id = my_id;
             sendI(&addme, L->owner_id, &cfd);  /* Our instruction */
-            while(!(*my_trigger));
+            printf("Thread id %lu waiting for lock\n",(unsigned long)pthread_self());
+            while(!(*my_trigger)) poll(my_id);
         }
     }
+    printf("Thread id %lu got lock\n",(unsigned long)pthread_self());
     *my_trigger = 0;
     // Got the lock
 }
@@ -120,12 +129,15 @@ void myunlock(struct lock *L)
     // No need to disable interrupts since we will not poll in these functions
     if (L->waiter != -1) {
        next_trigger = get_trigger(L->waiter);         
-       L->waiter = -1;
        *next_trigger = 1;
+       printf("setting trigger of %lu\n",
+               pcpu[L->waiter].pid);
+       L->waiter = -1;
     } else {
         L->owner_id = -1;
     }
 
+    printf("Thread id %lu released lock\n",(unsigned long)pthread_self());
     EUI(my_id);
 }
 
@@ -140,6 +152,7 @@ static void addme(void *p)
         fprintf(stderr,"ERROR: mylock: Failed to get cpu id\n");
         return;
     }
+    printf("Thread id %lu entering addme\n",(unsigned long)pthread_self());
     DUI(my_id);  // Our instruction
     if (L->owner_id != my_id) {
         if (L->owner_id == -1) {
