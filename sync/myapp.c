@@ -20,13 +20,14 @@ void * increment_counter(void *arg)
 {
     int cpu = get_myid();
     unsigned long myid = (unsigned long)pthread_self();
-    printf("Thread_id %lu entering on cpu %d\n", myid,cpu);
+    
     int i = 0;
-    for (i = 0; i < 2; ++i)
+    for (i = 0; i < 10; ++i)
     {
         poll(cpu);
         mylock(&L);
         poll(cpu);
+        printf("Thread_id %lu entering on cpu %d\n", myid,cpu);
         count++;
         printf("Thread_id %lu read count %d\n", myid,count);
         poll(cpu);
@@ -45,6 +46,7 @@ void * increment_counter(void *arg)
 
 int main(int argc, void *argv[])
 {
+    init();
     pthread_t threads[NUM_CORES];
     int i, rc;
 
