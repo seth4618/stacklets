@@ -24,21 +24,21 @@ void * increment_counter(void *arg)
     int i = 0;
     for (i = 0; i < 10; ++i)
     {
-        poll(cpu);
+        poll(0xFF);
         mylock(&L);
-        poll(cpu);
+        poll(0xFF);
         printf("Thread_id %lu entering on cpu %d\n", myid,cpu);
         count++;
         printf("Thread_id %lu read count %d\n", myid,count);
-        poll(cpu);
+        poll(0xFF);
         myunlock(&L);
-        poll(cpu);
+        poll(0xFF);
         sleep(interval);
                 
     }
-    poll(cpu);
+    poll(0xFF);
     sleep(2);   // Sleep to give time for other threads to send messages
-    poll(cpu);
+    poll(0xFF);
     printf("Thread_id %lu exiting on cpu %d\n", myid,cpu);
     pthread_exit(NULL);
     return NULL;

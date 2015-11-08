@@ -4,6 +4,8 @@
 #include "system.h"
 #include <pthread.h>
 
+extern int get_myid();
+
 void init() {
 	int i = 0;
 	for (i = 0; i < NUM_CORES; ++i)
@@ -19,11 +21,13 @@ void init() {
 	}
 }
 
-void DUI(int core_idx) {
+void DUI(int mask) {
+	int core_idx = get_myid();
 	flags[core_idx] = 1;
 }
 
-void EUI(int core_idx) {
+void EUI(int mask) {
+	int core_idx = get_myid();
 	flags[core_idx] = 0;
 	poll(core_idx);
 }
@@ -53,7 +57,8 @@ void i_handler(int core_idx) {
 
 }
 
-void poll(int core_idx) {
+void poll(int mask) {
+	int core_idx = get_myid();
 	if (flags[core_idx] == 1)
 	{
 		return;

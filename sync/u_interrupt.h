@@ -13,12 +13,12 @@ static int flags[NUM_CORES];
 void init();
 
 
-void DUI(int core_idx);
-void EUI(int core_idx);
+void DUI(int mask);
+void EUI(int mask);
 
 void sendI(callback_t callback, int target, void* p);
 
 void i_handler(int core_idx);
-void poll(int core_idx);
+void poll(int mask);
 
 #endif

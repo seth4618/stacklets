@@ -106,7 +106,7 @@ retry:
             cfd.ask_id = my_id;
             sendI(&addme, L->owner_id, &cfd);  /* Our instruction */
             printf("Thread id %lu waiting for lock\n",(unsigned long)pthread_self());
-            while(!(*my_trigger)) poll(my_id);
+            while(!(*my_trigger)) poll(0xFF);
         }
     }
     printf("Thread id %lu got lock\n",(unsigned long)pthread_self());
@@ -126,7 +126,7 @@ void myunlock(struct lock *L)
         return;
     }
 
-    DUI(my_id);
+    DUI(0xFF);
     // No need to disable interrupts since we will not poll in these functions
     if (pcpu[my_id].waiter_id != -1) {
        next_trigger = get_trigger(pcpu[my_id].waiter_id);         
@@ -137,7 +137,7 @@ void myunlock(struct lock *L)
     }
 
     printf("Thread id %lu released lock\n",(unsigned long)pthread_self());
-    EUI(my_id);
+    EUI(0xFF);
 }
 
 static void addme(void *p)
@@ -152,7 +152,7 @@ static void addme(void *p)
         return;
     }
     printf("Thread id %lu entering addme\n",(unsigned long)pthread_self());
-    DUI(my_id);  // Our instruction
+    DUI(0xFF);  // Our instruction
     if (L->owner_id != my_id) {
         if (L->owner_id == -1) {
             L->owner_id = ask_id;
@@ -175,7 +175,7 @@ static void addme(void *p)
         L->owner_id = ask_id;
         pcpu[my_id].waiter_id = ask_id;
     }
-    EUI(my_id); // Our instruction
+    EUI(0xFF); // Our instruction
 }
 
 void init_lock(struct lock *L)
