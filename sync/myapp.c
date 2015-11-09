@@ -24,26 +24,26 @@ void * increment_counter(void *arg)
     int i = 0;
     for (i = 0; i < 10; ++i)
     {
-        poll(cpu);
+        POLL();
         mylock(&L);
-        poll(cpu);
+        POLL();
         count++;
-        poll(cpu);
+        POLL();
         myunlock(&L);
-        poll(cpu);
+        POLL();
         sleep(interval);
                 
     }
-    poll(cpu);
+    POLL();
     sleep(2);   // Sleep to give time for other threads to send messages
-    poll(cpu);
+    POLL();
     pthread_exit(NULL);
     return NULL;
 }
 
 int main(int argc, void *argv[])
 {
-    init();
+    init_system();
     pthread_t threads[NUM_CORES];
     int i, rc;
 
