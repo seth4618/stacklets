@@ -8,15 +8,11 @@
 #include "mylock.h"
 
 static pthread_mutex_t l_mutex;
-spinlock_t sl;
 
-struct mystruct {
-    int my_id;  // Per-cpu id
-    long pid;   // Per-process id
-    bool trigger;
-    int waiter_id;
+struct mylockstruct {
+    bool trigger;   // Per-cpu trigger
+    int waiter_id;  // my waiter
 };
-
 
 // cfd = call_function_data
 // structure that contains arguments to addme call
@@ -26,56 +22,14 @@ struct addme_cfd
     int ask_id;
 };
 
-typedef struct mystruct mystruct_t;
-static mystruct_t pcpu[NUM_CORES];
+typedef struct mylockstruct mylockstruct_t;
+static mylockstruct_t pcpu_lock_struct[NUM_CORES];
 
 static void addme(void *p);
 
 static bool *get_trigger(int id)
 {
-    return &pcpu[id].trigger;
-}
-
-// Returns -1 on error, returns id >=0 otherwise
-static int put_myid(long pid)
-{
-    int i;
-
-    for (i = 0; i < NUM_CORES; i++) {
-        if (pcpu[i].pid == -1) {
-            pcpu[i].pid = pid;
-            return i;
-        }
-    }
-    return -1;
-}
-
-//Assert if put_myid() could not find you a slot
-//Ideally each pthread must be associated with  cpu
-int get_myid()
-{
-    int i;
-    pthread_t pid;
-
-    pid = (long)pthread_self();
-
-    spinlock_lock(&sl);
-    for (i = 0; i < NUM_CORES; i++) {
-        if (pcpu[i].pid == pid)
-            goto ret;
-    }
-
-    // First time caller
-    if ((i = put_myid(pid)) >= 0) {
-        goto ret;
-    } else {
-        spinlock_unlock(&sl);
-        assert(0);
-    }
-
-ret:
-    spinlock_unlock(&sl);
-    return i;
+    return &pcpu_lock_struct[id].trigger;
 }
 
 void mylock(struct lock *L)
@@ -83,6 +37,7 @@ void mylock(struct lock *L)
     int my_id  = get_myid();
     bool *my_trigger;
     struct addme_cfd cfd;
+    message *msg = (message *)malloc(sizeof(message));
 
     my_trigger = get_trigger(my_id);
 
@@ -102,10 +57,16 @@ retry:
         if (L->owner_id == -1) { // It just got freed
             goto retry;
         } else {
+            if (msg == NULL)
+	        {
+	        	goto retry;
+	        }
             cfd.L = L;
             cfd.ask_id = my_id;
-            sendI(&addme, L->owner_id, &cfd);  /* Our instruction */
-            while (!(*my_trigger)) poll(my_id);
+	        msg -> callback = &addme;
+	        msg -> p = &cfd;
+            SENDI(msg, L->owner_id);  /* Our instruction */
+            while (!(*my_trigger)) POLL();
         }
     }
     *my_trigger = 0;
@@ -124,17 +85,17 @@ void myunlock(struct lock *L)
         return;
     }
 
-    DUI(my_id);
+    DUI(1); /* disable the uint #1 */
     // No need to disable interrupts since we will not poll in these functions
-    if (pcpu[my_id].waiter_id != -1) {
-        next_trigger = get_trigger(pcpu[my_id].waiter_id);
+    if (pcpu_lock_struct[my_id].waiter_id != -1) {
+        next_trigger = get_trigger(pcpu_lock_struct[my_id].waiter_id);
         *next_trigger = 1;
-        pcpu[my_id].waiter_id = -1;
+        pcpu_lock_struct[my_id].waiter_id = -1;
     } else {
         L->owner_id = -1;
     }
 
-    EUI(my_id);
+    EUI(0xfffe);
 }
 
 static void addme(void *p)
@@ -143,12 +104,13 @@ static void addme(void *p)
     struct addme_cfd *cfd = (struct addme_cfd *)p;
     struct lock *L = (struct lock *)cfd->L;
     int ask_id = (int)cfd->ask_id;
+    message *msg = (message *)malloc(sizeof(message));
 
     if (my_id == -1) {
         fprintf(stderr, "ERROR: mylock: Failed to get cpu id\n");
         return;
     }
-    DUI(my_id);  // Our instruction
+    DUI(1);  // Our instruction: disable the uint #1
     if (L->owner_id != my_id) {
         if (L->owner_id == -1) {
             L->owner_id = ask_id;
@@ -159,19 +121,33 @@ static void addme(void *p)
 
 
             if (L->owner_id != ask_id) {
-                sendI(&addme, L->owner_id, p);
+                if (msg == NULL)
+	            {
+	              	fprintf(stderr,"ERROR:malloc\n");
+                    exit(1);
+	            }
+                msg->callback = &addme;
+                msg->p = p;
+                SENDI(msg, L->owner_id);
             } else {
                 bool *next_trigger = get_trigger(ask_id);
                 *next_trigger = 1;
             }
         } else {
-            sendI(&addme, L->owner_id, p);
+            if (msg == NULL)
+	        {
+	          	fprintf(stderr,"ERROR:malloc\n");
+                exit(1);
+	        }
+            msg->callback = &addme;
+            msg->p = p;
+            SENDI(msg, L->owner_id);
         }
     } else {
         L->owner_id = ask_id;
-        pcpu[my_id].waiter_id = ask_id;
+        pcpu_lock_struct[my_id].waiter_id = ask_id;
     }
-    EUI(my_id); // Our instruction
+    EUI(0xfffe); // Our instruction
 }
 
 void init_lock(struct lock *L)
@@ -179,21 +155,7 @@ void init_lock(struct lock *L)
     int i;
 
     for (i = 0; i < NUM_CORES; i++) {
-        pcpu[i].my_id = i;
-        pcpu[i].pid = -1;
-        pcpu[i].trigger = 0;
-        pcpu[i].waiter_id = -1;
-    }
-
-    L->owner_id = -1;
-
-}
-
-void destroy_lock(struct lock *L)
-{
-    int i;
-
-    for (i = 0; i < NUM_CORES; i++) {
-        pcpu[i].pid = -1;
+        pcpu_lock_struct[i].trigger = 0;
+        pcpu_lock_struct[i].waiter_id = -1;
     }
 }

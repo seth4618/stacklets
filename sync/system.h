@@ -3,6 +3,4 @@
 #define NUM_CORES 4
 
 int get_myid(void);
-void poll(int);
-
-#endif
+void init_system(void);

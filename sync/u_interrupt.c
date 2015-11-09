@@ -4,7 +4,7 @@
 #include "system.h"
 #include <pthread.h>
 
-void init() {
+void init_uint() {
 	int i = 0;
 	for (i = 0; i < NUM_CORES; ++i)
 	{
@@ -19,23 +19,21 @@ void init() {
 	}
 }
 
-void DUI(int core_idx) {
-	flags[core_idx] = 1;
+/* flag: interrupt flag */
+void dui(int flag) {
+    int core_idx = get_myid();
+
+	flags[core_idx] |= flag;
 }
 
-void EUI(int core_idx) {
-	flags[core_idx] = 0;
-	poll(core_idx);
+void eui(int flag) {
+    int core_idx = get_myid();
+
+	flags[core_idx] &= 0;   // clear flag
+	poll();
 }
 
-void sendI(callback_t callback, int target, void* p) {
-	message *msg = (message *)malloc(sizeof(message));
-	if (msg == NULL)
-	{
-		return;
-	}
-	msg -> callback = callback;
-	msg -> p = p;
+void sendI(message *msg, int target) {
 	enqueue(msg_bufs[target], msg); 
 }
 
@@ -50,7 +48,9 @@ void i_handler(int core_idx) {
 
 }
 
-void poll(int core_idx) {
+void poll(void) {
+    int core_idx = get_myid();
+
 	if (flags[core_idx] == 1)
 	{
 		return;

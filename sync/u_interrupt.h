@@ -10,15 +10,31 @@ static int flags[NUM_CORES];
 
 
 
-void init();
+void init_uint();
 
+#ifdef SIM
 
-void DUI(int core_idx);
-void EUI(int core_idx);
+#define DUI(x)	asm volatile("%0x06 %[arg]",  : [arg] "=r" (x))
+#define EUI(x)	asm volatile("%0x07 %[arg]",  : [arg] "=r" (x))
+#define SENDI(x, y)	asm volatile("%0x16 %[arg] %[arg2]",  : [arg] "=r" (x) : [arg2] "=r" (y))
 
-void sendI(callback_t callback, int target, void* p);
+#define POLL()
+
+#endif
+
+#define DUI(x)	dui(x)
+#define EUI(x) 	eui(x)
+#define SENDI(x, y) sendi(x, y)
+#define POLL() poll()
+
+#endif
+
+void dui(int flag);
+void eui(int flag);
+
+void sendI(message *msg, int target);
 
 void i_handler(int core_idx);
-void poll(int core_idx);
+void poll();
 
 #endif
