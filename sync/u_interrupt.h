@@ -12,9 +12,9 @@ void init_uint();
 
 #ifdef SIM
 
-#define DUI(x)	asm volatile("%0x06 %[arg]",  : [arg] "=r" (x))
-#define EUI(x)	asm volatile("%0x07 %[arg]",  : [arg] "=r" (x))
-#define SENDI(x, y)	asm volatile("%0x16 %[arg] %[arg2]",  : [arg] "=r" (x) : [arg2] "=r" (y))
+#define DUI(x)	asm volatile("%0x6000 %[arg]",  : [arg] "=r" (x))
+#define EUI(x)	asm volatile("%0x6001 %[arg]",  : [arg] "=r" (x))
+#define SENDI(x, y)	asm volatile("%0x6002 %[arg] %[arg2]",  : [arg] "=r" (x) : [arg2] "=r" (y))
 #define POLL() 
 
 #else
