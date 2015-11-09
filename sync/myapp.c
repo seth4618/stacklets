@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include "mylock.h"
 #include "system.h"
+#include "u_interrupt.h"
 
 /* Global variables */
 int count = 0;
@@ -22,28 +23,28 @@ void * increment_counter(void *arg)
     unsigned long myid = (unsigned long)pthread_self();
     
     int i = 0;
-    for (i = 0; i < 10; ++i)
+    for (i = 0; i < 2; ++i)
     {
-        poll(cpu);
+        POLL();
         mylock(&L);
-        poll(cpu);
+        POLL();
         count++;
-        poll(cpu);
+        POLL();
         myunlock(&L);
-        poll(cpu);
+        POLL();
         sleep(interval);
                 
     }
-    poll(cpu);
+    POLL();
     sleep(2);   // Sleep to give time for other threads to send messages
-    poll(cpu);
+    POLL();
     pthread_exit(NULL);
     return NULL;
 }
 
 int main(int argc, void *argv[])
 {
-    init();
+    init_system();
     pthread_t threads[NUM_CORES];
     int i, rc;
 
@@ -64,7 +65,6 @@ int main(int argc, void *argv[])
             exit(1);
         }
     }
-    destroy_lock(&L);
     printf("Total count is %d\n",count);
     exit(0);
 }
