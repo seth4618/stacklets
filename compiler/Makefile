@@ -1,5 +1,5 @@
 CC=gcc-4.8
-CFLAGS=-g -O3
+CFLAGS=-g -DDEBUG
 DEPS = myfib.h seedStack.h readyQ.h
 OBJ = myfib.o seedStack.o readyQ.o
 
@@ -10,4 +10,4 @@ fib: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f *.o fib

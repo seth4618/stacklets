@@ -4,6 +4,16 @@
 #include "readyQ.h"
 #include <stdio.h>
 #include <pthread.h>
+#include <assert.h>
+
+#define EMBED_BREAKPOINT bp()
+void bp(void) {}
+
+#ifdef DEBUG
+#define DEBUG_PRINT(fmt, args...)    fprintf(stderr, fmt, ## args)
+#else
+#define DEBUG_PRINT(fmt, args...)    /* Don't do anything in release builds */
+#endif
 
 // helper functions
 void die(char* str)
@@ -13,7 +23,7 @@ void die(char* str)
 }
 
 static int suspCtr = 0;
-static int suspHere = 10;
+static int suspHere = 1;
 
 typedef enum {
     Terminate,
@@ -38,8 +48,8 @@ suspend(SuspendOption option)
         enqReadyQ(stackPointer);
     }
 
-    for (;;)
-    {
+    //for (;;)
+    //{
         // look at seedStack.  If there is stuff there, grab it
         Seed* seed = seedDummyHead->next;
         while (seed != NULL)
@@ -49,8 +59,10 @@ suspend(SuspendOption option)
                 seed->activated = 1;
                 seed->joinCounter = 2;
                 seed->routine(seed->argv);
-                if (seed->joinCounter-- == 0)
+                DEBUG_PRINT("seed %d returned\n", ((Foo *)seed->argv)->input);
+                if (--seed->joinCounter == 0)
                 {
+                    //assert(0);
                     restoreStackPointer(seed->adr);
                     goto *seed->sp;
                 }
@@ -62,18 +74,20 @@ suspend(SuspendOption option)
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
+            void* sp = ready->sp;
+            DEBUG_PRINT("find a ready thread\n");
             deqReadyQ();
-            restoreStackPointer(ready->sp);
+            restoreStackPointer(sp);
             restoreRegisters();
         }
-    }
+    //}
 }
 
 // will (semi) randomly put this thread on readyQ and suspend it.
 void
 testHack(void)
 {
-    if (suspCtr++ >= 10) {
+    if (suspCtr++ >= suspHere) {
 	    suspCtr = 0;
 	    suspend(Yield); // suspend will never return
     }
@@ -83,7 +97,8 @@ void
 fib(void* F)
 {
     Foo* f = (Foo *)F;
-    printf("n = %d\n", f->input);
+    DEBUG_PRINT("n = %d\n", f->input);
+    bp();
     volatile Registers saveArea;
 
     if (f->input <= 2)
@@ -107,9 +122,8 @@ fib(void* F)
     saveRegisters();
     fib(a);
 
-    if (seed->activated && seed->joinCounter--)
+    if (seed->activated && --seed->joinCounter)
     {
-        popSeed(seed);
         suspend(Terminate);
     }
     
@@ -119,6 +133,7 @@ fib(void* F)
     return;
 
 SecondChildDone:
+    popSeed(seed);
     restoreRegisters(); // foo, a, b may be stored in any of the registers
     f->output = a->output + b->output;
 }

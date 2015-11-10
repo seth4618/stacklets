@@ -21,7 +21,7 @@ typedef uint64_t Registers[16];
     asm volatile("movq %%rcx,%[indexCX]   \n"\
                  "movq %%rdx,%[indexDX]   \n"\
                  "movq %%rbx,%[indexBX]   \n"\
-                 "movq %%rsp,%[indexSP]   \n"\
+                 "movq %%rbp,%[indexBP]   \n"\
                  "movq %%rsi,%[indexSI]   \n"\
                  "movq %%rdi,%[indexDI]   \n"\
                  "movq %%r8,%[indexR8]    \n"\
@@ -36,7 +36,7 @@ typedef uint64_t Registers[16];
                  : [indexCX] "=m" (saveArea[0]),\
                    [indexDX] "=m" (saveArea[1]),\
                    [indexBX] "=m" (saveArea[2]),\
-                   [indexSP] "=m" (saveArea[3]),\
+                   [indexBP] "=m" (saveArea[3]),\
                    [indexSI] "=m" (saveArea[4]),\
                    [indexDI] "=m" (saveArea[5]),\
                    [indexR8] "=m" (saveArea[6]),\
@@ -53,7 +53,7 @@ typedef uint64_t Registers[16];
     asm volatile("movq %[indexCX],%%rcx   \n"\
                  "movq %[indexDX],%%rdx   \n"\
                  "movq %[indexBX],%%rbx   \n"\
-                 "movq %[indexSP],%%rsp   \n"\
+                 "movq %[indexBP],%%rbp   \n"\
                  "movq %[indexSI],%%rsi   \n"\
                  "movq %[indexDI],%%rdi   \n"\
                  "movq %[indexR8],%%r8    \n"\
@@ -69,7 +69,7 @@ typedef uint64_t Registers[16];
                  : [indexCX] "m" (saveArea[0]),\
                    [indexDX] "m" (saveArea[1]),\
                    [indexBX] "m" (saveArea[2]),\
-                   [indexSP] "m" (saveArea[3]),\
+                   [indexBP] "m" (saveArea[3]),\
                    [indexSI] "m" (saveArea[4]),\
                    [indexDI] "m" (saveArea[5]),\
                    [indexR8] "m" (saveArea[6]),\
