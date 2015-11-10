@@ -7,9 +7,10 @@ void readyQInit()
     readyDummyHead = (ReadyThreadHead *)calloc(1, sizeof(ReadyThreadHead));
 }
 
-void enqReadyQ(void *stackPointer)
+void enqReadyQ(void* resumeAdr, void *stackPointer)
 {
     ReadyThread* ready = (ReadyThread *)calloc(1, sizeof(ReadyThread));
+    ready->adr = resumeAdr;
     ready->sp = stackPointer;
     if (readyDummyHead->back) {
         readyDummyHead->back->next = ready;

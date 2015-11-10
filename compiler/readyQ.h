@@ -4,6 +4,7 @@
 #pragma once
 
 typedef struct ReadyThread {
+    void* adr;
     void* sp;
     struct ReadyThread* next;
 } ReadyThread;
@@ -16,5 +17,5 @@ typedef struct ReadyThreadHead{
 ReadyThreadHead* readyDummyHead;
 
 void readyQInit();
-void enqReadyQ(void *stackPointer);
+void enqReadyQ(void* resumeAdr, void *stackPointer);
 void deqReadyQ();

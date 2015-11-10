@@ -25,31 +25,84 @@ void die(char* str)
 static int suspCtr = 0;
 static int suspHere = 1;
 
-typedef enum {
-    Terminate,
-    Yield
-} SuspendOption;
+void* systemStack;
+#define SYSTEM_STACK_SIZE   8192
+#define STACKLET_SIZE       8192
+
+void
+systemStackInit()
+{
+    void* systemStackBuffer;
+    systemStackBuffer = calloc(1, SYSTEM_STACK_SIZE);
+    systemStack = systemStackBuffer + SYSTEM_STACK_SIZE;
+}
+
+#define suspend() do { \
+    asm volatile("movq %[sysStack],%%rsp \n"\
+                 "call _realSuspend \n"\
+                 :\
+                 : [sysStack] "m" (systemStack));} while (0)
+
+#define setArgument(x) do { \
+    asm volatile("movq %[argv],%%rdi \n"\
+                 :\
+                 : [argv] "m" (x));} while (0)
+
+typedef struct {
+    void* stubRoutine;
+    Seed* seed;
+    void* stackletBuf;
+} Stub;
+
+void* stubBase;
+
+void
+stubRoutine()
+{
+    Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
+    Seed* seed = stackletStub->seed;
+    void* buf = stackletStub->stackletBuf;
+ 
+    if (--seed->joinCounter == 0)
+    {
+        free(buf);
+        restoreStackPointer(seed->sp);
+        goto *seed->adr;
+    }
+
+    free(buf);
+    suspend();
+}
+
+// Create a new stacklet to run the seed.
+void
+stackletFork(Seed* seed)
+{
+    seed->joinCounter = 2;
+    void* stackletBuf = calloc(1, STACKLET_SIZE);
+    stubBase = stackletBuf + STACKLET_SIZE;
+    Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
+
+    stackletStub->stackletBuf = stackletBuf;
+    stackletStub->seed = seed;
+    stackletStub->stubRoutine = stubRoutine;
+
+    setArgument(seed->argv);
+    void* routine = seed->routine;
+    goto *routine;
+}
 
 // Context switch to another user thread in readyQ (explicit seed) or in seed
 // stack (implicity seed).
 //
 // The current user thread will be lost if it is not put into the readyQ before
 // calling this function. This funciton is executed in a separate system stack.
+__attribute__ ((used))
 void
-suspend(SuspendOption option)
+realSuspend()
 {
-    Registers saveArea;
-
-    if (option == Yield)
+    for (;;)
     {
-        saveRegisters();
-        void* stackPointer;
-        getStackPointer(stackPointer);
-        enqReadyQ(stackPointer);
-    }
-
-    //for (;;)
-    //{
         // look at seedStack.  If there is stuff there, grab it
         Seed* seed = seedDummyHead->next;
         while (seed != NULL)
@@ -57,15 +110,7 @@ suspend(SuspendOption option)
             if (seed->activated == 0)
             {
                 seed->activated = 1;
-                seed->joinCounter = 2;
-                seed->routine(seed->argv);
-                DEBUG_PRINT("seed %d returned\n", ((Foo *)seed->argv)->input);
-                if (--seed->joinCounter == 0)
-                {
-                    //assert(0);
-                    restoreStackPointer(seed->adr);
-                    goto *seed->sp;
-                }
+                stackletFork(seed);
             }
             seed = seed->next;
         }
@@ -74,23 +119,39 @@ suspend(SuspendOption option)
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
-            void* sp = ready->sp;
             DEBUG_PRINT("find a ready thread\n");
-            deqReadyQ();
-            restoreStackPointer(sp);
-            restoreRegisters();
+            restoreStackPointer(ready->sp);
+            goto *ready->adr;
         }
-    //}
+    }
 }
 
 // will (semi) randomly put this thread on readyQ and suspend it.
+//void
+//testHack(void)
+//{
+//    if (suspCtr++ >= suspHere) {
+//	    suspCtr = 0;
+//        saveRegisters();
+//        void* stackPointer;
+//        getStackPointer(stackPointer);
+//        enqReadyQ(stackPointer);
+//	    suspend(Yield); // suspend will never return
+//    }
+//}
+
 void
-testHack(void)
+yield(void)
 {
-    if (suspCtr++ >= suspHere) {
-	    suspCtr = 0;
-	    suspend(Yield); // suspend will never return
-    }
+    Registers saveArea;
+    saveRegisters();
+    void* stackPointer;
+    getStackPointer(stackPointer);
+    enqReadyQ(&&Resume, stackPointer);
+	suspend(); // suspend will never return
+Resume:
+    deqReadyQ();
+    restoreRegisters();
 }
 
 void
@@ -107,7 +168,12 @@ fib(void* F)
         return;
     }
 
-    testHack();
+    // testHack
+    if (suspCtr++ >= suspHere) {
+        suspCtr = 0;
+        yield();
+    }
+    //testHack();
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     Foo* b = (Foo *)calloc(1, sizeof(Foo));
@@ -124,7 +190,7 @@ fib(void* F)
 
     if (seed->activated && --seed->joinCounter)
     {
-        suspend(Terminate);
+        suspend();
     }
     
     popSeed(seed);
@@ -141,8 +207,10 @@ SecondChildDone:
 int 
 startfib(int n)
 {
+    systemStackInit();
     seedStackInit();
     readyQInit();
+
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
     fib(a);

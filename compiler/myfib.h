@@ -4,6 +4,8 @@
 #pragma once
 #include <stdlib.h>
 
+void _suspend();
+
 typedef struct {
     int input;
     int output;
