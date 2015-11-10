@@ -37,11 +37,36 @@ systemStackInit()
     systemStack = systemStackBuffer + SYSTEM_STACK_SIZE;
 }
 
-#define suspend() do { \
+#define switchToSysStack() do { \
     asm volatile("movq %[sysStack],%%rsp \n"\
-                 "call _realSuspend \n"\
                  :\
                  : [sysStack] "m" (systemStack));} while (0)
+
+#define switchToSysStackAndFree(buf) do { \
+    asm volatile("movq %[Abuf],%%rdi \n"\
+                 "movq %[AsystemStack],%%rsp \n"\
+                 "call _free \n"\
+                 :\
+                 : [Abuf] "r" (buf),\
+                   [AsystemStack] "m" (systemStack));} while (0)
+
+#define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
+    asm volatile("movq %[Abuf],%%rdi \n"\
+                 "movq %[Asp],%%rax \n"\
+                 "movq %[Aadr],%%rbx \n"\
+                 "movq %[AsystemStack],%%rsp \n"\
+                 "call _free \n"\
+                 "movq %%rax,%%rsp \n"\
+                 "jmp *%%rbx \n"\
+                 :\
+                 : [Abuf] "r" (buf),\
+                   [Asp] "r" (sp),\
+                   [Aadr] "r" (adr),\
+                   [AsystemStack] "m" (systemStack));} while (0)
+
+//#define dealloc(x) do { \
+//    asm volatile("movq %[sysStack],%%rsp \n"\
+                 
 
 #define setArgument(x) do { \
     asm volatile("movq %[argv],%%rdi \n"\
@@ -59,18 +84,22 @@ void* stubBase;
 void
 stubRoutine()
 {
+    DEBUG_PRINT("In stub routine.\n");
     Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
     Seed* seed = stackletStub->seed;
     void* buf = stackletStub->stackletBuf;
  
     if (--seed->joinCounter == 0)
     {
-        free(buf);
-        restoreStackPointer(seed->sp);
-        goto *seed->adr;
+        switchToSysStackAndFreeAndResume(buf, seed->sp, seed->adr);
+        // sp -> sysStack
+        //restoreStackPointer(seed->sp);
+        //goto *seed->adr;
     }
 
-    free(buf);
+    DEBUG_PRINT("\tSecond child returns first.\n");
+    switchToSysStackAndFree(buf);
+    // sp -> sysStack
     suspend();
 }
 
@@ -78,6 +107,7 @@ stubRoutine()
 void
 stackletFork(Seed* seed)
 {
+    DEBUG_PRINT("Forking a stacklet.\n");
     seed->joinCounter = 2;
     void* stackletBuf = calloc(1, STACKLET_SIZE);
     stubBase = stackletBuf + STACKLET_SIZE;
@@ -88,7 +118,8 @@ stackletFork(Seed* seed)
     stackletStub->stubRoutine = stubRoutine;
 
     setArgument(seed->argv);
-    void* routine = seed->routine;
+    restoreStackPointer(stackletStub);
+    void* routine = seed->routine; //XXX rsp is already changed
     goto *routine;
 }
 
@@ -97,9 +128,8 @@ stackletFork(Seed* seed)
 //
 // The current user thread will be lost if it is not put into the readyQ before
 // calling this function. This funciton is executed in a separate system stack.
-__attribute__ ((used))
 void
-realSuspend()
+suspend()
 {
     for (;;)
     {
@@ -119,7 +149,7 @@ realSuspend()
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
-            DEBUG_PRINT("find a ready thread\n");
+            DEBUG_PRINT("Are to resume a ready thread.\n");
             restoreStackPointer(ready->sp);
             goto *ready->adr;
         }
@@ -140,26 +170,36 @@ realSuspend()
 //    }
 //}
 
+#define labelhack(x) \
+    asm goto("" : : : : x)
+
 void
 yield(void)
 {
+    DEBUG_PRINT("Put self in readyQ and suspend\n");
     Registers saveArea;
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
+    labelhack(Resume);
     enqReadyQ(&&Resume, stackPointer);
+
+    switchToSysStack();
+    // rsp -> sysStack
 	suspend(); // suspend will never return
+
 Resume:
-    deqReadyQ();
     restoreRegisters();
+    deqReadyQ();
+    DEBUG_PRINT("Resumed a ready thread.\n");
 }
 
 void
 fib(void* F)
 {
     Foo* f = (Foo *)F;
-    DEBUG_PRINT("n = %d\n", f->input);
     bp();
+    DEBUG_PRINT("[n = %d]\n", f->input);
     volatile Registers saveArea;
 
     if (f->input <= 2)
@@ -188,20 +228,35 @@ fib(void* F)
     saveRegisters();
     fib(a);
 
-    if (seed->activated && --seed->joinCounter)
+    if (seed->activated)
     {
-        suspend();
+        if (--seed->joinCounter) {
+            DEBUG_PRINT("First child returns first.\n");
+            switchToSysStack();
+            // rsp -> sysStack
+            suspend();
+        } else {
+            goto FirstChildDone;
+        }
     }
     
     popSeed(seed);
     fib(b);
     f->output = a->output + b->output;
+    DEBUG_PRINT("Normal return from n = %d\n", f->input);
+    return;
+
+FirstChildDone:
+    popSeed(seed);
+    f->output = a->output + b->output;
+    DEBUG_PRINT("First child return from n = %d\n", f->input);
     return;
 
 SecondChildDone:
     popSeed(seed);
     restoreRegisters(); // foo, a, b may be stored in any of the registers
     f->output = a->output + b->output;
+    DEBUG_PRINT("Second child return from n = %d\n", f->input);
 }
 
 int 

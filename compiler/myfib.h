@@ -4,7 +4,7 @@
 #pragma once
 #include <stdlib.h>
 
-void _suspend();
+void suspend();
 
 typedef struct {
     int input;
