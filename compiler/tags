@@ -1,0 +1,365 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CC	Makefile	/^CC=gcc-4.8$/;"	m
+CFLAGS	Makefile	/^CFLAGS=-g$/;"	m
+Cont2ReadyQ	draft/fib.h	/^#define Cont2ReadyQ(/;"	d
+Continuation	draft/fib.c	/^} Continuation;$/;"	t	typeref:struct:__anon1	file:
+DEPS	Makefile	/^DEPS = myfib.h seedStack.h readyQ.h$/;"	m
+EH_frame1	myfib.s	/^EH_frame1:$/;"	l
+Foo	myfib.h	/^} Foo;$/;"	t	typeref:struct:__anon4
+L10	myfib.s	/^L10:$/;"	l
+L11	draft/fib.s	/^L11:$/;"	l
+L11	myfib.s	/^L11:$/;"	l
+L12	draft/fib.s	/^L12:$/;"	l
+L12	myfib.s	/^L12:$/;"	l
+L13	myfib.s	/^L13:$/;"	l
+L14	draft/fib.s	/^L14:$/;"	l
+L15	myfib.s	/^L15:$/;"	l
+L17	myfib.s	/^L17:$/;"	l
+L18	myfib.s	/^L18:$/;"	l
+L2	draft/fib.s	/^L2:$/;"	l
+L20	myfib.s	/^L20:$/;"	l
+L24	myfib.s	/^L24:$/;"	l
+L25	myfib.s	/^L25:$/;"	l
+L3	draft/fib.s	/^L3:$/;"	l
+L4	myfib.s	/^L4:$/;"	l
+L5	myfib.s	/^L5:$/;"	l
+L6	draft/fib.s	/^L6:$/;"	l
+L8	draft/fib.s	/^L8:$/;"	l
+L9	myfib.s	/^L9:$/;"	l
+LASFDE1	myfib.s	/^LASFDE1:$/;"	l
+LASFDE11	myfib.s	/^LASFDE11:$/;"	l
+LASFDE13	myfib.s	/^LASFDE13:$/;"	l
+LASFDE15	myfib.s	/^LASFDE15:$/;"	l
+LASFDE17	myfib.s	/^LASFDE17:$/;"	l
+LASFDE19	myfib.s	/^LASFDE19:$/;"	l
+LASFDE21	myfib.s	/^LASFDE21:$/;"	l
+LASFDE3	myfib.s	/^LASFDE3:$/;"	l
+LASFDE5	myfib.s	/^LASFDE5:$/;"	l
+LASFDE7	myfib.s	/^LASFDE7:$/;"	l
+LASFDE9	myfib.s	/^LASFDE9:$/;"	l
+LC0	draft/fib.s	/^LC0:$/;"	l
+LC0	myfib.s	/^LC0:$/;"	l
+LC1	draft/fib.s	/^LC1:$/;"	l
+LC1	myfib.s	/^LC1:$/;"	l
+LC2	draft/fib.s	/^LC2:$/;"	l
+LC2	myfib.s	/^LC2:$/;"	l
+LC3	draft/fib.s	/^LC3:$/;"	l
+LC3	myfib.s	/^LC3:$/;"	l
+LC4	draft/fib.s	/^LC4:$/;"	l
+LCFI0	draft/fib.s	/^LCFI0:$/;"	l
+LCFI0	myfib.s	/^LCFI0:$/;"	l
+LCFI1	draft/fib.s	/^LCFI1:$/;"	l
+LCFI1	myfib.s	/^LCFI1:$/;"	l
+LCFI10	draft/fib.s	/^LCFI10:$/;"	l
+LCFI10	myfib.s	/^LCFI10:$/;"	l
+LCFI11	draft/fib.s	/^LCFI11:$/;"	l
+LCFI11	myfib.s	/^LCFI11:$/;"	l
+LCFI12	draft/fib.s	/^LCFI12:$/;"	l
+LCFI12	myfib.s	/^LCFI12:$/;"	l
+LCFI13	draft/fib.s	/^LCFI13:$/;"	l
+LCFI13	myfib.s	/^LCFI13:$/;"	l
+LCFI14	myfib.s	/^LCFI14:$/;"	l
+LCFI15	myfib.s	/^LCFI15:$/;"	l
+LCFI16	myfib.s	/^LCFI16:$/;"	l
+LCFI17	myfib.s	/^LCFI17:$/;"	l
+LCFI18	myfib.s	/^LCFI18:$/;"	l
+LCFI19	myfib.s	/^LCFI19:$/;"	l
+LCFI2	draft/fib.s	/^LCFI2:$/;"	l
+LCFI2	myfib.s	/^LCFI2:$/;"	l
+LCFI20	myfib.s	/^LCFI20:$/;"	l
+LCFI21	myfib.s	/^LCFI21:$/;"	l
+LCFI22	myfib.s	/^LCFI22:$/;"	l
+LCFI23	myfib.s	/^LCFI23:$/;"	l
+LCFI24	myfib.s	/^LCFI24:$/;"	l
+LCFI25	myfib.s	/^LCFI25:$/;"	l
+LCFI26	myfib.s	/^LCFI26:$/;"	l
+LCFI27	myfib.s	/^LCFI27:$/;"	l
+LCFI28	myfib.s	/^LCFI28:$/;"	l
+LCFI29	myfib.s	/^LCFI29:$/;"	l
+LCFI3	draft/fib.s	/^LCFI3:$/;"	l
+LCFI3	myfib.s	/^LCFI3:$/;"	l
+LCFI30	myfib.s	/^LCFI30:$/;"	l
+LCFI4	draft/fib.s	/^LCFI4:$/;"	l
+LCFI4	myfib.s	/^LCFI4:$/;"	l
+LCFI5	draft/fib.s	/^LCFI5:$/;"	l
+LCFI5	myfib.s	/^LCFI5:$/;"	l
+LCFI6	draft/fib.s	/^LCFI6:$/;"	l
+LCFI6	myfib.s	/^LCFI6:$/;"	l
+LCFI7	draft/fib.s	/^LCFI7:$/;"	l
+LCFI7	myfib.s	/^LCFI7:$/;"	l
+LCFI8	draft/fib.s	/^LCFI8:$/;"	l
+LCFI8	myfib.s	/^LCFI8:$/;"	l
+LCFI9	draft/fib.s	/^LCFI9:$/;"	l
+LCFI9	myfib.s	/^LCFI9:$/;"	l
+LECIE1	myfib.s	/^LECIE1:$/;"	l
+LEFDE1	myfib.s	/^LEFDE1:$/;"	l
+LEFDE11	myfib.s	/^LEFDE11:$/;"	l
+LEFDE13	myfib.s	/^LEFDE13:$/;"	l
+LEFDE15	myfib.s	/^LEFDE15:$/;"	l
+LEFDE17	myfib.s	/^LEFDE17:$/;"	l
+LEFDE19	myfib.s	/^LEFDE19:$/;"	l
+LEFDE21	myfib.s	/^LEFDE21:$/;"	l
+LEFDE3	myfib.s	/^LEFDE3:$/;"	l
+LEFDE5	myfib.s	/^LEFDE5:$/;"	l
+LEFDE7	myfib.s	/^LEFDE7:$/;"	l
+LEFDE9	myfib.s	/^LEFDE9:$/;"	l
+LFB10	myfib.s	/^LFB10:$/;"	l
+LFB11	myfib.s	/^LFB11:$/;"	l
+LFB12	myfib.s	/^LFB12:$/;"	l
+LFB13	myfib.s	/^LFB13:$/;"	l
+LFB14	myfib.s	/^LFB14:$/;"	l
+LFB4	draft/fib.s	/^LFB4:$/;"	l
+LFB4	myfib.s	/^LFB4:$/;"	l
+LFB5	draft/fib.s	/^LFB5:$/;"	l
+LFB5	myfib.s	/^LFB5:$/;"	l
+LFB6	draft/fib.s	/^LFB6:$/;"	l
+LFB6	myfib.s	/^LFB6:$/;"	l
+LFB7	draft/fib.s	/^LFB7:$/;"	l
+LFB7	myfib.s	/^LFB7:$/;"	l
+LFB8	draft/fib.s	/^LFB8:$/;"	l
+LFB8	myfib.s	/^LFB8:$/;"	l
+LFB9	myfib.s	/^LFB9:$/;"	l
+LFE10	myfib.s	/^LFE10:$/;"	l
+LFE11	myfib.s	/^LFE11:$/;"	l
+LFE12	myfib.s	/^LFE12:$/;"	l
+LFE13	myfib.s	/^LFE13:$/;"	l
+LFE14	myfib.s	/^LFE14:$/;"	l
+LFE4	draft/fib.s	/^LFE4:$/;"	l
+LFE4	myfib.s	/^LFE4:$/;"	l
+LFE5	draft/fib.s	/^LFE5:$/;"	l
+LFE5	myfib.s	/^LFE5:$/;"	l
+LFE6	draft/fib.s	/^LFE6:$/;"	l
+LFE6	myfib.s	/^LFE6:$/;"	l
+LFE7	draft/fib.s	/^LFE7:$/;"	l
+LFE7	myfib.s	/^LFE7:$/;"	l
+LFE8	draft/fib.s	/^LFE8:$/;"	l
+LFE8	myfib.s	/^LFE8:$/;"	l
+LFE9	myfib.s	/^LFE9:$/;"	l
+LSCIE1	myfib.s	/^LSCIE1:$/;"	l
+LSFDE1	myfib.s	/^LSFDE1:$/;"	l
+LSFDE11	myfib.s	/^LSFDE11:$/;"	l
+LSFDE13	myfib.s	/^LSFDE13:$/;"	l
+LSFDE15	myfib.s	/^LSFDE15:$/;"	l
+LSFDE17	myfib.s	/^LSFDE17:$/;"	l
+LSFDE19	myfib.s	/^LSFDE19:$/;"	l
+LSFDE21	myfib.s	/^LSFDE21:$/;"	l
+LSFDE3	myfib.s	/^LSFDE3:$/;"	l
+LSFDE5	myfib.s	/^LSFDE5:$/;"	l
+LSFDE7	myfib.s	/^LSFDE7:$/;"	l
+LSFDE9	myfib.s	/^LSFDE9:$/;"	l
+L_str	draft/test.s	/^L_str:                                  ## @str$/;"	l
+Ltmp0	draft/test.s	/^Ltmp0:$/;"	l
+Ltmp1	draft/test.s	/^Ltmp1:$/;"	l
+Ltmp2	draft/test.s	/^Ltmp2:$/;"	l
+Ltmp3	draft/test.s	/^Ltmp3:$/;"	l
+Ltmp4	draft/test.s	/^Ltmp4:$/;"	l
+Ltmp5	draft/test.s	/^Ltmp5:$/;"	l
+OBJ	Makefile	/^OBJ = myfib.o seedStack.o readyQ.o$/;"	m
+ReadyThread	readyQ.h	/^typedef struct ReadyThread {$/;"	s
+ReadyThread	readyQ.h	/^} ReadyThread;$/;"	t	typeref:struct:ReadyThread
+ReadyThreadHead	readyQ.h	/^typedef struct ReadyThreadHead{$/;"	s
+ReadyThreadHead	readyQ.h	/^} ReadyThreadHead;$/;"	t	typeref:struct:ReadyThreadHead
+Registers	draft/fib.c	/^typedef uint64_t Registers[16];$/;"	t	file:
+Registers	myfib.h	/^typedef uint64_t Registers[16];$/;"	t
+STACKLET_SIZE	draft/fib.c	/^#define STACKLET_SIZE /;"	d	file:
+Seed	seedStack.h	/^typedef struct Seed {$/;"	s
+Seed	seedStack.h	/^} Seed;$/;"	t	typeref:struct:Seed
+Stub	draft/fib.c	/^} Stub;$/;"	t	typeref:struct:__anon2	file:
+SuspendOption	myfib.c	/^} SuspendOption;$/;"	t	typeref:enum:__anon3	file:
+Terminate	myfib.c	/^    Terminate,$/;"	e	enum:__anon3	file:
+Yield	myfib.c	/^    Yield$/;"	e	enum:__anon3	file:
+_dequeue	draft/fib.s	/^_dequeue:$/;"	l
+_dequeue	myfib.s	/^_dequeue:$/;"	l
+_die	draft/fib.s	/^_die:$/;"	l
+_die	myfib.s	/^_die:$/;"	l
+_fib	myfib.s	/^_fib:$/;"	l
+_foo	draft/test.s	/^_foo:                                   ## @foo$/;"	l
+_main	draft/test.s	/^_main:                                  ## @main$/;"	l
+_main	myfib.s	/^_main:$/;"	l
+_popseed	draft/fib.s	/^_popseed:$/;"	l
+_popseed	myfib.s	/^_popseed:$/;"	l
+_readQInit	myfib.s	/^_readQInit:$/;"	l
+_seedStackInit	myfib.s	/^_seedStackInit:$/;"	l
+_startfib	myfib.s	/^_startfib:$/;"	l
+_stubRoutine	myfib.s	/^_stubRoutine:$/;"	l
+_suspHere	draft/fib.s	/^_suspHere:$/;"	l
+_suspHere	myfib.s	/^_suspHere:$/;"	l
+_suspend	draft/fib.s	/^_suspend:$/;"	l
+_suspend	myfib.s	/^_suspend:$/;"	l
+_testHack	draft/fib.s	/^_testHack:$/;"	l
+_testHack	myfib.s	/^_testHack:$/;"	l
+activated	seedStack.h	/^    int activated;$/;"	m	struct:Seed
+adjustChildReturnAdr	draft/fib.h	/^#define adjustChildReturnAdr(/;"	d
+adr	draft/fib.c	/^	void* adr;$/;"	m	struct:__anon1	file:
+adr	seedStack.h	/^    void* adr;$/;"	m	struct:Seed
+argv	seedStack.h	/^    void* argv;$/;"	m	struct:Seed
+back	readyQ.h	/^    struct ReadyThread* back;$/;"	m	struct:ReadyThreadHead	typeref:struct:ReadyThreadHead::ReadyThread
+bar	draft/orig_two_forks.s	/^bar:$/;"	l
+buf	draft/test.c	/^jmp_buf buf;$/;"	v
+checkcont	draft/orig_two_forks.s	/^checkcont:$/;"	l
+checkcont_end	draft/orig_two_forks.s	/^checkcont_end:$/;"	l
+cont	draft/orig_two_forks.s	/^cont:$/;"	l
+deqReadyQ	readyQ.c	/^void deqReadyQ()$/;"	f
+dequeue	draft/fib.c	/^void dequeue()$/;"	f
+deschedule	draft/orig_two_forks.s	/^deschedule:$/;"	l
+die	draft/fib.c	/^void die(char* str)$/;"	f
+die	myfib.c	/^void die(char* str)$/;"	f
+enqReadyQ	readyQ.c	/^void enqReadyQ(void *stackPointer)$/;"	f
+fib	draft/fib.c	/^fib(int n)$/;"	f
+fib	draft/two_forks.c	/^int fib(int n) {$/;"	f
+fib	myfib.c	/^fib(void* F)$/;"	f
+foo	draft/example.c	/^pfunc foo;$/;"	v
+foo	draft/orig_two_forks.s	/^foo:$/;"	l
+foo	draft/test.c	/^void foo()$/;"	f
+foo_steal	draft/orig_two_forks.s	/^foo_steal:$/;"	l
+foo_stub	draft/orig_two_forks.s	/^foo_stub:$/;"	l
+foo_susp	draft/orig_two_forks.s	/^foo_susp:$/;"	l
+fork	draft/fib.c	/^fork(void* retAdr, uint64_t fp, int (*func)(int), int n)$/;"	f
+fork	draft/orig_two_forks.s	/^fork:$/;"	l
+forkAndReturn	draft/fib.c	/^forkAndReturn(void* retAdr, uint64_t fp, int (*func)(int), int n)$/;"	f
+fp	draft/fib.c	/^	void* fp;$/;"	m	struct:__anon1	file:
+fp	draft/fib.c	/^    uint64_t fp;$/;"	m	struct:__anon2	file:
+front	readyQ.h	/^    struct ReadyThread* front;$/;"	m	struct:ReadyThreadHead	typeref:struct:ReadyThreadHead::ReadyThread
+getFramePointer	draft/fib.h	/^#define getFramePointer(/;"	d
+getIntReturnValue	draft/fib.h	/^#define getIntReturnValue(/;"	d
+getStackPointer	draft/fib.h	/^#define getStackPointer(/;"	d
+getStackPointer	myfib.h	/^#define getStackPointer(/;"	d
+get_id	draft/orig_two_forks.s	/^get_id:$/;"	l
+global	draft/test.c	/^int global;$/;"	v
+initSeed	seedStack.c	/^Seed* initSeed(void* adr, void* sp, void (*routine)(void *), void* argv)$/;"	f
+inlet_bar	draft/orig_two_forks.s	/^inlet_bar:$/;"	l
+inlet_foo	draft/orig_two_forks.s	/^inlet_foo:$/;"	l
+input	myfib.h	/^    int input;$/;"	m	struct:__anon4
+joinCounter	seedStack.h	/^    int joinCounter;$/;"	m	struct:Seed
+main	draft/example.c	/^int main()$/;"	f
+main	draft/example.s	/^main:$/;"	l
+main	draft/fib.c	/^main(int argc, char** argv)$/;"	f
+main	draft/orig_two_forks.s	/^main:$/;"	l
+main	draft/test.c	/^int main()$/;"	f
+main	draft/two_forks.c	/^int main() {$/;"	f
+main	myfib.c	/^main(int argc, char** argv)$/;"	f
+movq	draft/fib.s	/^movq -104(%rbp),rsp   $/;"	l
+movq	draft/fib.s	/^movq -112(%rbp),rbx   $/;"	l
+movq	draft/fib.s	/^movq -120(%rbp),rdx   $/;"	l
+movq	draft/fib.s	/^movq -24(%rbp),r15  $/;"	l
+movq	draft/fib.s	/^movq -32(%rbp),r14  $/;"	l
+movq	draft/fib.s	/^movq -40(%rbp),r13  $/;"	l
+movq	draft/fib.s	/^movq -48(%rbp),r12  $/;"	l
+movq	draft/fib.s	/^movq -56(%rbp),r11  $/;"	l
+movq	draft/fib.s	/^movq -64(%rbp),r10  $/;"	l
+movq	draft/fib.s	/^movq -72(%rbp),r9    $/;"	l
+movq	draft/fib.s	/^movq -80(%rbp),r8    $/;"	l
+movq	draft/fib.s	/^movq -88(%rbp),rdi   $/;"	l
+movq	draft/fib.s	/^movq -96(%rbp),rsi   $/;"	l
+movq	draft/fib.s	/^movq r10,-64(%rbp) $/;"	l
+movq	draft/fib.s	/^movq r11,-56(%rbp) $/;"	l
+movq	draft/fib.s	/^movq r12,-48(%rbp) $/;"	l
+movq	draft/fib.s	/^movq r13,-40(%rbp) $/;"	l
+movq	draft/fib.s	/^movq r14,-32(%rbp) $/;"	l
+movq	draft/fib.s	/^movq r15,-24(%rbp) $/;"	l
+movq	draft/fib.s	/^movq r8,-80(%rbp)   $/;"	l
+movq	draft/fib.s	/^movq r9,-72(%rbp)   $/;"	l
+movq	draft/fib.s	/^movq rbx,-112(%rbp)  $/;"	l
+movq	draft/fib.s	/^movq rdi,-88(%rbp)  $/;"	l
+movq	draft/fib.s	/^movq rdx,-120(%rbp)  $/;"	l
+movq	draft/fib.s	/^movq rsi,-96(%rbp)  $/;"	l
+movq	draft/fib.s	/^movq rsp,-104(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r10,-80(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r10,-96(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r11,-72(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r11,-88(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r12,-64(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r12,-80(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r13,-56(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r13,-72(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r14,-48(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r14,-64(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r15,-40(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r15,-56(%rbp)  $/;"	l
+movq	myfib.s	/^movq %r8,-112(%rbp)    $/;"	l
+movq	myfib.s	/^movq %r8,-96(%rbp)    $/;"	l
+movq	myfib.s	/^movq %r9,-104(%rbp)    $/;"	l
+movq	myfib.s	/^movq %r9,-88(%rbp)    $/;"	l
+movq	myfib.s	/^movq %rax,-32(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rax,-48(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rbx,-128(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rbx,-144(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rdi,-104(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rdi,-120(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rdx,-136(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rdx,-152(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rsi,-112(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rsi,-128(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rsp,-120(%rbp)   $/;"	l
+movq	myfib.s	/^movq %rsp,-136(%rbp)   $/;"	l
+movq	myfib.s	/^movq -104(%rbp),%rdi   $/;"	l
+movq	myfib.s	/^movq -112(%rbp),%rsi   $/;"	l
+movq	myfib.s	/^movq -120(%rbp),%rsp   $/;"	l
+movq	myfib.s	/^movq -128(%rbp),%rbx   $/;"	l
+movq	myfib.s	/^movq -136(%rbp),%rdx   $/;"	l
+movq	myfib.s	/^movq -32(%rbp),%rax   $/;"	l
+movq	myfib.s	/^movq -40(%rbp),%r15  $/;"	l
+movq	myfib.s	/^movq -48(%rbp),%r14  $/;"	l
+movq	myfib.s	/^movq -56(%rbp),%r13  $/;"	l
+movq	myfib.s	/^movq -64(%rbp),%r12  $/;"	l
+movq	myfib.s	/^movq -72(%rbp),%r11  $/;"	l
+movq	myfib.s	/^movq -80(%rbp),%r10  $/;"	l
+movq	myfib.s	/^movq -88(%rbp),%r9    $/;"	l
+movq	myfib.s	/^movq -96(%rbp),%r8    $/;"	l
+next	readyQ.h	/^    struct ReadyThread* next;$/;"	m	struct:ReadyThread	typeref:struct:ReadyThread::ReadyThread
+next	seedStack.h	/^    struct Seed* next;$/;"	m	struct:Seed	typeref:struct:Seed::Seed
+output	myfib.h	/^    int output;$/;"	m	struct:__anon4
+pfunc	draft/example.c	/^typedef void *(*pfunc)(void *);$/;"	t	file:
+popSeed	seedStack.c	/^void popSeed(Seed* seed)$/;"	f
+pop_seed	draft/two_forks.c	/^void *pop_seed()$/;"	f
+popseed	draft/fib.c	/^Continuation* popseed()$/;"	f
+prev	seedStack.h	/^    struct Seed* prev;$/;"	m	struct:Seed	typeref:struct:Seed::Seed
+pushSeed	seedStack.c	/^void pushSeed(Seed* seed)$/;"	f
+push_seed	draft/two_forks.c	/^void push_seed(void *seed)$/;"	f
+pushseed	draft/fib.h	/^#define pushseed(/;"	d
+readyDummyHead	readyQ.h	/^ReadyThreadHead* readyDummyHead;$/;"	v
+readyQ	draft/fib.c	/^Continuation readyQ[128];$/;"	v
+readyQBack	draft/fib.c	/^int readyQBack = 0;$/;"	v
+readyQFront	draft/fib.c	/^int readyQFront = 0;$/;"	v
+readyQInit	readyQ.c	/^void readyQInit()$/;"	f
+restoreFramePointer	draft/fib.h	/^#define restoreFramePointer(/;"	d
+restoreRegisters	draft/fib.h	/^#define restoreRegisters(/;"	d
+restoreRegisters	myfib.h	/^#define restoreRegisters(/;"	d
+restoreStackPointer	draft/fib.h	/^#define restoreStackPointer(/;"	d
+restoreStackPointer	myfib.h	/^#define restoreStackPointer(/;"	d
+retAdr	draft/fib.c	/^    void* retAdr;$/;"	m	struct:__anon2	file:
+routine	seedStack.h	/^    void (*routine)(void *);$/;"	m	struct:Seed
+saveRegisters	draft/fib.h	/^#define saveRegisters(/;"	d
+saveRegisters	myfib.h	/^#define saveRegisters(/;"	d
+seedDummyHead	seedStack.h	/^Seed* seedDummyHead;$/;"	v
+seedStack	draft/fib.c	/^Continuation seedStack[128];$/;"	v
+seedStackInit	seedStack.c	/^void seedStackInit()$/;"	f
+seedStackPtr	draft/fib.c	/^int seedStackPtr = 0;$/;"	v
+seed_stack	draft/two_forks.c	/^void *seed_stack[1000];$/;"	v
+seed_top	draft/two_forks.c	/^int seed_top = -1;$/;"	v
+sp	readyQ.h	/^    void* sp;$/;"	m	struct:ReadyThread
+sp	seedStack.h	/^    void* sp;$/;"	m	struct:Seed
+startfib	draft/fib.c	/^startfib(int n)$/;"	f
+startfib	myfib.c	/^startfib(int n)$/;"	f
+stubRoutine	draft/fib.c	/^    void (*stubRoutine)();$/;"	m	struct:__anon2	file:
+stubRoutine	draft/fib.c	/^void stubRoutine()$/;"	f
+stub_handler	draft/orig_two_forks.s	/^stub_handler:$/;"	l
+suspCtr	draft/fib.c	/^static int suspCtr = 0;$/;"	v	file:
+suspCtr	myfib.c	/^static int suspCtr = 0;$/;"	v	file:
+suspHere	draft/fib.c	/^static int suspHere = 10;$/;"	v	file:
+suspHere	myfib.c	/^static int suspHere = 10;$/;"	v	file:
+suspend	draft/fib.c	/^suspend(void)$/;"	f
+suspend	draft/orig_two_forks.s	/^suspend:$/;"	l
+suspend	myfib.c	/^suspend(SuspendOption option)$/;"	f
+t	draft/example.c	/^int t;$/;"	v
+testHack	draft/fib.c	/^testHack(void)$/;"	f
+testHack	myfib.c	/^testHack(void)$/;"	f
+thread	draft/two_forks.c	/^void thread() {$/;"	f
+top	draft/fib.c	/^    uint64_t top;$/;"	m	struct:__anon2	file:
+unsuspend	draft/orig_two_forks.s	/^unsuspend:$/;"	l
+yield	draft/two_forks.c	/^void yield() {$/;"	f
