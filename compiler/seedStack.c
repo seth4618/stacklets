@@ -10,7 +10,8 @@ void seedStackInit()
     seedDummyHead = (Seed *)calloc(1, sizeof(Seed));
 }
 
-Seed* initSeed(void* adr, void* sp, void (*routine)(void *), void* argv)
+Seed* initSeed(void* adr, void* sp, void (*routine)(void *), void* argv,
+               void* parentStubBase)
 {
     Seed* seed = calloc(1, sizeof(Seed));
     seed->adr = adr;
@@ -18,6 +19,7 @@ Seed* initSeed(void* adr, void* sp, void (*routine)(void *), void* argv)
     seed->routine = routine;
     seed->argv = argv;
     seed->id = current_id++;
+    seed->parentStubBase = parentStubBase;
     return seed;
 }
 

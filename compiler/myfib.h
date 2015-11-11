@@ -21,7 +21,6 @@ typedef struct {
 
 typedef uint64_t Registers[16];
 
-
 #define SYSTEM_STACK_SIZE   8192
 #define STACKLET_SIZE       32768
 
@@ -36,11 +35,11 @@ asm volatile("movq %[Abuf],%%rdi \n"\
              "call _free \n"\
              :\
              : [Abuf] "r" (buf),\
-               [AsystemStack] "m" (systemStack)\
-             : "rdi");} while (0)
+               [AsystemStack] "m" (systemStack));} while (0)
 
-#define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
-asm volatile("movq %[Abuf],%%rdi \n"\
+#define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
+asm volatile("movq %[AparentSB], %[AStubBase] \n"\
+             "movq %[Abuf],%%rdi \n"\
              "movq %[AsystemStack],%%rsp \n"\
              "pushq %[Asp] \n"\
              "pushq %[Aadr] \n"\
@@ -49,11 +48,12 @@ asm volatile("movq %[Abuf],%%rdi \n"\
              "popq %%rax \n"\
              "movq %%rax,%%rsp \n"\
              "jmp *%%rbx \n"\
-             :\
+             : [AStubBase] "=m" (stubBase) \
              : [Abuf] "r" (buf),\
                [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
-               [AsystemStack] "m" (systemStack));} while (0)
+               [AsystemStack] "m" (systemStack),\
+               [AparentSB] "r" (parentSB));} while (0)
 
 #define setArgument(x) do { \
 asm volatile("movq %[argv],%%rdi \n"\

@@ -16,7 +16,7 @@ void die(char* str)
 }
 
 static int suspCtr = 0;
-static int suspHere = 1;
+static int suspHere = 2;
 
 void* systemStack;
 
@@ -34,10 +34,10 @@ typedef struct {
     void* stackletBuf;
 } Stub;
 
-void* stubBase;
+void* volatile stubBase;
 
 void
-stubRoutine()
+stubRoutineFunctionWrapper()
 {
     DEBUG_PRINT("In stub routine.\n");
     Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
@@ -47,19 +47,20 @@ stubRoutine()
     if (--seed->joinCounter == 0)
     {
         DEBUG_PRINT("\tFirst child returns first.\n");
-        //void* buf = stackletStub->stackletBuf;
-        switchToSysStackAndFreeAndResume(buf, seed->sp, seed->adr);
-        // sp -> sysStack
-        //restoreStackPointer(seed->sp);
-        //goto *seed->adr;
+        switchToSysStackAndFreeAndResume(buf, seed->sp, seed->adr,
+                                         seed->parentStubBase);
     }
 
-    //void* buf = stackletStub->stackletBuf;
     DEBUG_PRINT("\tSecond child returns first.\n");
-    //DEBUG_PRINT("\tGoing to free stacklet %x.\n", buf);
     switchToSysStackAndFree(buf);
     // sp -> sysStack
     suspend();
+}
+
+void
+stubRoutine()
+{
+    stubRoutineFunctionWrapper();
 }
 
 // Create a new stacklet to run the seed.
@@ -78,9 +79,9 @@ stackletFork(Seed* seed)
     stackletStub->stubRoutine = stubRoutine;
 
     setArgument(seed->argv);
+    void* routine = seed->routine; 
     restoreStackPointer(stackletStub);
-    void* routine = seed->routine; //XXX rsp is already changed
-    goto *routine;
+    goto *routine; //XXX rsp is already changed
 }
 
 // Context switch to another user thread in readyQ (explicit seed) or in seed
@@ -125,7 +126,7 @@ yield(void)
     labelhack(Resume);
 
     DEBUG_PRINT("Put self in readyQ and suspend\n");
-    Registers saveArea;
+    volatile Registers saveArea;
     void* volatile localStubBase = stubBase;
     DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
     saveRegisters();
@@ -152,7 +153,7 @@ fib(void* F)
 
     Foo* volatile f = (Foo *)F;
     bp();
-    Registers volatile saveArea;
+    Registers volatile saveArea; //XXX can this make sure saveArea is on the stack
 
     if (f->input <= 2)
     {
@@ -178,7 +179,7 @@ fib(void* F)
 
     void* stackPointer;
     getStackPointer(stackPointer);
-    Seed* volatile seed = initSeed(&&SecondChildDone, stackPointer, fib, (void *)b);
+    Seed* volatile seed = initSeed(&&SecondChildDone, stackPointer, fib, (void *)b, stubBase);
     pushSeed(seed);
 
     saveRegisters();
