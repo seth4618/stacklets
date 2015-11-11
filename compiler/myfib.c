@@ -2,18 +2,11 @@
 #include "myfib.h"
 #include "seedStack.h"
 #include "readyQ.h"
-#include <stdio.h>
 #include <pthread.h>
 #include <assert.h>
 
 #define EMBED_BREAKPOINT bp()
 void bp(void) {}
-
-#ifdef DEBUG
-#define DEBUG_PRINT(fmt, args...)    fprintf(stderr, fmt, ## args)
-#else
-#define DEBUG_PRINT(fmt, args...)    /* Don't do anything in release builds */
-#endif
 
 // helper functions
 void die(char* str)
@@ -91,6 +84,7 @@ stubRoutine()
  
     if (--seed->joinCounter == 0)
     {
+        DEBUG_PRINT("\tFirst child returns first.\n");
         switchToSysStackAndFreeAndResume(buf, seed->sp, seed->adr);
         // sp -> sysStack
         //restoreStackPointer(seed->sp);
@@ -149,7 +143,7 @@ suspend()
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
-            DEBUG_PRINT("Are to resume a ready thread.\n");
+            //DEBUG_PRINT("Are to resume a ready thread.\n");
             restoreStackPointer(ready->sp);
             goto *ready->adr;
         }
@@ -178,6 +172,7 @@ yield(void)
 {
     DEBUG_PRINT("Put self in readyQ and suspend\n");
     Registers saveArea;
+    void* localStubBase = stubBase;
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
@@ -191,6 +186,7 @@ yield(void)
 Resume:
     restoreRegisters();
     deqReadyQ();
+    stubBase = localStubBase;
     DEBUG_PRINT("Resumed a ready thread.\n");
 }
 
@@ -199,11 +195,11 @@ fib(void* F)
 {
     Foo* f = (Foo *)F;
     bp();
-    DEBUG_PRINT("[n = %d]\n", f->input);
     volatile Registers saveArea;
 
     if (f->input <= 2)
     {
+        DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
         f->output = 1;
         return;
     }
@@ -213,12 +209,15 @@ fib(void* F)
         suspCtr = 0;
         yield();
     }
+    DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
     //testHack();
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     Foo* b = (Foo *)calloc(1, sizeof(Foo));
     a->input = f->input - 1;
+    a->depth = f->depth + 1;
     b->input = f->input - 2;
+    b->depth = f->depth + 1;
 
     void* stackPointer;
     getStackPointer(stackPointer);
@@ -268,6 +267,7 @@ startfib(int n)
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
+    a->depth = 1;
     fib(a);
     return a->output;
 }

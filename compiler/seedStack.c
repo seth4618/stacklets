@@ -1,6 +1,7 @@
 // @file seedStack.c
 #include "seedStack.h"
 #include "stdlib.h"
+#include "myfib.h"
 
 void seedStackInit()
 {
@@ -19,6 +20,7 @@ Seed* initSeed(void* adr, void* sp, void (*routine)(void *), void* argv)
 
 void pushSeed(Seed* seed)
 {
+    DEBUG_PRINT("Push seed %d\n", ((Foo *)(seed->argv))->input);
     Seed* origHead = seedDummyHead->next;
     seedDummyHead->next = seed;
     seed->prev = seedDummyHead;
@@ -28,6 +30,7 @@ void pushSeed(Seed* seed)
 
 void popSeed(Seed* seed)
 {
+    DEBUG_PRINT("Pop seed %d\n", ((Foo *)(seed->argv))->input);
     seed->prev->next = seed->next;
     if (seed->next) seed->next->prev = seed->prev;
     free(seed);
