@@ -1,0 +1,34 @@
+The following is the discussed plan for moodifying architectural components for
+stacklets.
+
+The following tasks are pertaining to gem5. Pin should be similar:
+1. Understand the code pertaining to pipelining (especially the fetch phase)
+2. Implement two new instructions pertaining to stacklets:
+    2.1 MOVIADR - this instruction moves the address given by the SENDI
+    instruction to destination register.
+    2.2 RETULI - this instruction denotes the return from user-level interrupts
+    and the pipeline is restored to how it was executing prior to the interrupt.
+3. Algorithm:
+    3.1 In fetch, before processing the instruction at hand, first check if there are
+    any interrupts. If so, store the current PC into a register (to restore later)
+    and load the interrupt handler's PC.
+      - SENDI ideally has to have 4 parameters:
+        - Who is to be interrupted
+        - PC (interrupt handler PC)
+        - data pointer (address)
+        - Mask (denoting which interrupts to mask)
+        - We are going to have the mask hard-coded in the instr as of now
+        - We are going to have the PC as the first 8 bytes of the memory pointed to
+          by the data pointer.
+        - Thus, SENDI now has 2 parameters whom_to_interrupt, data_pointer
+        - In fetch, we will introduce a bubble of a few cycles / instructions (say 8
+          for now). We will know this with accuracy once we know exactly what the
+          handlers are supposed to do.
+    3.2 Apart from modifying fetch, there is nothing to be done. The pipeline should
+    then drain as it would have, just with the correct instructions depending on the
+    interrupt.
+    3.3. On receiving a RETULI, the PC that was withheld will be restored and
+    previous instructions will proceed with their execution.
+4. Another aspect to keep in mind is that we need to know which process is being
+interrupted. Interrupts generated for process A should not end up interrupting
+process B.
