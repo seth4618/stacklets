@@ -3,6 +3,8 @@
 #include "stdlib.h"
 #include "myfib.h"
 
+int current_id;
+
 void seedStackInit()
 {
     seedDummyHead = (Seed *)calloc(1, sizeof(Seed));
@@ -15,12 +17,13 @@ Seed* initSeed(void* adr, void* sp, void (*routine)(void *), void* argv)
     seed->sp = sp;
     seed->routine = routine;
     seed->argv = argv;
+    seed->id = current_id++;
     return seed;
 }
 
 void pushSeed(Seed* seed)
 {
-    DEBUG_PRINT("Push seed %d\n", ((Foo *)(seed->argv))->input);
+    DEBUG_PRINT("Push seed[id %d] %d\n", seed->id, ((Foo *)(seed->argv))->input);
     Seed* origHead = seedDummyHead->next;
     seedDummyHead->next = seed;
     seed->prev = seedDummyHead;
@@ -30,7 +33,7 @@ void pushSeed(Seed* seed)
 
 void popSeed(Seed* seed)
 {
-    DEBUG_PRINT("Pop seed %d\n", ((Foo *)(seed->argv))->input);
+    DEBUG_PRINT("Pop seed[id %d] %d\n", seed->id, ((Foo *)(seed->argv))->input);
     seed->prev->next = seed->next;
     if (seed->next) seed->next->prev = seed->prev;
     free(seed);

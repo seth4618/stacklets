@@ -7,7 +7,7 @@ OBJ = myfib.o seedStack.o readyQ.o
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 fib: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc-4.8 -o $@ $^ $(CFLAGS)
 
 myfib:
 	$(CC) $(CFLAGS) -S myfib.c

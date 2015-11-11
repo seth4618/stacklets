@@ -12,6 +12,7 @@ typedef struct Seed {
     int joinCounter;
     struct Seed* prev;
     struct Seed* next;
+    int id;
 } Seed;
 
 Seed* seedDummyHead;

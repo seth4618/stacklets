@@ -19,8 +19,6 @@ static int suspCtr = 0;
 static int suspHere = 1;
 
 void* systemStack;
-#define SYSTEM_STACK_SIZE   8192
-#define STACKLET_SIZE       8192
 
 void
 systemStackInit()
@@ -29,42 +27,6 @@ systemStackInit()
     systemStackBuffer = calloc(1, SYSTEM_STACK_SIZE);
     systemStack = systemStackBuffer + SYSTEM_STACK_SIZE;
 }
-
-#define switchToSysStack() do { \
-    asm volatile("movq %[sysStack],%%rsp \n"\
-                 :\
-                 : [sysStack] "m" (systemStack));} while (0)
-
-#define switchToSysStackAndFree(buf) do { \
-    asm volatile("movq %[Abuf],%%rdi \n"\
-                 "movq %[AsystemStack],%%rsp \n"\
-                 "call _free \n"\
-                 :\
-                 : [Abuf] "r" (buf),\
-                   [AsystemStack] "m" (systemStack));} while (0)
-
-#define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
-    asm volatile("movq %[Abuf],%%rdi \n"\
-                 "movq %[Asp],%%rax \n"\
-                 "movq %[Aadr],%%rbx \n"\
-                 "movq %[AsystemStack],%%rsp \n"\
-                 "call _free \n"\
-                 "movq %%rax,%%rsp \n"\
-                 "jmp *%%rbx \n"\
-                 :\
-                 : [Abuf] "r" (buf),\
-                   [Asp] "r" (sp),\
-                   [Aadr] "r" (adr),\
-                   [AsystemStack] "m" (systemStack));} while (0)
-
-//#define dealloc(x) do { \
-//    asm volatile("movq %[sysStack],%%rsp \n"\
-                 
-
-#define setArgument(x) do { \
-    asm volatile("movq %[argv],%%rdi \n"\
-                 :\
-                 : [argv] "m" (x));} while (0)
 
 typedef struct {
     void* stubRoutine;
@@ -85,13 +47,16 @@ stubRoutine()
     if (--seed->joinCounter == 0)
     {
         DEBUG_PRINT("\tFirst child returns first.\n");
+        //void* buf = stackletStub->stackletBuf;
         switchToSysStackAndFreeAndResume(buf, seed->sp, seed->adr);
         // sp -> sysStack
         //restoreStackPointer(seed->sp);
         //goto *seed->adr;
     }
 
+    //void* buf = stackletStub->stackletBuf;
     DEBUG_PRINT("\tSecond child returns first.\n");
+    //DEBUG_PRINT("\tGoing to free stacklet %x.\n", buf);
     switchToSysStackAndFree(buf);
     // sp -> sysStack
     suspend();
@@ -104,6 +69,7 @@ stackletFork(Seed* seed)
     DEBUG_PRINT("Forking a stacklet.\n");
     seed->joinCounter = 2;
     void* stackletBuf = calloc(1, STACKLET_SIZE);
+    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf);
     stubBase = stackletBuf + STACKLET_SIZE;
     Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
 
@@ -150,33 +116,21 @@ suspend()
     }
 }
 
-// will (semi) randomly put this thread on readyQ and suspend it.
-//void
-//testHack(void)
-//{
-//    if (suspCtr++ >= suspHere) {
-//	    suspCtr = 0;
-//        saveRegisters();
-//        void* stackPointer;
-//        getStackPointer(stackPointer);
-//        enqReadyQ(stackPointer);
-//	    suspend(Yield); // suspend will never return
-//    }
-//}
-
 #define labelhack(x) \
     asm goto("" : : : : x)
 
 void
 yield(void)
 {
+    labelhack(Resume);
+
     DEBUG_PRINT("Put self in readyQ and suspend\n");
     Registers saveArea;
-    void* localStubBase = stubBase;
+    void* volatile localStubBase = stubBase;
+    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
-    labelhack(Resume);
     enqReadyQ(&&Resume, stackPointer);
 
     switchToSysStack();
@@ -185,17 +139,20 @@ yield(void)
 
 Resume:
     restoreRegisters();
-    deqReadyQ();
     stubBase = localStubBase;
+    deqReadyQ();
     DEBUG_PRINT("Resumed a ready thread.\n");
 }
 
 void
 fib(void* F)
 {
-    Foo* f = (Foo *)F;
+    labelhack(FirstChildDone);
+    labelhack(SecondChildDone);
+
+    Foo* volatile f = (Foo *)F;
     bp();
-    volatile Registers saveArea;
+    Registers volatile saveArea;
 
     if (f->input <= 2)
     {
@@ -212,8 +169,8 @@ fib(void* F)
     DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
     //testHack();
 
-    Foo* a = (Foo *)calloc(1, sizeof(Foo));
-    Foo* b = (Foo *)calloc(1, sizeof(Foo));
+    Foo* volatile a = (Foo *)calloc(1, sizeof(Foo));
+    Foo* volatile b = (Foo *)calloc(1, sizeof(Foo));
     a->input = f->input - 1;
     a->depth = f->depth + 1;
     b->input = f->input - 2;
@@ -221,7 +178,7 @@ fib(void* F)
 
     void* stackPointer;
     getStackPointer(stackPointer);
-    Seed* seed = initSeed(&&SecondChildDone, stackPointer, fib, (void *)b);
+    Seed* volatile seed = initSeed(&&SecondChildDone, stackPointer, fib, (void *)b);
     pushSeed(seed);
 
     saveRegisters();
@@ -252,10 +209,11 @@ FirstChildDone:
     return;
 
 SecondChildDone:
-    popSeed(seed);
     restoreRegisters(); // foo, a, b may be stored in any of the registers
+    popSeed(seed);
     f->output = a->output + b->output;
     DEBUG_PRINT("Second child return from n = %d\n", f->input);
+    return;
 }
 
 int 

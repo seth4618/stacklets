@@ -21,6 +21,45 @@ typedef struct {
 
 typedef uint64_t Registers[16];
 
+
+#define SYSTEM_STACK_SIZE   8192
+#define STACKLET_SIZE       32768
+
+#define switchToSysStack() do { \
+asm volatile("movq %[sysStack],%%rsp \n"\
+             :\
+             : [sysStack] "m" (systemStack));} while (0)
+
+#define switchToSysStackAndFree(buf) do { \
+asm volatile("movq %[Abuf],%%rdi \n"\
+             "movq %[AsystemStack],%%rsp \n"\
+             "call _free \n"\
+             :\
+             : [Abuf] "r" (buf),\
+               [AsystemStack] "m" (systemStack)\
+             : "rdi");} while (0)
+
+#define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
+asm volatile("movq %[Abuf],%%rdi \n"\
+             "movq %[AsystemStack],%%rsp \n"\
+             "pushq %[Asp] \n"\
+             "pushq %[Aadr] \n"\
+             "call _free \n"\
+             "popq %%rbx \n"\
+             "popq %%rax \n"\
+             "movq %%rax,%%rsp \n"\
+             "jmp *%%rbx \n"\
+             :\
+             : [Abuf] "r" (buf),\
+               [Asp] "r" (sp),\
+               [Aadr] "r" (adr),\
+               [AsystemStack] "m" (systemStack));} while (0)
+
+#define setArgument(x) do { \
+asm volatile("movq %[argv],%%rdi \n"\
+             :\
+             : [argv] "m" (x));} while (0)
+
 #define restoreStackPointer(x) do { \
     asm volatile("movq %[sp],%%rsp" : : [sp] "r" (x) : "rsp"); } while (0)
 
