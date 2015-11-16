@@ -416,6 +416,20 @@ namespace X86ISA
                     StaticInst::nullStaticInstPtr);
     };
 
+    /*
+     * Class ULI for stackets.
+     */
+    class ULI : public X86Interrupt
+    {
+      public:
+        ULI(uint8_t _vector) :
+            X86Interrupt("User Level Interrupt", "#ULI", _vector)
+        {}
+
+        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
+                    StaticInst::nullStaticInstPtr);
+    };
+
     class SoftwareInterrupt : public X86Interrupt
     {
       public:

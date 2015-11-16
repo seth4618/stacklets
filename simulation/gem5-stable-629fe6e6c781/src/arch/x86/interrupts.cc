@@ -287,6 +287,9 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
                 !pendingStartup && !startedUp) {
             pendingUnmaskableInt = pendingStartup = true;
             startupVector = vector;
+        } else if (deliveryMode == DeliveryMode::ULI && !pendingULI) {
+            pendingUnmaskableInt = pendingULI = true;
+            uliVector = vector;
         }
     }
     if (FullSystem)
@@ -617,6 +620,7 @@ X86ISA::Interrupts::Interrupts(Params * p)
       pendingExtInt(false), extIntVector(0),
       pendingInit(false), initVector(0),
       pendingStartup(false), startupVector(0),
+      pendingULI(false), uliVector(0),
       startedUp(false), pendingUnmaskableInt(false),
       pendingIPIs(0), cpu(NULL),
       intSlavePort(name() + ".int_slave", this, this)
@@ -678,6 +682,9 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
         } else if (pendingStartup) {
             DPRINTF(LocalApic, "Generating SIPI fault object.\n");
             return std::make_shared<StartupInterrupt>(startupVector);
+        } else if (pendingULI) {
+            DPRINTF(LocalApic, "Generating ULI fault object.\n");
+            return std::make_shared<ULI>(uliVector);
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
                     "ints were pending.\n");
@@ -712,8 +719,11 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
             DPRINTF(LocalApic, "SIPI sent to core.\n");
             pendingStartup = false;
             startedUp = true;
+        } else if (pendingULI) {
+            DPRINTF(LocalApic, "ULI sent to core.\n");
+            pendingULI = false;
         }
-        if (!(pendingSmi || pendingNmi || pendingInit || pendingStartup))
+        if (!(pendingSmi || pendingNmi || pendingInit || pendingStartup || pendingULI))
             pendingUnmaskableInt = false;
     } else if (pendingExtInt) {
         pendingExtInt = false;
@@ -742,6 +752,8 @@ X86ISA::Interrupts::serialize(std::ostream &os)
     SERIALIZE_SCALAR(initVector);
     SERIALIZE_SCALAR(pendingStartup);
     SERIALIZE_SCALAR(startupVector);
+    SERIALIZE_SCALAR(pendingULI);
+    SERIALIZE_SCALAR(uliVector);
     SERIALIZE_SCALAR(startedUp);
     SERIALIZE_SCALAR(pendingUnmaskableInt);
     SERIALIZE_SCALAR(pendingIPIs);
@@ -767,6 +779,8 @@ X86ISA::Interrupts::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(initVector);
     UNSERIALIZE_SCALAR(pendingStartup);
     UNSERIALIZE_SCALAR(startupVector);
+    UNSERIALIZE_SCALAR(pendingULI);
+    UNSERIALIZE_SCALAR(uliVector);
     UNSERIALIZE_SCALAR(startedUp);
     UNSERIALIZE_SCALAR(pendingUnmaskableInt);
     UNSERIALIZE_SCALAR(pendingIPIs);

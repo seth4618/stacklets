@@ -305,5 +305,14 @@ namespace X86ISA
 
         tc->pcState(tc->readMiscReg(MISCREG_CS_BASE));
     }
+
+    /*
+     * This is the user-level interrupt handler for stacklets
+     */
+    void
+    ULI::invoke(ThreadContext *tc, const StaticInstPtr &inst)
+    {
+      DPRINTF(Faults, "in ULI handler\n");
+    }
 } // namespace X86ISA
 

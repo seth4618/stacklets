@@ -362,6 +362,7 @@ dumpKvm(const struct kvm_vcpu_events &events)
            events.nmi.masked);
 
     inform("\tSIPI vector: 0x%x\n", events.sipi_vector);
+    //inform("\tULI vector: 0x%x\n", events.uli_vector);
     inform("\tFlags: 0x%x\n", events.flags);
 }
 

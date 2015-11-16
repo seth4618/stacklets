@@ -127,6 +127,8 @@ class Interrupts : public BasicPioDevice, IntDevice
     uint8_t initVector;
     bool pendingStartup;
     uint8_t startupVector;
+    bool pendingULI;
+    uint8_t uliVector;
     bool startedUp;
 
     // This is a quick check whether any of the above (except ExtInt) are set.
