@@ -1,0 +1,168 @@
+From 2e830a0aa3ce69392305b8fb271e126d5470ca27 Mon Sep 17 00:00:00 2001
+From: Saurabh Kadekodi <skadekod@andrew.cmu.edu>
+Date: Mon, 16 Nov 2015 09:46:50 -0500
+Subject: [PATCH 1/2] Added ULI support on the receiver side
+
+---
+ .../gem5-stable-629fe6e6c781/src/arch/x86/faults.cc      |  9 +++++++++
+ .../gem5-stable-629fe6e6c781/src/arch/x86/faults.hh      | 14 ++++++++++++++
+ .../gem5-stable-629fe6e6c781/src/arch/x86/interrupts.cc  | 16 +++++++++++++++-
+ .../gem5-stable-629fe6e6c781/src/arch/x86/interrupts.hh  |  2 ++
+ .../gem5-stable-629fe6e6c781/src/arch/x86/intmessage.hh  |  3 ++-
+ .../gem5-stable-629fe6e6c781/src/cpu/kvm/x86_cpu.cc      |  1 +
+ 6 files changed, 43 insertions(+), 2 deletions(-)
+
+diff --git a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.cc b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.cc
+index e3a4bef..82b0505 100644
+--- a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.cc
++++ b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.cc
+@@ -305,5 +305,14 @@ namespace X86ISA
+ 
+         tc->pcState(tc->readMiscReg(MISCREG_CS_BASE));
+     }
++
++    /*
++     * This is the user-level interrupt handler for stacklets
++     */
++    void
++    ULI::invoke(ThreadContext *tc, const StaticInstPtr &inst)
++    {
++      DPRINTF(Faults, "in ULI handler\n");
++    }
+ } // namespace X86ISA
+ 
+diff --git a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.hh b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.hh
+index f8715de..4601ef5 100644
+--- a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.hh
++++ b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/faults.hh
+@@ -416,6 +416,20 @@ namespace X86ISA
+                     StaticInst::nullStaticInstPtr);
+     };
+ 
++    /*
++     * Class ULI for stackets.
++     */
++    class ULI : public X86Interrupt
++    {
++      public:
++        ULI(uint8_t _vector) :
++            X86Interrupt("User Level Interrupt", "#ULI", _vector)
++        {}
++
++        void invoke(ThreadContext * tc, const StaticInstPtr &inst =
++                    StaticInst::nullStaticInstPtr);
++    };
++
+     class SoftwareInterrupt : public X86Interrupt
+     {
+       public:
+diff --git a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.cc b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.cc
+index 171e8a1..ba97f82 100644
+--- a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.cc
++++ b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.cc
+@@ -287,6 +287,9 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
+                 !pendingStartup && !startedUp) {
+             pendingUnmaskableInt = pendingStartup = true;
+             startupVector = vector;
++        } else if (deliveryMode == DeliveryMode::ULI && !pendingULI) {
++            pendingUnmaskableInt = pendingULI = true;
++            uliVector = vector;
+         }
+     }
+     if (FullSystem)
+@@ -617,6 +620,7 @@ X86ISA::Interrupts::Interrupts(Params * p)
+       pendingExtInt(false), extIntVector(0),
+       pendingInit(false), initVector(0),
+       pendingStartup(false), startupVector(0),
++      pendingULI(false), uliVector(0),
+       startedUp(false), pendingUnmaskableInt(false),
+       pendingIPIs(0), cpu(NULL),
+       intSlavePort(name() + ".int_slave", this, this)
+@@ -678,6 +682,9 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
+         } else if (pendingStartup) {
+             DPRINTF(LocalApic, "Generating SIPI fault object.\n");
+             return std::make_shared<StartupInterrupt>(startupVector);
++        } else if (pendingULI) {
++            DPRINTF(LocalApic, "Generating ULI fault object.\n");
++            return std::make_shared<ULI>(uliVector);
+         } else {
+             panic("pendingUnmaskableInt set, but no unmaskable "
+                     "ints were pending.\n");
+@@ -712,8 +719,11 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
+             DPRINTF(LocalApic, "SIPI sent to core.\n");
+             pendingStartup = false;
+             startedUp = true;
++        } else if (pendingULI) {
++            DPRINTF(LocalApic, "ULI sent to core.\n");
++            pendingULI = false;
+         }
+-        if (!(pendingSmi || pendingNmi || pendingInit || pendingStartup))
++        if (!(pendingSmi || pendingNmi || pendingInit || pendingStartup || pendingULI))
+             pendingUnmaskableInt = false;
+     } else if (pendingExtInt) {
+         pendingExtInt = false;
+@@ -742,6 +752,8 @@ X86ISA::Interrupts::serialize(std::ostream &os)
+     SERIALIZE_SCALAR(initVector);
+     SERIALIZE_SCALAR(pendingStartup);
+     SERIALIZE_SCALAR(startupVector);
++    SERIALIZE_SCALAR(pendingULI);
++    SERIALIZE_SCALAR(uliVector);
+     SERIALIZE_SCALAR(startedUp);
+     SERIALIZE_SCALAR(pendingUnmaskableInt);
+     SERIALIZE_SCALAR(pendingIPIs);
+@@ -767,6 +779,8 @@ X86ISA::Interrupts::unserialize(Checkpoint *cp, const std::string &section)
+     UNSERIALIZE_SCALAR(initVector);
+     UNSERIALIZE_SCALAR(pendingStartup);
+     UNSERIALIZE_SCALAR(startupVector);
++    UNSERIALIZE_SCALAR(pendingULI);
++    UNSERIALIZE_SCALAR(uliVector);
+     UNSERIALIZE_SCALAR(startedUp);
+     UNSERIALIZE_SCALAR(pendingUnmaskableInt);
+     UNSERIALIZE_SCALAR(pendingIPIs);
+diff --git a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.hh b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.hh
+index b584c23..6964407 100644
+--- a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.hh
++++ b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/interrupts.hh
+@@ -127,6 +127,8 @@ class Interrupts : public BasicPioDevice, IntDevice
+     uint8_t initVector;
+     bool pendingStartup;
+     uint8_t startupVector;
++    bool pendingULI;
++    uint8_t uliVector;
+     bool startedUp;
+ 
+     // This is a quick check whether any of the above (except ExtInt) are set.
+diff --git a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/intmessage.hh b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/intmessage.hh
+index 6bf1804..10071f6 100644
+--- a/simulation/gem5-stable-629fe6e6c781/src/arch/x86/intmessage.hh
++++ b/simulation/gem5-stable-629fe6e6c781/src/arch/x86/intmessage.hh
+@@ -59,12 +59,13 @@ namespace X86ISA
+             INIT = 5,
+             SIPI = 6,
+             ExtInt = 7,
++            ULI = 8,
+             NumModes
+         };
+ 
+         static const char * const names[NumModes] = {
+             "Fixed", "LowestPriority", "SMI", "Reserved",
+-            "NMI", "INIT", "Startup", "ExtInt"
++            "NMI", "INIT", "Startup", "ExtInt", "UserLevelInterrupt"
+         };
+ 
+         static inline bool
+diff --git a/simulation/gem5-stable-629fe6e6c781/src/cpu/kvm/x86_cpu.cc b/simulation/gem5-stable-629fe6e6c781/src/cpu/kvm/x86_cpu.cc
+index 34b51f1..7404f0e 100644
+--- a/simulation/gem5-stable-629fe6e6c781/src/cpu/kvm/x86_cpu.cc
++++ b/simulation/gem5-stable-629fe6e6c781/src/cpu/kvm/x86_cpu.cc
+@@ -362,6 +362,7 @@ dumpKvm(const struct kvm_vcpu_events &events)
+            events.nmi.masked);
+ 
+     inform("\tSIPI vector: 0x%x\n", events.sipi_vector);
++    //inform("\tULI vector: 0x%x\n", events.uli_vector);
+     inform("\tFlags: 0x%x\n", events.flags);
+ }
+ 
+-- 
+1.9.3 (Apple Git-50)
+
