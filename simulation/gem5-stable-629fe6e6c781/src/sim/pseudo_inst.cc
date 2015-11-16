@@ -193,7 +193,9 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         break;
 
       case 0x55: // annotate_func
-      case 0x56: // reserved2_func
+      case 0x56: // stacklet
+	stacklet(tc, args[0], args[1]);
+	break;
       case 0x57: // reserved3_func
       case 0x58: // reserved4_func
       case 0x59: // reserved5_func
@@ -605,6 +607,13 @@ switchcpu(ThreadContext *tc)
 {
     DPRINTF(PseudoInst, "PseudoInst::switchcpu()\n");
     exitSimLoop("switchcpu");
+}
+
+uint64_t
+stacklet(ThreadContext *tc, uint64_t arg1, uint64_t arg2)
+{
+	DPRINTF(PseudoInst, "PseudoInst::stacklet()\n");
+	return arg1 + arg2;
 }
 
 //
