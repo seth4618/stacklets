@@ -1,8 +1,5 @@
-// @file myfib.h
-//
-// helper assembly functions
-#pragma once
-#include <stdlib.h>
+// @file debug.c
+
 #include <stdio.h>
 
 #ifdef DEBUG
@@ -10,9 +7,3 @@
 #else
 #define DEBUG_PRINT(fmt, args...)    /* Don't do anything in release builds */
 #endif
-
-typedef struct {
-    int input;
-    int output;
-    int depth;
-} Foo;

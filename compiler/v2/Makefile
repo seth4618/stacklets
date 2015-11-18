@@ -1,7 +1,7 @@
 CC=gcc-4.8
 CFLAGS=-g -DDEBUG -O
-DEPS = myfib.h seedStack.h readyQ.h
-OBJ = myfib.o seedStack.o readyQ.o
+DEPS = myfib.h seedStack.h readyQ.h stacklet.h
+OBJ = myfib.o seedStack.o readyQ.o stacklet.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
