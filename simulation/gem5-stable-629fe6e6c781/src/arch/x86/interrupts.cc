@@ -684,7 +684,7 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
             return std::make_shared<StartupInterrupt>(startupVector);
         } else if (pendingULI) {
             DPRINTF(LocalApic, "Generating ULI fault object.\n");
-            return std::make_shared<ULI>(uliVector);
+            return std::make_shared<ULI>(uli_queue.front());
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
                     "ints were pending.\n");
@@ -803,4 +803,14 @@ X86ISA::Interrupts *
 X86LocalApicParams::create()
 {
     return new X86ISA::Interrupts(this);
+}
+
+void
+X86ISA::Interrupts::addULI(uint8_t mask, uint64_t packet_address, uint64_t uli_handler_pc)
+{
+  uli_node_t node;
+  node.mask = mask;
+  node.packet_address = packet_address;
+  node.uli_handler_pc = uli_handler_pc;
+  uli_queue.push(node);
 }

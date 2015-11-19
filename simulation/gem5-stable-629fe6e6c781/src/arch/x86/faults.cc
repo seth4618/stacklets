@@ -313,6 +313,23 @@ namespace X86ISA
     ULI::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     {
       DPRINTF(Faults, "in ULI handler\n");
+
+      /*
+       * Geting the current PC
+       */
+      PCState pcState = tc->pcState();
+      Addr pc = pcState.pc();
+
+      /*
+       * Need to save PC into a custom register (R15).
+       */
+      this->savedPC = (uint64_t) pc;
+
+      /*
+       * Set the PC as the PC retrieved from the queue entry.
+       */
+      tc->pcState(node.uli_handler_pc);
     }
+
 } // namespace X86ISA
 

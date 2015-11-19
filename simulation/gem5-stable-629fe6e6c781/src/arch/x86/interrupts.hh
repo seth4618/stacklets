@@ -62,6 +62,7 @@
 #include "dev/io_device.hh"
 #include "params/X86LocalApic.hh"
 #include "sim/eventq.hh"
+#include <queue>
 
 class ThreadContext;
 class BaseCPU;
@@ -195,6 +196,13 @@ class Interrupts : public BasicPioDevice, IntDevice
     IntSlavePort intSlavePort;
 
   public:
+
+    /*
+     * ULI queue head.
+     */
+    std::queue<uli_node_t> uli_queue;
+    uint64_t savedULIPC;
+    void addULI(uint8_t mask, uint64_t packet_address, uint64_t uli_handler_pc);
 
     int getInitialApicId() { return initialApicId; }
 

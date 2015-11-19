@@ -46,6 +46,13 @@
 #include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
+//#include "arch/x86/interrupts.hh"
+
+typedef struct uli_node {
+  uint8_t mask;
+  uint64_t packet_address;
+  uint64_t uli_handler_pc;
+} uli_node_t;
 
 namespace X86ISA
 {
@@ -421,13 +428,23 @@ namespace X86ISA
      */
     class ULI : public X86Interrupt
     {
+      private:
+        uint64_t savedPC;
+        uli_node_t node;
       public:
-        ULI(uint8_t _vector) :
-            X86Interrupt("User Level Interrupt", "#ULI", _vector)
-        {}
+        ULI(uli_node_t node) :
+            X86Interrupt("User Level Interrupt", "#ULI", 0)
+        {
+          this->node = node;
+        }
 
         void invoke(ThreadContext * tc, const StaticInstPtr &inst =
                     StaticInst::nullStaticInstPtr);
+
+        bool isSoft()
+        {
+            return true;
+        }
     };
 
     class SoftwareInterrupt : public X86Interrupt
