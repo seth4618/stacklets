@@ -53,7 +53,7 @@ fib(void* F)
 
     // stacklet ===========================
     void* volatile stackPointer;
-    getStackPointer(stackPointer);
+    getStackPointer(stackPointer); //XXX May be we can push ebp, where it points to esp also ??
     Seed* volatile seed = initSeed(&&SecondChildSteal, stackPointer);
     pushSeed(seed);
     int volatile syncCounter = 0;

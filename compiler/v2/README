@@ -1,4 +1,4 @@
-The function to to lazy fork recursively.
+The function to do lazy fork recursively.
 
 Inorder to minimize the overhead of a potential parallel sequential call, we
 do as little work as possible when inserting seeds to the seed stack.
@@ -33,7 +33,7 @@ In "suspend", we:
        is necessary because some of the local variables may be stored in
        the registers.
    (5) Change the return address of the first call to "ChildDone".
-   (6) Change the synchronization counter to be 2.
+   (6) Initialize the synchronization counter to be 2.
    (7) Store the registers on the stack in the same reversed area.
    (8) Change the stack pointer to a "system stack".
    (9) Call "stackletFork" with the return address "ChildDone", the
