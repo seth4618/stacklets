@@ -45,7 +45,8 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
                [AparentSP] "r" (parentSP),\
                [Afunc] "r" (func),\
                [Aarg] "r" (arg),\
-               [sysStack] "m" (systemStack));} while (0)
+               [sysStack] "m" (systemStack)\
+             : "rdi", "rsi", "rdx", "rcx");} while (0)
 
 #define switchAndJmpWithArg(sp, adr, arg) do {\
 asm volatile("movq %[Aarg], %%rdi \n"\

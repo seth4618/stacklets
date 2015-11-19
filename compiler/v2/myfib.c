@@ -6,32 +6,26 @@
 #include <pthread.h>
 #include <assert.h>
 
-#define EMBED_BREAKPOINT bp()
-void bp(void) {}
-
-// helper functions
-void die(char* str)
-{
-    fprintf(stderr, "Error: %s\n", str);
-    exit(-1);
-}
-
 static int suspCtr = 0;
 static int suspHere = 2;
 
 void
 fib(void* F)
 {
+    // This is to prevent the compiler from eliminating the label through
+    // deadcode analysis.
     labelhack(FirstChildDoneNormally);
     labelhack(SecondChildSteal);
     labelhack(ChildDone);
 
+    // The compiler will assign 0 to these local variables after label if we do
+    // not specify volatile attribute here.
     Foo* volatile f = (Foo *)F;
     Registers volatile saveArea; //XXX can this make sure saveArea is on the stack
 
     if (f->input <= 2)
     {
-        DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
+//        DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
         f->output = 1;
         return;
     }
@@ -42,7 +36,7 @@ fib(void* F)
         yield();
     }
     // ====================================
-    DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
+//    DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
 
     Foo* volatile a = (Foo *)calloc(1, sizeof(Foo));
     Foo* volatile b = (Foo *)calloc(1, sizeof(Foo));
@@ -71,7 +65,7 @@ FirstChildDoneNormally:
 
     fib(b);
     f->output = a->output + b->output;
-    DEBUG_PRINT("Normal return from n = %d\n", f->input);
+//    DEBUG_PRINT("Normal return from n = %d\n", f->input);
     return;
 
 SecondChildSteal:
@@ -87,16 +81,23 @@ ChildDone:
     // stacklet ===========================
     restoreRegisters();
     if (--syncCounter != 0)
+    {
+        saveRegisters();
         suspendStub();
+    }
     // ====================================
 
     f->output = a->output + b->output;
-    DEBUG_PRINT("A child return from n = %d\n", f->input);
+//    DEBUG_PRINT("A child return from n = %d\n", f->input);
     return;
 }
 
+// Start calculating fib.
+//
+// Currently we are only doing one thread. We can created multiple pthreads here
+// to have the calculation run in multithread mode.
 int 
-startfib(int n)
+startfib(int n, int numthreads)
 {
     stackletInit();
 
@@ -117,8 +118,7 @@ main(int argc, char** argv)
     if (argc == 3) numthreads = atoi(argv[2]);
     printf("Will run fib(%d) on %d thread(s)\n", n, numthreads);
 
-    //int x = startfib(n, numthreads);
-    int x = startfib(n);
+    int x = startfib(n, numthreads);
 
     printf("fib(%d) = %d\n", n, x);
     exit(0);
