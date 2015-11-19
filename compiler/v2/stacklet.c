@@ -46,7 +46,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
     void* stackletBuf = calloc(1, STACKLET_SIZE);
     DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf);
     void* newStubBase = stackletBuf + STACKLET_SIZE;
-    Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
+    Stub* stackletStub = (Stub *)(newStubBase - sizeof(Stub));
 
     stackletStub->parentStubBase = stubBase;
     stackletStub->parentSP = parentSP;
@@ -90,6 +90,7 @@ suspend()
     }
 }
 
+// Yield to another user thread.
 void
 yield(void)
 {
