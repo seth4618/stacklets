@@ -30,8 +30,8 @@ void
 stubRoutine()
 {
     DEBUG_PRINT("In stub routine.\n");
-    Stub* stackletStub = (Stub *)(stubBase - sizeof(Stub));
-    void* buf = stackletStub - STACKLET_SIZE;
+    Stub* stackletStub = (Stub *)((char *)stubBase - sizeof(Stub));
+    void* buf = (char *)stubBase - STACKLET_SIZE;
  
     DEBUG_PRINT("\tFirst child returns first.\n");
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
@@ -45,8 +45,8 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
     DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
     DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf);
-    void* newStubBase = stackletBuf + STACKLET_SIZE;
-    Stub* stackletStub = (Stub *)(newStubBase - sizeof(Stub));
+    void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;
+    Stub* stackletStub = (Stub *)((char *)newStubBase - sizeof(Stub));
 
     stackletStub->parentStubBase = stubBase;
     stackletStub->parentSP = parentSP;
@@ -99,7 +99,7 @@ yield(void)
     DEBUG_PRINT("Put self in readyQ and suspend\n");
     Registers volatile saveArea;
     void* volatile localStubBase = stubBase;
-    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
+    //DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
