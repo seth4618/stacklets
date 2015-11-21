@@ -86,7 +86,16 @@ void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
 void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
 void debugbreak(ThreadContext *tc);
 void switchcpu(ThreadContext *tc);
-uint64_t stacklet(ThreadContext *tc, uint64_t arg1, uint64_t arg2);
+/*
+ * Functions for stacklets.
+ */
+uint64_t stacklet_eui(ThreadContext *tc);
+uint64_t stacklet_dui(ThreadContext *tc);
+uint64_t stacklet_sendi(ThreadContext *tc);
+uint64_t stacklet_moviadr(ThreadContext *tc);
+uint64_t stacklet_retuli(ThreadContext *tc);
+uint64_t stacklet_getcpuid(ThreadContext *tc);
+
 void workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 void workend(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 

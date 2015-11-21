@@ -193,9 +193,28 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         break;
 
       case 0x55: // annotate_func
-      case 0x56: // stacklet
-	stacklet(tc, args[0], args[1]);
-	break;
+      case 0x56: // stacklets
+        switch(subfunc) {
+          case 0x00:
+            stacklet_eui(tc);
+            break;
+          case 0x01:
+            stacklet_dui(tc);
+            break;
+          case 0x02:
+            stacklet_sendi(tc);
+            break;
+          case 0x03:
+            stacklet_moviadr(tc);
+            break;
+          case 0x04:
+            stacklet_retuli(tc);
+            break;
+          case 0x05:
+            stacklet_getcpuid(tc);
+            break;
+        }
+        break;
       case 0x57: // reserved3_func
       case 0x58: // reserved4_func
       case 0x59: // reserved5_func
@@ -609,13 +628,84 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
+
 uint64_t
-stacklet(ThreadContext *tc, uint64_t arg1, uint64_t arg2)
+stacklet_eui(ThreadContext *tc)
 {
-	DPRINTF(PseudoInst, "PseudoInst::stacklet()\n");
-	return arg1 + arg2;
+  /*
+   * In this instruction, we enable user-level interrupts, i.e. typically
+   * after completing the handling of a user-level interrupt, we enable
+   * user-level interrupts to be open to accepting further interrupts.
+   */
+  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  return 0;
 }
 
+uint64_t
+stacklet_dui(ThreadContext *tc)
+{
+  /*
+   * In this instruction, we disable user-level interrupts. When we are
+   * processing one user-level interrupt, we would like to disable more
+   * user-level interrupts and interrupts occuring at the time will be
+   * treated as packet drops.
+   */
+  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  return 0;
+}
+
+uint64_t
+stacklet_sendi(ThreadContext *tc)
+{
+  /*
+   * This instruction sends a user-level interrupt to another core.
+   */
+  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  return 0;
+}
+
+uint64_t
+stacklet_moviadr(ThreadContext *tc)
+{
+  /*
+   * This instruction moves the interrupt-handler address to a special
+   * register (or variable, in the case of a simulator).
+   */
+  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
+  assert(interrupts);
+  return 0;
+}
+
+uint64_t
+stacklet_retuli(ThreadContext *tc)
+{
+  /*
+   * This instruction denotes the return from a user-level interrupt
+   * handler.
+   */
+  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  return 0;
+}
+
+uint64_t
+stacklet_getcpuid(ThreadContext *tc)
+{
+  /*
+   * This instruction sends a user-level interrupt to another core.
+   */
+  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  return tc->cpuId();
+}
+
+#if 0
+uint64_t
+stacklet(ThreadContext *tc, uint64_t arg1, uint64_t arg2, uint8_t subfunc)
+{
+  DPRINTF(PseudoInst, "PseudoInst::stacklet()\n");
+  return arg1 + arg2;
+}
+#endif
 //
 // This function is executed when annotated work items begin.  Depending on 
 // what the user specified at the command line, the simulation may exit and/or

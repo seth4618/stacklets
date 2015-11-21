@@ -288,6 +288,8 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
             pendingUnmaskableInt = pendingStartup = true;
             startupVector = vector;
         } else if (deliveryMode == DeliveryMode::ULI && !pendingULI) {
+            // here we invoke addULI to add the ULI to the queue.
+            // it will subsequently be picked up in the commit phase of the pipeline
             pendingUnmaskableInt = pendingULI = true;
             uliVector = vector;
         }
