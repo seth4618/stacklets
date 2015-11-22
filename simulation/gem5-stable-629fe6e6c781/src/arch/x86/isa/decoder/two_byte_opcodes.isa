@@ -211,16 +211,16 @@
                     }}, IsNonSpeculative);
                     0x56: decode OPCODE_OP_BOTTOM3 {
                       0x0: stacklet0({{
-                          PseudoInst::stacklet_eui(xc->tcBase());
+                          PseudoInst::stacklet_eui(xc->tcBase(), Rdi);
                       }}, IsNonSpeculative);
                       0x1: stacklet1({{
-                          PseudoInst::stacklet_dui(xc->tcBase());
+                          PseudoInst::stacklet_dui(xc->tcBase(), Rdi);
                       }}, IsNonSpeculative);
                       0x2: stacklet2({{
-                          PseudoInst::stacklet_sendi(xc->tcBase());
+                          PseudoInst::stacklet_sendi(xc->tcBase(), Rdi, Rsi);
                       }}, IsNonSpeculative);
                       0x3: stacklet3({{
-                          PseudoInst::stacklet_moviadr(xc->tcBase());
+                          PseudoInst::stacklet_moviadr(xc->tcBase(), Rdi);
                       }}, IsNonSpeculative);
                       0x4: stacklet4({{
                           PseudoInst::stacklet_retuli(xc->tcBase());

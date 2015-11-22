@@ -54,7 +54,13 @@
 #define addsymbol_func          0x53
 #define panic_func              0x54
 
-#define stacklet_func		0x56 // Reserved for user
+#define stacklet_func		      0x56 // Reserved for user
+#define stacket_eui_func      0x0
+#define stacket_dui_func      0x1
+#define stacket_sendi_func    0x2
+#define stacket_moviadr_func  0x3
+#define stacket_retuli_func   0x4
+#define stacket_getcpuid_func 0x5
 #define reserved3_func          0x57 // Reserved for user
 #define reserved4_func          0x58 // Reserved for user
 #define reserved5_func          0x59 // Reserved for user
