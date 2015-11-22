@@ -55,7 +55,8 @@ asm volatile("movq %[Aarg], %%rdi \n"\
              :\
              : [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
-               [Aarg] "r" (arg));} while (0)
+               [Aarg] "r" (arg)\
+             : "rdi");} while (0)
 
 #define switchAndJmp(sp,adr) do {\
 asm volatile("movq %[Asp],%%rsp \n"\
@@ -80,7 +81,8 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
                [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
                [AsystemStack] "m" (systemStack),\
-               [AparentSB] "r" (parentSB));} while (0)
+               [AparentSB] "r" (parentSB)\
+             : "rdi");} while (0)
 
 #define restoreStackPointer(x) do { \
     asm volatile("movq %[sp],%%rsp" : : [sp] "r" (x) : "rsp"); } while (0)
