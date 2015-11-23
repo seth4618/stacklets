@@ -56,8 +56,9 @@
 #include "params/X86IntSourcePin.hh"
 #include "sim/sim_object.hh"
 
-namespace X86ISA {
 
+class ThreadContext;
+namespace X86ISA {
 typedef std::list<int> ApicList;
 
 class IntDevice
@@ -86,7 +87,7 @@ class IntDevice
             return device->recvMessage(pkt);
         }
     };
-
+  public:
     class IntMasterPort : public MessageMasterPort
     {
         IntDevice* device;
@@ -108,8 +109,9 @@ class IntDevice
         void sendMessage(ApicList apics,
                 TriggerIntMessage message, bool timing);
     };
-
+  protected:
     IntMasterPort intMasterPort;
+   //friend uint64_t PseudoInst::stacklet_sendi(ThreadContext *tc, uint64_t msg, uint16_t dest_cpu);
 
   public:
     IntDevice(MemObject * parent, Tick latency = 0) :

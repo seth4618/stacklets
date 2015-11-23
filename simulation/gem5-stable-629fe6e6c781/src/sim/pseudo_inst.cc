@@ -661,7 +661,7 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
   /*
    * This instruction sends a user-level interrupt to another core.
    */
-  //System *sys = tc->getSystemPtr();
+  System *sys = tc->getSystemPtr();
   DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
 
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
@@ -674,6 +674,8 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
   apics.push_back(dest_cpu);
   //TheISA::IntMasterPort *intMasterPort = dynamic_cast<TheISA::IntMasterPort *>(interrupts->getMasterPort("int_master"));
   //intMasterPort->sendMessage(apics, message, sys->isTimingMode());
+  TheISA::IntDevice::IntMasterPort intMasterPort = dynamic_cast<TheISA::IntDevice::IntMasterPort& >(interrupts->getMasterPort("int_master"));
+  intMasterPort.sendMessage(apics, message, sys->isTimingMode());
   return 0;
 }
 
