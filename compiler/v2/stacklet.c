@@ -6,9 +6,12 @@
 #include "readyQ.h"
 #include "debug.h"
 #include <stdlib.h>
+#include "myfib.h"
+#include <assert.h>
 
 void* systemStack;
-void* volatile stubBase;
+void* stubBase = (void*)-1; // there is no stacklet stub for the main stack
+extern Foo* fg;
 
 void
 systemStackInit()
@@ -16,6 +19,7 @@ systemStackInit()
     void* systemStackBuffer;
     systemStackBuffer = calloc(1, SYSTEM_STACK_SIZE);
     systemStack = systemStackBuffer + SYSTEM_STACK_SIZE;
+    DEBUG_PRINT("systemStack at %p.\n", systemStack);
 }
 
 void
@@ -29,11 +33,10 @@ stackletInit()
 void
 stubRoutine()
 {
-    DEBUG_PRINT("In stub routine.\n");
     Stub* stackletStub = (Stub *)((char *)stubBase - sizeof(Stub));
     void* buf = (char *)stubBase - STACKLET_SIZE;
+    DEBUG_PRINT("In stub routine, frees a stacklet at %p.\n", buf);
  
-    DEBUG_PRINT("\tFirst child returns first.\n");
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
             stackletStub->parentPC, stackletStub->parentStubBase);
 }
@@ -44,7 +47,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
 {
     DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
-    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf);
+//    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
     void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;
     Stub* stackletStub = (Stub *)((char *)newStubBase - sizeof(Stub));
 
@@ -97,9 +100,10 @@ yield(void)
     labelhack(Resume);
 
     DEBUG_PRINT("Put self in readyQ and suspend\n");
-    Registers volatile saveArea;
-    void* volatile localStubBase = stubBase;
-    //DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
+    Registers saveArea;
+    void* localStubBase = stubBase;
+    DEBUG_PRINT("stacklet %p cannot be freed\n", stubBase - STACKLET_SIZE);
+    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
@@ -110,5 +114,7 @@ yield(void)
 Resume:
     restoreRegisters();
     stubBase = localStubBase;
+    DEBUG_PRINT("stacklet %p can be freed\n", stubBase - STACKLET_SIZE);
+    DEBUG_PRINT("Restore stubBase to be %p.\n", stubBase);
     DEBUG_PRINT("Resumed a ready thread.\n");
 }

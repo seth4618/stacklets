@@ -6,6 +6,7 @@
 typedef struct ReadyThread {
     void* adr;
     void* sp;
+    int id;
     struct ReadyThread* next;
 } ReadyThread;
 

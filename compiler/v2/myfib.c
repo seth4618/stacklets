@@ -16,16 +16,15 @@ fib(void* F)
     // deadcode analysis.
     labelhack(FirstChildDoneNormally);
     labelhack(SecondChildSteal);
-    labelhack(ChildDone);
+    labelhack(FirstChildDone);
+    labelhack(SecondChildDone);
 
-    // The compiler will assign 0 to these local variables after label if we do
-    // not specify volatile attribute here.
-    Foo* volatile f = (Foo *)F;
-    Registers volatile saveArea; //XXX can this make sure saveArea is on the stack
+    Foo* f = (Foo *)F;
+    Registers saveArea; //XXX can this make sure saveArea is on the stack
 
     if (f->input <= 2)
     {
-//        DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
+        DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
         f->output = 1;
         return;
     }
@@ -36,26 +35,28 @@ fib(void* F)
         yield();
     }
     // ====================================
-//    DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
+    DEBUG_PRINT("[n = %d, depth = %d]\n", f->input, f->depth);
 
-    Foo* volatile a = (Foo *)calloc(1, sizeof(Foo));
-    Foo* volatile b = (Foo *)calloc(1, sizeof(Foo));
+    Foo* a = (Foo *)calloc(1, sizeof(Foo));
+    Foo* b = (Foo *)calloc(1, sizeof(Foo));
     a->input = f->input - 1;
     a->depth = f->depth + 1;
     b->input = f->input - 2;
     b->depth = f->depth + 1;
 
     // stacklet ===========================
-    void* volatile stackPointer;
+    void* stackPointer;
     getStackPointer(stackPointer); //XXX May be we can push ebp, where it points to esp also ??
-    Seed* volatile seed = initSeed(&&SecondChildSteal, stackPointer);
+    Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
     pushSeed(seed);
-    int volatile syncCounter = 0;
+    int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
+    void* localStubBase = stubBase; // used more than 12 hours to find this bug...
     saveRegisters();
     // ====================================
 
     fib(a);
+    restoreRegisters();
     goto *firstChildReturnAdr;
 
 FirstChildDoneNormally:
@@ -65,30 +66,53 @@ FirstChildDoneNormally:
 
     fib(b);
     f->output = a->output + b->output;
-//    DEBUG_PRINT("Normal return from n = %d\n", f->input);
+    DEBUG_PRINT("Normal return from n = %d\n", f->input);
     return;
 
 SecondChildSteal:
     // stacklet ===========================
     restoreRegisters();
-    firstChildReturnAdr = &&ChildDone;
+    firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
+    stubBase = localStubBase;
     saveRegisters();
-    stackletForkStub(&&ChildDone, stackPointer, fib, (void *)b);
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b);
     // ====================================
 
-ChildDone:
+FirstChildDone:
     // stacklet ===========================
     restoreRegisters();
     if (--syncCounter != 0)
     {
+        DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
+        DEBUG_PRINT("First child finishes first.\n");
         saveRegisters();
         suspendStub();
     }
     // ====================================
 
+    DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
+    DEBUG_PRINT("First child finishes last.\n");
     f->output = a->output + b->output;
-//    DEBUG_PRINT("A child return from n = %d\n", f->input);
+    DEBUG_PRINT("A child return from n = %d\n", f->input);
+    return;
+
+SecondChildDone:
+    // stacklet ===========================
+    restoreRegisters();
+    if (--syncCounter != 0)
+    {
+        // Cannot make any function calls here when second child finishes first.
+        // This is different from the case the first child finishes first.
+        saveRegisters();
+        suspendStub();
+    }
+    // ====================================
+
+    DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
+    DEBUG_PRINT("Second child finishes last.\n");
+    f->output = a->output + b->output;
+    DEBUG_PRINT("A child return from n = %d\n", f->input);
     return;
 }
 

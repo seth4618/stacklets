@@ -1,6 +1,9 @@
 // @readyQ.c
 #include "readyQ.h"
 #include <stdlib.h>
+#include "debug.h"
+
+int readyQId;
 
 void readyQInit()
 {
@@ -12,6 +15,7 @@ void enqReadyQ(void* resumeAdr, void *stackPointer)
     ReadyThread* ready = (ReadyThread *)calloc(1, sizeof(ReadyThread));
     ready->adr = resumeAdr;
     ready->sp = stackPointer;
+    ready->id = readyQId++;
     if (readyDummyHead->back) {
         readyDummyHead->back->next = ready;
         readyDummyHead->back = ready;
@@ -28,5 +32,6 @@ void deqReadyQ()
     if (origFront->next == NULL) {
         readyDummyHead->back = NULL;
     }
+    //DEBUG_PRINT("deqReadyQ with adr %p.\n", origFront->adr); XXX crash here
     free(origFront);
 }

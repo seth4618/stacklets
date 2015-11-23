@@ -1,4 +1,5 @@
 // @file stacklet.h
+#pragma once
 
 #include <stdint.h>
 
@@ -12,10 +13,10 @@ typedef struct {
 } Stub;
 
 extern void* systemStack;
-extern void* volatile stubBase;
+extern void* stubBase;
 
 #define SYSTEM_STACK_SIZE   8192
-#define STACKLET_SIZE       8192
+#define STACKLET_SIZE       81920
 
 void stackletInit();
 void systemStackInit();
@@ -29,7 +30,7 @@ void yield(void);
 
 #define suspendStub() do {\
 asm volatile("movq %[sysStack], %%rsp \n"\
-             "call _suspend \n"\
+             "call suspend \n"\
              :\
              : [sysStack] "m" (systemStack));} while (0)
 
@@ -39,7 +40,7 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
              "movq %[Afunc], %%rdx \n"\
              "movq %[Aarg], %%rcx \n"\
              "movq %[sysStack], %%rsp \n"\
-             "call _stackletFork \n"\
+             "call stackletFork \n"\
              :\
              : [AparentPC] "r" (parentPC),\
                [AparentSP] "r" (parentSP),\
@@ -71,7 +72,7 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
              "movq %[AsystemStack],%%rsp \n"\
              "pushq %[Asp] \n"\
              "pushq %[Aadr] \n"\
-             "call _free \n"\
+             "call free \n"\
              "popq %%rbx \n"\
              "popq %%rax \n"\
              "movq %%rax,%%rsp \n"\

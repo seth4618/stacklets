@@ -1,4 +1,5 @@
 // @file debug.c
+#pragma once
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,11 +11,7 @@
 #endif
 
 #define EMBED_BREAKPOINT bp()
-void bp(void) {}
+void bp(void);
 
 // helper functions
-void die(char* str)
-{
-    fprintf(stderr, "Error: %s\n", str);
-    exit(-1);
-}
+void die(char* str);
