@@ -1,0 +1,8 @@
+CC=gcc
+CFLAGS=-shared -fpic -o
+LDLIBS=-lpthread
+
+uli.so: u_interrupt.c queue.c spinlock.c system.c atomic_xchange.S
+	$(CC) $(CFLAGS) uli.so u_interrupt.c queue.c spinlock.c system.c atomic_xchange.S
+clean:
+	rm -f *.o
