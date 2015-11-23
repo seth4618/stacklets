@@ -13,7 +13,8 @@ The first lfork will always be a sequential call. But before we call it:
    resume, on the seed stack (let's call it "SecondChildSteal").
 2) Set the synchronization counter to be 0.
 3) Set the return address of the first child.
-4) We store all the registers on the stack in a reserved area.
+4) Save the current stubBase in a local variable.
+5) We store all the registers on the stack in a reserved area.
 
 For every several seeds we push to the seed stack, we call "yield", where we:
 1) Save the stubBase and registers on the stack.
@@ -34,11 +35,12 @@ In "suspend", we:
        the registers.
    (5) Change the return address of the first call to "ChildDone".
    (6) Initialize the synchronization counter to be 2.
-   (7) Store the registers on the stack in the same reversed area.
-   (8) Change the stack pointer to a "system stack".
-   (9) Call "stackletFork" with the return address "ChildDone", the
-       stack pointer of the current function as parameters, the function to
-       execute and the paremeter for the function.
+   (7) Restore the stubBase address.
+   (8) Store the registers on the stack in the same reversed area.
+   (9) Change the stack pointer to a "system stack".
+   (10) Call "stackletFork" with the return address "ChildDone", the
+        stack pointer of the current function as parameters, the function to
+        execute and the paremeter for the function.
 2) Check if there is any thread in the readyQ. If so, then we will resume
    the work of this user thread by:
    (1) Dequeue the readyQ.

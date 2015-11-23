@@ -56,7 +56,8 @@ fib(void* F)
     // ====================================
 
     fib(a);
-    restoreRegisters();
+    restoreRegisters(); // may not need to as we already used "volatile" on
+                        // "firstChildReturnAdr"
     goto *firstChildReturnAdr;
 
 FirstChildDoneNormally:
