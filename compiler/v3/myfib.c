@@ -6,9 +6,6 @@
 #include <pthread.h>
 #include <assert.h>
 
-//static int suspCtr = 0;
-//static int suspHere = 2;
-
 __thread long threadId;
 volatile int line;
 pthread_mutex_t lineLock;
@@ -36,12 +33,6 @@ fib(void* F)
         return;
     }
 
-    // testHack ===========================
-//    if (suspCtr++ >= suspHere) {
-//        suspCtr = 0;
-//        yield();
-//    }
-    // ====================================
     pthread_mutex_lock(&lineLock);
     DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d, line = %d]\n",
         threadId, f->input, f->depth, line++);
@@ -50,9 +41,7 @@ fib(void* F)
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     Foo* b = (Foo *)calloc(1, sizeof(Foo));
     a->input = f->input - 1;
-    a->depth = f->depth + 1;
     b->input = f->input - 2;
-    b->depth = f->depth + 1;
 
     // stacklet ===========================
     void* stackPointer;
@@ -61,7 +50,8 @@ fib(void* F)
     pthread_mutex_lock(&seedStackLock);
     pushSeed(seed);
     pthread_mutex_unlock(&seedStackLock);
-    int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination
+    int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
+                                  // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     void* localStubBase = stubBase; // used more than 12 hours to find this bug...
     saveRegisters();
@@ -98,38 +88,30 @@ FirstChildDone:
     // stacklet ===========================
     restoreRegisters();
     pthread_mutex_unlock(&seedStackLock);
-    if (--syncCounter != 0)
+    atomicAdd(syncCounter, -1);
+    if (syncCounter != 0)
     {
-//        DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
-//        DEBUG_PRINT("First child finishes first.\n");
         saveRegisters();
         suspendStub();
     }
     // ====================================
 
-//    DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
-//    DEBUG_PRINT("First child finishes last.\n");
     f->output = a->output + b->output;
-//    DEBUG_PRINT("A child return from n = %d\n", f->input);
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
                  // has already returned.
     // stacklet ===========================
     restoreRegisters();
-    if (--syncCounter != 0)
+    atomicAdd(syncCounter, -1);
+    if (syncCounter != 0)
     {
-        // Cannot make any function calls here when second child finishes first.
-        // This is different from the case the first child finishes first.
         saveRegisters();
         suspendStub();
     }
     // ====================================
 
-//    DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
-//    DEBUG_PRINT("Second child finishes last.\n");
     f->output = a->output + b->output;
-//    DEBUG_PRINT("A child return from n = %d\n", f->input);
     return;
 }
 
@@ -170,11 +152,11 @@ startfib(int n, int numthreads)
 
     // set up pthreads
     {
-      pthread_t tid[2];
+      pthread_t tid[30];
       long i;
-      for (i = 0; i < 2; i++)
+      for (i = 0; i < 30; i++)
         pthread_create(&tid[i], NULL, thread, (void*)i);
-      for (i = 0; i < 2; i++)
+      for (i = 0; i < 30; i++)
         pthread_join(tid[i], NULL); // this will stall forever
     }
 

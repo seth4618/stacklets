@@ -28,6 +28,10 @@ void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg
 void suspend();
 void yield(void);
 
+#define atomicAdd(x,change) do {\
+asm volatile("xadd %[Achange], %[Ax] \n"\
+             : [Ax] "=m" (x) \
+             : [Achange] "r" (change));} while (0)
 #define labelhack(x) \
     asm goto("" : : : : x)
 
@@ -86,7 +90,7 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
                [Aadr] "r" (adr),\
                [AsystemStack] "m" (systemStack),\
                [AparentSB] "r" (parentSB)\
-             : "rdi");} while (0)
+             : "rdi", "rbx", "rax");} while (0)
 
 #define restoreStackPointer(x) do { \
     asm volatile("movq %[sp],%%rsp" : : [sp] "r" (x) : "rsp"); } while (0)
