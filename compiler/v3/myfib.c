@@ -10,6 +10,8 @@
 //static int suspHere = 2;
 
 __thread long threadId;
+volatile int line;
+pthread_mutex_t lineLock;
 
 void
 fib(void* F)
@@ -26,7 +28,10 @@ fib(void* F)
 
     if (f->input <= 2)
     {
-        DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d]\n", threadId, f->input, f->depth);
+        pthread_mutex_lock(&lineLock);
+        DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d, line = %d]\n",
+            threadId, f->input, f->depth, line++);
+        pthread_mutex_unlock(&lineLock);
         f->output = 1;
         return;
     }
@@ -37,7 +42,10 @@ fib(void* F)
 //        yield();
 //    }
     // ====================================
-    DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d]\n", threadId, f->input, f->depth);
+    pthread_mutex_lock(&lineLock);
+    DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d, line = %d]\n",
+        threadId, f->input, f->depth, line++);
+    pthread_mutex_unlock(&lineLock);
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     Foo* b = (Foo *)calloc(1, sizeof(Foo));
@@ -50,9 +58,9 @@ fib(void* F)
     void* stackPointer;
     getStackPointer(stackPointer); //XXX May be we can push ebp, where it points to esp also ??
     Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
-//    pthread_mutex_lock(&seedStackLock);
+    pthread_mutex_lock(&seedStackLock);
     pushSeed(seed);
-//    pthread_mutex_unlock(&seedStackLock);
+    pthread_mutex_unlock(&seedStackLock);
     int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     void* localStubBase = stubBase; // used more than 12 hours to find this bug...
@@ -62,13 +70,13 @@ fib(void* F)
     fib(a);
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
-//    pthread_mutex_lock(&seedStackLock);
+    pthread_mutex_lock(&seedStackLock);
     goto *firstChildReturnAdr;
 
 FirstChildDoneNormally:
     // stacklet ===========================
     popSeed(seed);
-//    pthread_mutex_unlock(&seedStackLock);
+    pthread_mutex_unlock(&seedStackLock);
     // ====================================
 
     fib(b);
@@ -76,7 +84,7 @@ FirstChildDoneNormally:
 //    DEBUG_PRINT("Normal return from n = %d\n", f->input);
     return;
 
-SecondChildSteal:
+SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
     restoreRegisters();
     firstChildReturnAdr = &&FirstChildDone;
@@ -89,6 +97,7 @@ SecondChildSteal:
 FirstChildDone:
     // stacklet ===========================
     restoreRegisters();
+    pthread_mutex_unlock(&seedStackLock);
     if (--syncCounter != 0)
     {
 //        DEBUG_PRINT("syncCounter is at %p.\n", &syncCounter);
@@ -104,7 +113,8 @@ FirstChildDone:
 //    DEBUG_PRINT("A child return from n = %d\n", f->input);
     return;
 
-SecondChildDone:
+SecondChildDone: // We cannot make function calls before we confirm first child
+                 // has already returned.
     // stacklet ===========================
     restoreRegisters();
     if (--syncCounter != 0)
@@ -144,6 +154,8 @@ startfib(int n, int numthreads)
 
     stackletInit();
 
+    pthread_mutex_init(&lineLock, NULL);
+
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
     a->depth = 1;
@@ -157,12 +169,16 @@ startfib(int n, int numthreads)
     // ====================================
 
     // set up pthreads
-    pthread_t tid[2];
-    long i;
-    for (i = 0; i < 2; i++)
-      pthread_create(&tid[i], NULL, thread, (void*)i);
-    for (i = 0; i < 2; i++)
-      pthread_join(tid[i], NULL); // this will stall forever
+    {
+      pthread_t tid[2];
+      long i;
+      for (i = 0; i < 2; i++)
+        pthread_create(&tid[i], NULL, thread, (void*)i);
+      for (i = 0; i < 2; i++)
+        pthread_join(tid[i], NULL); // this will stall forever
+    }
+
+    //assert(0);
 
 Start:
     // stacklet ===========================

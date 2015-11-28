@@ -28,8 +28,8 @@ systemStackInit()
 void
 lockInit()
 {
-    pthread_mutex_init(&seedStackLock, NULL);
-    pthread_mutex_init(&readyQLock, NULL);
+    assert(pthread_mutex_init(&seedStackLock, NULL) == 0);
+    assert(pthread_mutex_init(&readyQLock, NULL) == 0);
 }
 
 void
@@ -55,6 +55,9 @@ stubRoutine()
 void
 stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
 {
+    // We can only unlock here because we cannot make function in
+    // "SecondChildSteal"
+    pthread_mutex_unlock(&seedStackLock);
     DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
 //    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
@@ -82,22 +85,22 @@ suspend()
     for (;;)
     {
         // look at seedStack.  If there is stuff there, grab it
-//        pthread_mutex_lock(&seedStackLock);
+        pthread_mutex_lock(&seedStackLock);
         Seed* seed = seedDummyHead->next;
         if (seed != NULL)
         {
             void* adr = seed->adr;
             void* sp = seed->sp;
             popSeed(seed);
-//            pthread_mutex_unlock(&seedStackLock);
             switchAndJmp(sp, adr);
         }
-//        pthread_mutex_unlock(&seedStackLock);
+        pthread_mutex_unlock(&seedStackLock);
 
         // look at ready Q.  If there is stuff there, grab one and start it
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
+            assert(0);
             void* adr = ready->adr;
             void* sp = ready->sp;
             deqReadyQ();
