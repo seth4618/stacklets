@@ -6,6 +6,7 @@
 
 #define SMP_INTFLAG 0x0001
 
+//#define DEBUG
 void init_uint() {
 	int i = 0;
 	for (i = 0; i < NUM_CORES; ++i)
@@ -36,12 +37,18 @@ void eui(int flag) {
 }
 
 void sendI(message *msg, int target) {
+#ifdef DEBUG
+    printf("Inside sendI\n");
+#endif
 	enqueue(msg_bufs[target], msg); 
 }
 
 void i_handler(int core_idx) {
 	queue *q = msg_bufs[core_idx];
 	while(!is_empty(q)) {
+#ifdef DEBUG
+        printf("Core %d inside ihandler\n", core_idx);
+#endif
 	    message *msg = dequeue(q);
 	    callback_t c = msg -> callback;
 	    (*c)(msg -> p);
@@ -50,8 +57,10 @@ void i_handler(int core_idx) {
 
 }
 
-void poll(void) {
-    int core_idx = get_myid();
+void our_poll() {
+    int core_idx;
+
+    core_idx = get_myid();
 
 	if (flags[core_idx] & SMP_INTFLAG)
 	{

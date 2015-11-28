@@ -22,7 +22,7 @@ void init_uint();
 #define DUI(x)	dui(x)
 #define EUI(x) 	eui(x)
 #define SENDI(x, y) sendI(x, y)
-#define POLL() poll()
+#define POLL() our_poll()
 
 #endif
 
@@ -32,6 +32,6 @@ void eui(int flag);
 void sendI(message *msg, int target);
 
 void i_handler(int core_idx);
-void poll();
+void our_poll();
 
 #endif
