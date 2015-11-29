@@ -40,13 +40,14 @@
 
 namespace X86ISA
 {
-    BitUnion32(TriggerIntMessage)
+    BitUnion64(TriggerIntMessage)
         Bitfield<7, 0> destination;
         Bitfield<15, 8> vector;
         Bitfield<18, 16> deliveryMode;
         Bitfield<19> destMode;
         Bitfield<20> level;
         Bitfield<21> trigger;
+        Bitfield<53, 22> global_message_map_key;
     EndBitUnion(TriggerIntMessage)
 
     namespace DeliveryMode

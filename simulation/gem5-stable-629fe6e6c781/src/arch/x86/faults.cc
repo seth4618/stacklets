@@ -47,6 +47,7 @@
 #include "cpu/thread_context.hh"
 #include "debug/Faults.hh"
 #include "sim/full_system.hh"
+#include "arch/x86/interrupts.hh"
 
 namespace X86ISA
 {
@@ -319,6 +320,10 @@ namespace X86ISA
        */
       PCState pcState = tc->pcState();
       Addr pc = pcState.pc();
+      //uli_node_t node = popTopULI(tc);
+      if(node.uli_handler_pc == 0) {
+        assert(0);
+      }
 
       /*
        * Need to save PC into a custom register (R15).

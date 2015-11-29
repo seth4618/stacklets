@@ -369,4 +369,20 @@ storeFloat80(void *_mem, double value)
     *fp80 = fp80_cvfd(value);
 }
 
+uli_node_t popTopULI(ThreadContext *tc)
+{
+  uli_node_t node;
+  node.uli_handler_pc = 0;
+  node.packet_address = 0;
+  Interrupts * interrupts = dynamic_cast<Interrupts *>(
+      tc->getCpuPtr()->getInterruptController());
+  assert(interrupts);
+  if((interrupts->uli_queue).empty()) {
+    return node;
+  }
+  node = (interrupts->uli_queue).front();
+  (interrupts->uli_queue).pop();
+  return node;
+}
+
 } // namespace X86_ISA

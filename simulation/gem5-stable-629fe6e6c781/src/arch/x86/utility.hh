@@ -48,6 +48,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "sim/full_system.hh"
+#include "arch/x86/faults.hh"
 
 class ThreadContext;
 
@@ -203,6 +204,8 @@ namespace X86ISA
      * @param value Double precision float to store.
      */
     void storeFloat80(void *mem, double value);
+
+    uli_node_t popTopULI(ThreadContext *tc);
 }
 
 #endif // __ARCH_X86_UTILITY_HH__

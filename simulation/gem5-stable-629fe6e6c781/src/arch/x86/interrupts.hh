@@ -186,7 +186,7 @@ class Interrupts : public BasicPioDevice, IntDevice
         return bits(regs[base + (vector / 32)], vector % 32);
     }
 
-    void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
+    void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level, uint32_t global_message_map_key);
 
     BaseCPU *cpu;
 
@@ -201,6 +201,8 @@ class Interrupts : public BasicPioDevice, IntDevice
      * ULI queue head.
      */
     std::queue<uli_node_t> uli_queue;
+    std::map<uint64_t, stacklet_message_t> global_message_map;
+    uint64_t global_message_counter;
     uint64_t savedULIPC;
     void addULI(uint8_t mask, uint64_t packet_address, uint64_t uli_handler_pc);
 
@@ -237,7 +239,7 @@ class Interrupts : public BasicPioDevice, IntDevice
     {
         LVTEntry entry = regs[APIC_LVT_TIMER];
         if (!entry.masked)
-            requestInterrupt(entry.vector, entry.deliveryMode, entry.trigger);
+            requestInterrupt(entry.vector, entry.deliveryMode, entry.trigger, 0);
         return entry.periodic;
     }
 

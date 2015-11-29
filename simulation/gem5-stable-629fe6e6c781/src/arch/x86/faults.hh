@@ -54,6 +54,11 @@ typedef struct uli_node {
   uint64_t uli_handler_pc;
 } uli_node_t;
 
+typedef struct stacklet_message {
+  uint64_t callback;
+  uint64_t p;
+} stacklet_message_t;
+
 namespace X86ISA
 {
     // Base class for all x86 "faults" where faults is in the m5 sense

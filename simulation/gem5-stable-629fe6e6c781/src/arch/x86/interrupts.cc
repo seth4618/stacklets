@@ -246,7 +246,7 @@ X86ISA::Interrupts::write(PacketPtr pkt)
 }
 void
 X86ISA::Interrupts::requestInterrupt(uint8_t vector,
-        uint8_t deliveryMode, bool level)
+        uint8_t deliveryMode, bool level, uint32_t global_message_map_key)
 {
     /*
      * Fixed and lowest-priority delivery mode interrupts are handled
@@ -293,6 +293,9 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
             // it will subsequently be picked up in the commit phase of the pipeline
             pendingUnmaskableInt = pendingULI = true;
             uliVector = vector; // maybe not needed
+            stacklet_message_t stacklet_msg = global_message_map[global_message_map_key];
+            addULI(vector, stacklet_msg.p, stacklet_msg.callback);
+            global_message_map.erase(global_message_map_key);
         }
     }
     if (FullSystem)
@@ -347,7 +350,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
                     message.vector);
 
             requestInterrupt(message.vector,
-                    message.deliveryMode, message.trigger);
+                    message.deliveryMode, message.trigger, message.global_message_map_key);
         }
         break;
       default:
@@ -525,7 +528,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                         for (int i = 0; i < numContexts; i++) {
                             if (i == initialApicId) {
                                 requestInterrupt(message.vector,
-                                        message.deliveryMode, message.trigger);
+                                        message.deliveryMode, message.trigger, message.global_message_map_key);
                             } else {
                                 apics.push_back(i);
                             }
@@ -533,7 +536,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                     } else {
                         if (message.destination == initialApicId) {
                             requestInterrupt(message.vector,
-                                    message.deliveryMode, message.trigger);
+                                    message.deliveryMode, message.trigger, message.global_message_map_key);
                         } else {
                             apics.push_back(message.destination);
                         }
@@ -543,11 +546,11 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
               case 1:
                 newVal = val;
                 requestInterrupt(message.vector,
-                        message.deliveryMode, message.trigger);
+                        message.deliveryMode, message.trigger, message.global_message_map_key);
                 break;
               case 2:
                 requestInterrupt(message.vector,
-                        message.deliveryMode, message.trigger);
+                        message.deliveryMode, message.trigger, message.global_message_map_key);
                 // Fall through
               case 3:
                 {
@@ -633,6 +636,9 @@ X86ISA::Interrupts::Interrupts(Params * p)
     regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
     ISRV = 0;
     IRRV = 0;
+
+    savedULIPC = 0;
+    global_message_counter = 0;
 }
 
 
@@ -686,8 +692,20 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
             DPRINTF(LocalApic, "Generating SIPI fault object.\n");
             return std::make_shared<StartupInterrupt>(startupVector);
         } else if (pendingULI) {
-            DPRINTF(LocalApic, "Generating ULI fault object.\n");
-            return std::make_shared<ULI>(uli_queue.front());
+          DPRINTF(LocalApic, "Generating ULI fault object.\n");
+          uli_node_t node;
+          node.uli_handler_pc = 0;
+          node.packet_address = 0;
+          if(uli_queue.empty()) {
+            return NoFault;
+          }
+          node = uli_queue.front();
+          uli_queue.pop();
+          /*uli_node_t node = popTopULI(tc);
+          if(node.uli_handler_pc == 0) {
+            assert(0);
+          }*/
+          return std::make_shared<ULI>(node);
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
                     "ints were pending.\n");

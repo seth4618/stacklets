@@ -669,11 +669,16 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
 
   TriggerIntMessage message = 0;
   message.deliveryMode = 8; // 8 stands for ULI
+  message.vector = 0; // this will be mask eventually
+  interrupts->global_message_counter++;
+  message.global_message_map_key = interrupts->global_message_counter; // position in the global messages queue
+  stacklet_message_t stacklet_msg;
+  stacklet_msg.callback = (uint64_t) msg;
+  stacklet_msg.p = (uint64_t) (msg + sizeof(uint64_t)); // this is assuming 64 bit architecture
+  interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
 
   ApicList apics;
   apics.push_back(dest_cpu);
-  //TheISA::IntMasterPort *intMasterPort = dynamic_cast<TheISA::IntMasterPort *>(interrupts->getMasterPort("int_master"));
-  //intMasterPort->sendMessage(apics, message, sys->isTimingMode());
   TheISA::IntDevice::IntMasterPort intMasterPort = dynamic_cast<TheISA::IntDevice::IntMasterPort& >(interrupts->getMasterPort("int_master"));
   intMasterPort.sendMessage(apics, message, sys->isTimingMode());
   return 0;
