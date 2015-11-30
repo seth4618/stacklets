@@ -1,0 +1,108 @@
+I DON'T THINK THIS WORKS.
+
+Shared Variable:
+
+L: contains ownerId of the tail of the lock
+
+Local Variables:
+
+trigger: boolean
+waiter: Id of next proc waiting for lock
+myID: my thread ID
+
+init:
+{
+	trigger = 0;
+	next = nil
+	waiter = nil;
+}
+
+acquire:
+{	
+  if (L == nil)			// see if lock is free?
+ top:
+     L = myID			// try and grab it
+  
+  fence.w.r
+  if (L != myID && trigger == 0) {		// did I get it?
+     // trigger = 0;		// No, so get setup to wait for it
+     if (L == nil) goto top;
+     sendI(&addme, &L, myID);
+     while (trigger == 0) spin;
+     // someone told me I have the lock
+  } 
+  // I have the lock
+}
+
+release:
+{
+  DUI
+  if (waiter != nil) {
+    next = waiter;
+    waiter = nil;
+    next->trigger = 1;
+  } else {
+        // noone waiting on my release, reset L
+  	L = nil;
+  }
+  trigger = 0;	// prevent double release
+  EUI
+}
+
+// not fair possible in case where I release as someone asks
+addme(askId)
+{
+  DUI
+    if (L != myId) {
+      if (L == nil) {
+        sendI(nak, &L);
+      } else {
+        sendI(addme, &L, askId);
+      }
+    } else {
+      waiter = askId;
+      L = askId;
+    }
+  EUI
+}
+
+// also unfair, but no nak.
+// do we need a time stamp?
+addme(askId)
+{
+  DUI
+    if (L != myId) {
+      if (L == nil) {
+        L = askId;
+	fence.w.r;
+	if (L != askId) sendI(addme, &L, askId);
+	else askId->trigger = 1;
+      } else {
+        sendI(addme, &L, askId);
+      }
+    } else {
+      waiter = askId;
+      L = askId;
+    }
+  EUI
+}
+
+// not a fair solution
+nak()
+{
+	// I asked for lock and didn't get it, try again
+	run acquire
+}
+
+Questions:
+- Who can update L?
+- Is it possible for more than on thread to have the ability to update L?
+- Deadlock possible?
+- Is it fair?
+- Is it fast when not locked?
+- worst case network traffic?  What is the condition?
+- Do we need fences? atomic operations?
+
+
+
+

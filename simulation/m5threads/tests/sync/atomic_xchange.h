@@ -1,0 +1,1 @@
+int atomic_xchange(int *state_ptr);
