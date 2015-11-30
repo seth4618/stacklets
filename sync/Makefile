@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g
+CFLAGS=-g -static -O3 -DSIM -I ../simulation/gem5-stable-629fe6e6c781/util/m5 ../simulation/gem5-stable-629fe6e6c781/util/m5/m5op_x86.S
 LDLIBS=-lpthread
 myapp: myapp.c mylock.o u_interrupt.o queue.o spinlock.o system.o atomic_xchange.o
 	$(CC) $(CFLAGS) -o myapp myapp.c mylock.o u_interrupt.o queue.o spinlock.o system.o atomic_xchange.o $(LDLIBS)
