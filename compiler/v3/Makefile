@@ -1,5 +1,5 @@
-CC=gcc-4.8
-CFLAGS=-g -DDEBUG -O
+CC=gcc
+CFLAGS=-g -O2
 LIBS = -lpthread
 DEPS = myfib.h seedStack.h readyQ.h stacklet.h debug.h
 OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o

@@ -45,7 +45,7 @@ stubRoutine()
 {
     Stub* stackletStub = (Stub *)((char *)stubBase - sizeof(Stub));
     void* buf = (char *)stubBase - STACKLET_SIZE;
-//    DEBUG_PRINT("Free a stacklet.\n");
+    DEBUG_PRINT("Free a stacklet.\n");
  
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
             stackletStub->parentPC, stackletStub->parentStubBase);
@@ -58,9 +58,9 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
     // We can only unlock here because we cannot make function in
     // "SecondChildSteal"
     pthread_mutex_unlock(&seedStackLock);
-//    DEBUG_PRINT("Forking a stacklet.\n");
+    DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
-//    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
+    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
     void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;
     Stub* stackletStub = (Stub *)((char *)newStubBase - sizeof(Stub));
 
@@ -110,27 +110,27 @@ suspend()
 }
 
 // Yield to another user thread.
-void
-yield(void)
-{
-    labelhack(Resume);
-
-    DEBUG_PRINT("Put self in readyQ and suspend\n");
-    Registers saveArea;
-    void* localStubBase = stubBase;
-    DEBUG_PRINT("stacklet %p cannot be freed\n", stubBase - STACKLET_SIZE);
-    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
-    saveRegisters();
-    void* stackPointer;
-    getStackPointer(stackPointer);
-    enqReadyQ(&&Resume, stackPointer);
-
-    suspendStub();
-
-Resume:
-    restoreRegisters();
-    stubBase = localStubBase;
-    DEBUG_PRINT("stacklet %p can be freed\n", stubBase - STACKLET_SIZE);
-    DEBUG_PRINT("Restore stubBase to be %p.\n", stubBase);
-    DEBUG_PRINT("Resumed a ready thread.\n");
-}
+//void
+//yield(void)
+//{
+//    labelhack(Resume);
+//
+//    DEBUG_PRINT("Put self in readyQ and suspend\n");
+//    Registers saveArea;
+//    void* localStubBase = stubBase;
+//    DEBUG_PRINT("stacklet %p cannot be freed\n", stubBase - STACKLET_SIZE);
+//    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
+//    saveRegisters();
+//    void* stackPointer;
+//    getStackPointer(stackPointer);
+//    enqReadyQ(&&Resume, stackPointer);
+//
+//    suspendStub();
+//
+//Resume:
+//    restoreRegisters();
+//    stubBase = localStubBase;
+//    DEBUG_PRINT("stacklet %p can be freed\n", stubBase - STACKLET_SIZE);
+//    DEBUG_PRINT("Restore stubBase to be %p.\n", stubBase);
+//    DEBUG_PRINT("Resumed a ready thread.\n");
+//}

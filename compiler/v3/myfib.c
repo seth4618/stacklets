@@ -7,11 +7,13 @@
 #include <assert.h>
 
 __thread long threadId;
+
+#ifdef DEBUG
 volatile int line;
 pthread_mutex_t lineLock;
-//int lineReturned[3000000]; // sufficient up to 30
-  int lineReturned[300000000];
+int lineReturned[300000000];
 pthread_mutex_t lineReturnedLock;
+#endif
 
 void
 fib(void* F)
@@ -28,19 +30,25 @@ fib(void* F)
 
     if (f->input <= 2)
     {
+
+#ifdef DEBUG
         pthread_mutex_lock(&lineLock);
-//        DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
-//            threadId, f->input, line++);
+        DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
+            threadId, f->input, line++);
         pthread_mutex_unlock(&lineLock);
+#endif
+
         f->output = 1;
         return;
     }
 
+#ifdef DEBUG
     pthread_mutex_lock(&lineLock);
     int volatile localLine = line++;
-//    DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
-//        threadId, f->input, localLine);
+    DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
+        threadId, f->input, localLine);
     pthread_mutex_unlock(&lineLock);
+#endif
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     Foo* b = (Foo *)calloc(1, sizeof(Foo));
@@ -101,10 +109,12 @@ FirstChildDone:
     }
     // ====================================
 
+#ifdef DEBUG
     pthread_mutex_lock(&lineReturnedLock);
     assert(lineReturned[localLine] == 0);
     lineReturned[localLine] = 1;
     pthread_mutex_unlock(&lineReturnedLock);
+#endif
 
     f->output = a->output + b->output;
     return;
@@ -123,10 +133,12 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     }
     // ====================================
 
+#ifdef DEBUG
     pthread_mutex_lock(&lineReturnedLock);
     assert(lineReturned[localLine] == 0);
     lineReturned[localLine] = 1;
     pthread_mutex_unlock(&lineReturnedLock);
+#endif
 
     f->output = a->output + b->output;
     return;
@@ -153,8 +165,10 @@ startfib(int n, int numthreads)
 
     stackletInit();
 
+#ifdef DEBUG
     pthread_mutex_init(&lineLock, NULL);
     pthread_mutex_init(&lineReturnedLock, NULL);
+#endif
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
@@ -169,11 +183,11 @@ startfib(int n, int numthreads)
 
     // set up pthreads
     {
-      pthread_t tid[50];
+      pthread_t tid[24];
       long i;
-      for (i = 0; i < 50; i++)
+      for (i = 0; i < 24; i++)
         pthread_create(&tid[i], NULL, thread, (void*)i);
-      for (i = 0; i < 50; i++)
+      for (i = 0; i < 24; i++)
         pthread_join(tid[i], NULL); // this will stall forever
     }
 

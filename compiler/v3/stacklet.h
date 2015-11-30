@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <pthread.h>
 
-#define MACOS
+//#define MACOS
 
 typedef uint64_t Registers[16];
 
@@ -28,7 +28,7 @@ void* systemStackInit();
 void stubRoutine();
 void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg);
 void suspend();
-void yield(void);
+//void yield(void);
 
 #define labelhack(x) \
     asm goto("" : : : : x)
