@@ -9,7 +9,8 @@
 __thread long threadId;
 volatile int line;
 pthread_mutex_t lineLock;
-int lineReturned[3000000];
+//int lineReturned[3000000]; // sufficient up to 30
+  int lineReturned[300000000];
 pthread_mutex_t lineReturnedLock;
 
 void
@@ -90,19 +91,16 @@ FirstChildDone:
     // stacklet ===========================
     restoreRegisters();
     pthread_mutex_unlock(&seedStackLock);
-    atomicAdd(syncCounter, -1);
-//    syncCounter--;
-//    atomicDec2(syncCounter);
-//    asm goto ("jnz %l0 \n" :::: a);
-    if (syncCounter != 0)
     {
-        saveRegisters();
-        suspendStub();
+        int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
+        if (localSyncCounter != 0)
+        {
+            saveRegisters();
+            suspendStub();
+        }
     }
-//a:
     // ====================================
 
-    DEBUG_PRINT("return from line %d\n", localLine);
     pthread_mutex_lock(&lineReturnedLock);
     assert(lineReturned[localLine] == 0);
     lineReturned[localLine] = 1;
@@ -115,19 +113,16 @@ SecondChildDone: // We cannot make function calls before we confirm first child
                  // has already returned.
     // stacklet ===========================
     restoreRegisters();
-    atomicAdd(syncCounter, -1);
-//    syncCounter--;
-//    atomicDec2(syncCounter);
-//    asm goto ("jnz %l0 \n" :::: b);
-    if (syncCounter != 0)
     {
-        saveRegisters();
-        suspendStub();
+        int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
+        if (localSyncCounter != 0)
+        {
+            saveRegisters();
+            suspendStub();
+        }
     }
-//b:
     // ====================================
 
-    DEBUG_PRINT("return from line %d\n", localLine);
     pthread_mutex_lock(&lineReturnedLock);
     assert(lineReturned[localLine] == 0);
     lineReturned[localLine] = 1;
