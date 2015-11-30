@@ -186,6 +186,10 @@ Start:
     // ====================================
 End:
     restoreRegisters();
+    printf("fib(%d) = %d\n", n, a->output);
+    exit(EXIT_SUCCESS);
+
+    // never reach here
     return a->output;
 }
 
@@ -200,7 +204,5 @@ main(int argc, char** argv)
     printf("Will run fib(%d) on %d thread(s)\n", n, numthreads);
 
     int x = startfib(n, numthreads);
-
-    printf("fib(%d) = %d\n", n, x);
     exit(0);
 }
