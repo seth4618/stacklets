@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <pthread.h>
 
+#define MACOS
+
 typedef uint64_t Registers[16];
 
 typedef struct {
@@ -28,28 +30,39 @@ void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg
 void suspend();
 void yield(void);
 
-#define atomicDec2(x) do {\
-asm volatile("movq $2, %%rax \n"\
-             "movq $1, %%rbx \n"\
-             "LOCK cmpxchg %%rbx, %[Ax] \n"\
-             : [Ax] "+m" (x) \
-             :\
-             : "rax", "rbx");} while (0)
-
-#define atomicAdd(x,change) do {\
-asm volatile("Lock add %[Achange], %[Ax] \n"\
-             : [Ax] "=m" (x) \
-             : [Achange] "r" (change));} while (0)
-
 #define labelhack(x) \
     asm goto("" : : : : x)
 
+#ifdef MACOS
+#define suspendStub() do {\
+asm volatile("movq %[sysStack], %%rsp \n"\
+             "call _suspend \n"\
+             :\
+             : [sysStack] "m" (systemStack));} while (0)
+#else
 #define suspendStub() do {\
 asm volatile("movq %[sysStack], %%rsp \n"\
              "call suspend \n"\
              :\
              : [sysStack] "m" (systemStack));} while (0)
+#endif
 
+#ifdef MACOS
+#define stackletForkStub(parentPC, parentSP, func, arg) do {\
+asm volatile("movq %[AparentPC], %%rdi \n"\
+             "movq %[AparentSP], %%rsi \n"\
+             "movq %[Afunc], %%rdx \n"\
+             "movq %[Aarg], %%rcx \n"\
+             "movq %[sysStack], %%rsp \n"\
+             "call _stackletFork \n"\
+             :\
+             : [AparentPC] "r" (parentPC),\
+               [AparentSP] "r" (parentSP),\
+               [Afunc] "r" (func),\
+               [Aarg] "r" (arg),\
+               [sysStack] "m" (systemStack)\
+             : "rdi", "rsi", "rdx", "rcx");} while (0)
+#else
 #define stackletForkStub(parentPC, parentSP, func, arg) do {\
 asm volatile("movq %[AparentPC], %%rdi \n"\
              "movq %[AparentSP], %%rsi \n"\
@@ -64,6 +77,7 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
                [Aarg] "r" (arg),\
                [sysStack] "m" (systemStack)\
              : "rdi", "rsi", "rdx", "rcx");} while (0)
+#endif
 
 #define switchAndJmpWithArg(sp, adr, arg) do {\
 asm volatile("movq %[Aarg], %%rdi \n"\
@@ -82,6 +96,26 @@ asm volatile("movq %[Asp],%%rsp \n"\
              : [Asp] "r" (sp),\
                [Aadr] "r" (adr));} while(0)
 
+#ifdef MACOS
+#define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
+asm volatile("movq %[AparentSB], %[AStubBase] \n"\
+             "movq %[Abuf],%%rdi \n"\
+             "movq %[AsystemStack],%%rsp \n"\
+             "pushq %[Asp] \n"\
+             "pushq %[Aadr] \n"\
+             "call _free \n"\
+             "popq %%rbx \n"\
+             "popq %%rax \n"\
+             "movq %%rax,%%rsp \n"\
+             "jmp *%%rbx \n"\
+             : [AStubBase] "=m" (stubBase) \
+             : [Abuf] "r" (buf),\
+               [Asp] "r" (sp),\
+               [Aadr] "r" (adr),\
+               [AsystemStack] "m" (systemStack),\
+               [AparentSB] "r" (parentSB)\
+             : "rdi", "rbx", "rax");} while (0)
+#else
 #define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
 asm volatile("movq %[AparentSB], %[AStubBase] \n"\
              "movq %[Abuf],%%rdi \n"\
@@ -100,6 +134,7 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
                [AsystemStack] "m" (systemStack),\
                [AparentSB] "r" (parentSB)\
              : "rdi", "rbx", "rax");} while (0)
+#endif
 
 #define restoreStackPointer(x) do { \
     asm volatile("movq %[sp],%%rsp" : : [sp] "r" (x) : "rsp"); } while (0)

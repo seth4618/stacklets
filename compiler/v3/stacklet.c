@@ -45,7 +45,7 @@ stubRoutine()
 {
     Stub* stackletStub = (Stub *)((char *)stubBase - sizeof(Stub));
     void* buf = (char *)stubBase - STACKLET_SIZE;
-    DEBUG_PRINT("Free a stacklet.\n");
+//    DEBUG_PRINT("Free a stacklet.\n");
  
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
             stackletStub->parentPC, stackletStub->parentStubBase);
@@ -58,7 +58,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
     // We can only unlock here because we cannot make function in
     // "SecondChildSteal"
     pthread_mutex_unlock(&seedStackLock);
-    DEBUG_PRINT("Forking a stacklet.\n");
+//    DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
 //    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
     void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;

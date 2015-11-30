@@ -29,8 +29,8 @@ fib(void* F)
     if (f->input <= 2)
     {
         pthread_mutex_lock(&lineLock);
-        DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
-            threadId, f->input, line++);
+//        DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
+//            threadId, f->input, line++);
         pthread_mutex_unlock(&lineLock);
         f->output = 1;
         return;
@@ -38,8 +38,8 @@ fib(void* F)
 
     pthread_mutex_lock(&lineLock);
     int volatile localLine = line++;
-    DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
-        threadId, f->input, localLine);
+//    DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
+//        threadId, f->input, localLine);
     pthread_mutex_unlock(&lineLock);
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
