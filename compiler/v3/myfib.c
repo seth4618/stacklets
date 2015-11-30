@@ -9,6 +9,8 @@
 __thread long threadId;
 volatile int line;
 pthread_mutex_t lineLock;
+int lineReturned[3000000];
+pthread_mutex_t lineReturnedLock;
 
 void
 fib(void* F)
@@ -26,16 +28,17 @@ fib(void* F)
     if (f->input <= 2)
     {
         pthread_mutex_lock(&lineLock);
-        DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d, line = %d]\n",
-            threadId, f->input, f->depth, line++);
+        DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
+            threadId, f->input, line++);
         pthread_mutex_unlock(&lineLock);
         f->output = 1;
         return;
     }
 
     pthread_mutex_lock(&lineLock);
-    DEBUG_PRINT("[threadId = %ld, n = %d, depth = %d, line = %d]\n",
-        threadId, f->input, f->depth, line++);
+    int volatile localLine = line++;
+    DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
+        threadId, f->input, localLine);
     pthread_mutex_unlock(&lineLock);
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
@@ -45,16 +48,16 @@ fib(void* F)
 
     // stacklet ===========================
     void* stackPointer;
-    getStackPointer(stackPointer); //XXX May be we can push ebp, where it points to esp also ??
+    getStackPointer(stackPointer);
     Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
     pthread_mutex_lock(&seedStackLock);
     pushSeed(seed);
-    pthread_mutex_unlock(&seedStackLock);
     int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     void* localStubBase = stubBase; // used more than 12 hours to find this bug...
     saveRegisters();
+    pthread_mutex_unlock(&seedStackLock); // uh.... need to lock until here..
     // ====================================
 
     fib(a);
@@ -71,7 +74,6 @@ FirstChildDoneNormally:
 
     fib(b);
     f->output = a->output + b->output;
-//    DEBUG_PRINT("Normal return from n = %d\n", f->input);
     return;
 
 SecondChildSteal: // We cannot make function calls here!
@@ -89,12 +91,22 @@ FirstChildDone:
     restoreRegisters();
     pthread_mutex_unlock(&seedStackLock);
     atomicAdd(syncCounter, -1);
+//    syncCounter--;
+//    atomicDec2(syncCounter);
+//    asm goto ("jnz %l0 \n" :::: a);
     if (syncCounter != 0)
     {
         saveRegisters();
         suspendStub();
     }
+//a:
     // ====================================
+
+    DEBUG_PRINT("return from line %d\n", localLine);
+    pthread_mutex_lock(&lineReturnedLock);
+    assert(lineReturned[localLine] == 0);
+    lineReturned[localLine] = 1;
+    pthread_mutex_unlock(&lineReturnedLock);
 
     f->output = a->output + b->output;
     return;
@@ -104,12 +116,22 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     // stacklet ===========================
     restoreRegisters();
     atomicAdd(syncCounter, -1);
+//    syncCounter--;
+//    atomicDec2(syncCounter);
+//    asm goto ("jnz %l0 \n" :::: b);
     if (syncCounter != 0)
     {
         saveRegisters();
         suspendStub();
     }
+//b:
     // ====================================
+
+    DEBUG_PRINT("return from line %d\n", localLine);
+    pthread_mutex_lock(&lineReturnedLock);
+    assert(lineReturned[localLine] == 0);
+    lineReturned[localLine] = 1;
+    pthread_mutex_unlock(&lineReturnedLock);
 
     f->output = a->output + b->output;
     return;
@@ -137,10 +159,10 @@ startfib(int n, int numthreads)
     stackletInit();
 
     pthread_mutex_init(&lineLock, NULL);
+    pthread_mutex_init(&lineReturnedLock, NULL);
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
-    a->depth = 1;
 
     // stacklet ===========================
     void* stackPointer;
@@ -152,11 +174,11 @@ startfib(int n, int numthreads)
 
     // set up pthreads
     {
-      pthread_t tid[30];
+      pthread_t tid[50];
       long i;
-      for (i = 0; i < 30; i++)
+      for (i = 0; i < 50; i++)
         pthread_create(&tid[i], NULL, thread, (void*)i);
-      for (i = 0; i < 30; i++)
+      for (i = 0; i < 50; i++)
         pthread_join(tid[i], NULL); // this will stall forever
     }
 

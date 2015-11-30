@@ -28,10 +28,19 @@ void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg
 void suspend();
 void yield(void);
 
+#define atomicDec2(x) do {\
+asm volatile("movq $2, %%rax \n"\
+             "movq $1, %%rbx \n"\
+             "LOCK cmpxchg %%rbx, %[Ax] \n"\
+             : [Ax] "+m" (x) \
+             :\
+             : "rax", "rbx");} while (0)
+
 #define atomicAdd(x,change) do {\
-asm volatile("xadd %[Achange], %[Ax] \n"\
+asm volatile("Lock add %[Achange], %[Ax] \n"\
              : [Ax] "=m" (x) \
              : [Achange] "r" (change));} while (0)
+
 #define labelhack(x) \
     asm goto("" : : : : x)
 

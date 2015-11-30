@@ -9,5 +9,4 @@
 typedef struct {
     int input;
     int output;
-    int depth;
 } Foo;
