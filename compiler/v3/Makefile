@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-g -O2
+CFLAGS=-g -O1
 LIBS = -lpthread
 DEPS = myfib.h seedStack.h readyQ.h stacklet.h debug.h
 OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o

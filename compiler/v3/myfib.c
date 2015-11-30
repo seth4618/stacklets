@@ -5,6 +5,7 @@
 #include "seedStack.h"
 #include <pthread.h>
 #include <assert.h>
+#include <unistd.h>
 
 __thread long threadId;
 
@@ -54,6 +55,12 @@ fib(void* F)
     Foo* b = (Foo *)calloc(1, sizeof(Foo));
     a->input = f->input - 1;
     b->input = f->input - 2;
+
+    // longer execution like this?
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 10;
+    nanosleep(&ts, NULL);
 
     // stacklet ===========================
     void* stackPointer;
@@ -151,6 +158,14 @@ void *thread(void *arg)
   suspend();
 }
 
+void createPthreads(int numthreads)
+{
+    pthread_t tid[numthreads];
+    long i;
+    for (i = 1; i < numthreads; i++)
+        pthread_create(&tid[i], NULL, thread, (void*)i);
+}
+
 // Start calculating fib.
 //
 // Currently we are only doing one thread. We can created multiple pthreads here
@@ -158,52 +173,24 @@ void *thread(void *arg)
 int 
 startfib(int n, int numthreads)
 {
-    labelhack(Start);
-    labelhack(End);
-
-    Registers saveArea;
-
     stackletInit();
+    createPthreads(numthreads);
 
 #ifdef DEBUG
     pthread_mutex_init(&lineLock, NULL);
     pthread_mutex_init(&lineReturnedLock, NULL);
 #endif
 
+    Registers saveArea;
+
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
 
-    // stacklet ===========================
-    void* stackPointer;
-    getStackPointer(stackPointer);
-    Seed* seed = initSeed(&&Start, stackPointer);
-    pushSeed(seed);
-    saveRegisters();
-    // ====================================
+    threadId = (long)0; // main thread's id is 0
+    systemStack = systemStackInit();
+    fib(a);
 
-    // set up pthreads
-    {
-      pthread_t tid[24];
-      long i;
-      for (i = 0; i < 24; i++)
-        pthread_create(&tid[i], NULL, thread, (void*)i);
-      for (i = 0; i < 24; i++)
-        pthread_join(tid[i], NULL); // this will stall forever
-    }
-
-    //assert(0);
-
-Start:
-    // stacklet ===========================
-    restoreRegisters();
-    stackletForkStub(&&End, stackPointer, fib, (void *)a);
-    // ====================================
-End:
-    restoreRegisters();
-    printf("fib(%d) = %d\n", n, a->output);
-    exit(EXIT_SUCCESS);
-
-    // never reach here
+    // Only one thread can reach here. It does not have to the main thread;
     return a->output;
 }
 
@@ -218,5 +205,6 @@ main(int argc, char** argv)
     printf("Will run fib(%d) on %d thread(s)\n", n, numthreads);
 
     int x = startfib(n, numthreads);
-    exit(0);
+    printf("fib(%d) = %d\n", n, x);
+    exit(EXIT_SUCCESS);
 }
