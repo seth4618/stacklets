@@ -3,11 +3,13 @@
 #include "stacklet.h"
 #include "stdio.h"
 #include "seedStack.h"
+#include "spinlock.h"
 #include "readyQ.h"
 #include "debug.h"
 #include <stdlib.h>
 #include "myfib.h"
 #include <assert.h>
+#include "myassert.h"
 
 __thread void* systemStack;
 __thread int threadId;
@@ -22,13 +24,89 @@ __thread void* stubBase = (void*)-1;
 TrackingInfo trackingInfo;
 #endif
 
+#define TRACK_STACKLETS
+#if defined(TRACK_STACKLETS)
+static Stub* sinfos = NULL;
+SpinLockType stackletInfoLock;
+static int sltsAlloc = 0;
+static int sltsDealloc = 0;
+static int sltsMismatched = 0;
+
+static void 
+initStackletInfo(int nt)
+{
+    mySpinInitLock(&stackletInfoLock, NULL);
+}
+
+static void 
+addStacklet(int tid, int stid, Stub* stub)
+{
+    mySpinLock(&stackletInfoLock);
+    sltsAlloc++;
+    stub->next = sinfos;
+    sinfos = stub;
+    stub->prev = NULL;
+    stub->allocatorThread = tid;
+    stub->seedThread = stid;
+    mySpinUnlock(&stackletInfoLock);
+}
+
+static void 
+removeStacklet(int tid, Stub* stub)
+{
+    Stub* ptr;
+    mySpinLock(&stackletInfoLock);
+    for (ptr = sinfos; (ptr != NULL) && (ptr != stub); ptr = ptr->next);
+    if (ptr == NULL) {
+	dprintLine("Expected to find stub %p from %d\n", stub, tid);
+	mySpinUnlock(&stackletInfoLock);
+	return;
+    }
+    //myassert(ptr != NULL, "Expected to find stub %p from %d\n", stub, tid);
+    sltsDealloc++;
+    Stub* pp = stub->prev;
+    Stub* pn = stub->next;
+    if (pp) pp->next = pn; else sinfos = pn;
+    if (pn) pn->prev = pp;
+    if (stub->allocatorThread != tid) {
+	sltsMismatched++;
+    }
+    mySpinUnlock(&stackletInfoLock);
+}
+
+static void
+showStacklets(int grablock)
+{
+    if (grablock) mySpinLock(&stackletInfoLock);
+    fprintf(stderr, "Stacklets: Allocated:%d, Deallocated:%d, Mismatched:%d\n", sltsAlloc, sltsDealloc, sltsMismatched);
+    Stub* ptr;
+    for (ptr = sinfos; ptr != NULL; ptr = ptr->next) {
+	fprintf(stderr, "\t%p: sp:%p @ pc:%p base:%p alloc:%d seed:%d\n", ptr, ptr->parentSP, ptr->parentPC, ptr->parentStubBase, ptr->allocatorThread, ptr->seedThread);
+    }
+    if (grablock) mySpinUnlock(&stackletInfoLock);
+}
+
+void showStackletsSafe(void) {
+    showStacklets(1);
+}
+void showStackletsUnsafe(void) {
+    showStacklets(0);
+}
+#else
+# define initStackletInfo(nt)
+# define addStacklet(x, y, z)
+# define removeStacklet(x, y)
+void showStackletsSafe(void) {}
+void showStackletsUnsafe(void) {}
+#endif
+
 void*
 systemStackInit()
 {
     void* systemStackBuffer;
     systemStackBuffer = calloc(1, SYSTEM_STACK_SIZE);
     systemStack = systemStackBuffer + SYSTEM_STACK_SIZE;
-    DEBUG_PRINT("systemStack at %p.\n", systemStack);
+    dprintLine("systemStack = [%p,%p]\n", systemStack, systemStackBuffer);
     return systemStack;
 }
 
@@ -42,9 +120,26 @@ void
 stackletInit(int numThreads)
 {
     numberOfThreads = numThreads;
+    initStackletInfo(numThreads);
     lockInit();
     seedStackInit(numThreads);
     readyQInit();
+}
+
+// we are on system stack and getting calling stacklet sp in callersp,
+// address to free in buf, and stackletStub for resuming parent in
+// stackletStub.  Called by stubRoutine.
+
+void
+finishStubRoutine(void* buf, Stub* stackletStub, void* callerSP)
+{
+    dprintLine("finishing Stub for %p (%p)\n", stackletStub, callerSP);
+    removeStacklet(threadId, stackletStub);
+    void* parentSP = stackletStub->parentSP;
+    void* parentPC = stackletStub->parentPC;
+    void* parentBase = stackletStub->parentStubBase;
+    //DON'T FOR NOW free(buf);
+    resumeParent(parentSP, parentPC, parentBase);
 }
 
 // running at the base of the stacklet to return to its parent.
@@ -55,9 +150,12 @@ stubRoutine()
     void* buf = (char *)stubBase - STACKLET_SIZE;
     DEBUG_PRINT("Free a stacklet.\n");
  
-    switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
-            stackletStub->parentPC, stackletStub->parentStubBase);
+    switchToSysStackAndFinishStub(buf, stackletStub);
+    // ->parentSP,
+    // stackletStub->parentPC, stackletStub->parentStubBase);
 }
+
+
 
 // Create a new stacklet to run the seed which we got from tid.
 // seedStack of tid is currently locked on entry, but must be released
@@ -74,13 +172,15 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int
     void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;
     Stub* stackletStub = (Stub *)((char *)newStubBase - sizeof(Stub));
 
-    DPL("new stacklet on %d at %p\n", threadId, newStubBase);
+    dprintLine("new stacklet on %d at %p\n", threadId, stackletStub);
 
 
     stackletStub->parentStubBase = stubBase;
     stackletStub->parentSP = parentSP;
     stackletStub->parentPC = parentPC;
     stackletStub->stubRoutine = stubRoutine;
+
+    addStacklet(threadId, tid, stackletStub);
 
     stubBase = newStubBase;
 
