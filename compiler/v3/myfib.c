@@ -8,8 +8,6 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-__thread long threadId;
-
 #ifdef DEBUG
 volatile int line;
 pthread_mutex_t lineLock;
@@ -27,6 +25,8 @@ int result[] = {0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,
                 514229,832040,1346269,2178309,3524578,5702887,9227465,
                 14930352,24157817,39088169,63245986,102334155,165580141,
                 267914296,433494437,701408733,1134903170,1836311903};
+static int suspCtr = 0;
+static int suspHere = 3;
 
 void
 fib(void* F)
@@ -45,6 +45,8 @@ fib(void* F)
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
 
+    DPL(">fib(%d)\n", f->input);
+
     if (f->input <= 2)
     {
 
@@ -59,6 +61,13 @@ fib(void* F)
         return;
     }
 
+#if 0
+    if (suspCtr++ >= suspHere) {
+        suspCtr = 0;
+        yield();
+    }
+#endif
+
 #ifdef DEBUG
     pthread_mutex_lock(&lineLock);
     int volatile localLine = line++;
@@ -72,36 +81,37 @@ fib(void* F)
     a->input = f->input - 1;
     b->input = f->input - 2;
 
+#if 0
     // longer execution like this?
-//    struct timespec ts;
-//    ts.tv_sec = 0;
-//    ts.tv_nsec = 10;
-//    nanosleep(&ts, NULL);
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 10;
+    nanosleep(&ts, NULL);
+#endif
 
     // stacklet ===========================
     void* stackPointer;
     getStackPointer(stackPointer);
     Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
-    pthread_mutex_lock(&seedStackLock);
-    pushSeed(seed);
+    pushSeed(seed, threadId, 1);
     int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     void* localStubBase = stubBase; // used more than 12 hours to find this bug...
+    int ptid = threadId;
     saveRegisters();
-    pthread_mutex_unlock(&seedStackLock); // uh.... need to lock until here..
+    seedStackUnlock(threadId); // uh.... need to lock until here..
     // ====================================
 
     fib(a);
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
-    pthread_mutex_lock(&seedStackLock);
+    seedStackLock(threadId);
     goto *firstChildReturnAdr;
 
-FirstChildDoneNormally:
+ FirstChildDoneNormally:
     // stacklet ===========================
-    popSeed(seed);
-    pthread_mutex_unlock(&seedStackLock);
+    popSeed(threadId, 1);	       /* also releases lock */
     // ====================================
 
     fib(b);
@@ -111,19 +121,22 @@ FirstChildDoneNormally:
 SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
     restoreRegisters();
+    //recoverParentTID(ptid);
     firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
-    stubBase = localStubBase;
+    stubBase = localStubBase;	/* SCG:what is local stubbase? */
     saveRegisters();
 #ifdef TRACKER
     __sync_add_and_fetch(&trackingInfo.fork, 1);
 #endif
-    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b);
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b, ptid);
     // ====================================
 
 FirstChildDone:
     // stacklet ===========================
-    pthread_mutex_unlock(&seedStackLock);
+    dprintLine("fib(%d) has first child returned\n", f->input);
+    restoreRegisters();
+    seedStackUnlock(threadId);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
@@ -184,6 +197,7 @@ void *thread(void *arg)
   threadId = (long)arg;
   systemStack = systemStackInit();
   suspend();
+  fprintf(stderr, "Got back from suspend!\n");
 }
 
 void createPthreads(int numthreads)
@@ -201,7 +215,7 @@ void createPthreads(int numthreads)
 int 
 startfib(int n, int numthreads)
 {
-    stackletInit();
+    stackletInit(numthreads);
     createPthreads(numthreads);
 
 #ifdef DEBUG
@@ -240,7 +254,6 @@ main(int argc, char** argv)
            "Will run fib(%d) on %d thread(s)\n\n", n, numthreads);
 
     int x = startfib(n, numthreads);
-
     assert(x == result[n]);
     printf("*** result ***\n"
            "fib(%d) = %d (verified)\n\n", n, x);
@@ -264,5 +277,12 @@ main(int argc, char** argv)
            "time elapsed: %lf\n\n", elapsed);
 #endif
 
+    printf("fib(%d) = %d\n", n, x);
     exit(EXIT_SUCCESS);
 }
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:

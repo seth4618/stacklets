@@ -15,3 +15,16 @@ void bp(void);
 
 // helper functions
 void die(char* str);
+
+void dprintLine(char* fmt, ...);
+
+#ifdef DLINE
+# define DPL(fmt, args...)	dprintLine(fmt, ## args)
+#else
+# define DPL(fmt, args...)	
+#endif
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:

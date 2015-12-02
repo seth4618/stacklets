@@ -15,7 +15,8 @@ typedef struct {
     int suspend;
 } TrackingInfo;
 extern TrackingInfo trackingInfo;
-#endif
+
+extern __thread int threadId;
 
 typedef uint64_t Registers[16];
 
@@ -27,19 +28,18 @@ typedef struct {
 } Stub;
 
 extern __thread void* systemStack;
-extern pthread_mutex_t seedStackLock;
 extern pthread_mutex_t readyQLock;
 extern __thread void* stubBase;
 
-#define SYSTEM_STACK_SIZE   8192
+#define SYSTEM_STACK_SIZE   (8192*2)
 #define STACKLET_SIZE       81920
 
-void stackletInit();
+void stackletInit(int numThreads);
 void* systemStackInit();
 void stubRoutine();
-void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg);
+void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid);
 void suspend();
-//void yield(void);
+void yield(void);
 
 #define labelhack(x) \
     asm goto("" : : : : x)
@@ -74,11 +74,13 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
                [sysStack] "m" (systemStack)\
              : "rdi", "rsi", "rdx", "rcx");} while (0)
 #else
-#define stackletForkStub(parentPC, parentSP, func, arg) do {\
-asm volatile("movq %[AparentPC], %%rdi \n"\
+#define stackletForkStub(parentPC, parentSP, func, arg, tid) do {	\
+asm volatile("\t#calling stackletfork\n"\
+	     "movq %[AparentPC], %%rdi \n"\
              "movq %[AparentSP], %%rsi \n"\
              "movq %[Afunc], %%rdx \n"\
              "movq %[Aarg], %%rcx \n"\
+             "movl %[TIDarg], %%r8d \n"\
              "movq %[sysStack], %%rsp \n"\
              "call stackletFork \n"\
              :\
@@ -86,8 +88,9 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
                [AparentSP] "r" (parentSP),\
                [Afunc] "r" (func),\
                [Aarg] "r" (arg),\
+               [TIDarg] "r" (tid),\
                [sysStack] "m" (systemStack)\
-             : "rdi", "rsi", "rdx", "rcx");} while (0)
+             : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
 #endif
 
 #define switchAndJmpWithArg(sp, adr, arg) do {\
@@ -100,12 +103,25 @@ asm volatile("movq %[Aarg], %%rdi \n"\
                [Aarg] "r" (arg)\
              : "rdi");} while (0)
 
-#define switchAndJmp(sp,adr) do {\
+// used to start running a child steal routine.  We are stealing from thread tid.
+// the steal routine will assume %rax has tid from whom we are stealing
+// See recoverParentTID
+#define switchAndJmp(sp,adr,tid) do {		\
 asm volatile("movq %[Asp],%%rsp \n"\
+             "movl %[Itid], %%eax \n"\
              "jmp *%[Aadr] \n"\
              :\
              : [Asp] "r" (sp),\
+	       [Itid] "r" (tid),\
                [Aadr] "r" (adr));} while(0)
+
+// right after restoring registers this is needed
+// see switchAndJmp
+#define recoverParentTID(tid) \
+    asm volatile("movl %%eax,%[Itid]"\
+		 : [Itid] "=r" (tid)	\
+                 :\
+		 : "eax")
 
 #ifdef MACOS
 #define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
@@ -217,3 +233,9 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
                    [indexR14] "m" (saveArea[12]),\
                    [indexR15] "m" (saveArea[13]),\
                    [indexAX] "m" (saveArea[14]));} while (0)
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:

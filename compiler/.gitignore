@@ -3,3 +3,5 @@ draft
 *.s
 *.o
 fib
+.,*
+.*.d
