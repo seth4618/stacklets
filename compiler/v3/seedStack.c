@@ -100,9 +100,8 @@ releaseSeed(Seed* seed, int tid)
 Seed*
 peekSeed(int tid)
 {
-    if (seedStacks[tid] != NULL) {
-	seedStackLock(tid);
-    }
+    if (seedStacks[tid] == NULL) return NULL;
+    seedStackLock(tid);
     Seed* seed = seedStacks[tid];
     if (seed == NULL) seedStackUnlock(tid);
     return seed;
