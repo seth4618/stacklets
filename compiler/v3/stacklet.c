@@ -43,6 +43,7 @@ stackletInit(int numThreads)
     readyQInit();
 }
 
+// running at the base of the stacklet to return to its parent.
 void
 stubRoutine()
 {
