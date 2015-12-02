@@ -15,6 +15,10 @@ pthread_mutex_t readyQLock;
 
 __thread void* stubBase = (void*)-1; // there is no stacklet stub for the main stack
 
+#ifdef TRACKER
+TrackingInfo trackingInfo;
+#endif
+
 void*
 systemStackInit()
 {
@@ -82,6 +86,10 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
 void
 suspend()
 {
+#ifdef TRACKER
+    __sync_add_and_fetch(&trackingInfo.suspend, 1);
+#endif
+
     for (;;)
     {
         // look at seedStack.  If there is stuff there, grab it

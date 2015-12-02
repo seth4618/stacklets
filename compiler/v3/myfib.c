@@ -6,15 +6,9 @@
 #include <pthread.h>
 #include <assert.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 __thread long threadId;
-
-#ifdef TRACKER
-struct {
-    int fib;
-    int fork;
-} trackingInfo;
-#endif
 
 #ifdef DEBUG
 volatile int line;
@@ -22,6 +16,17 @@ pthread_mutex_t lineLock;
 int lineReturned[300000000];
 pthread_mutex_t lineReturnedLock;
 #endif
+
+#ifdef BENCHMARK
+struct timeval startTime;
+struct timeval endTime;
+#endif
+
+int result[] = {0,1,1,2,3,5,8,13,21,34,55,89,144,233,377,610,987,1597,2584,
+                4181,6765,10946,17711,28657,46368,75025,121393,196418,317811,
+                514229,832040,1346269,2178309,3524578,5702887,9227465,
+                14930352,24157817,39088169,63245986,102334155,165580141,
+                267914296,433494437,701408733,1134903170,1836311903};
 
 void
 fib(void* F)
@@ -68,10 +73,10 @@ fib(void* F)
     b->input = f->input - 2;
 
     // longer execution like this?
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 10;
-    nanosleep(&ts, NULL);
+//    struct timespec ts;
+//    ts.tv_sec = 0;
+//    ts.tv_nsec = 10;
+//    nanosleep(&ts, NULL);
 
     // stacklet ===========================
     void* stackPointer;
@@ -118,7 +123,6 @@ SecondChildSteal: // We cannot make function calls here!
 
 FirstChildDone:
     // stacklet ===========================
-    restoreRegisters();
     pthread_mutex_unlock(&seedStackLock);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
@@ -129,7 +133,12 @@ FirstChildDone:
             suspendStub();
         }
     }
+    restoreRegisters();
     // ====================================
+
+#ifdef TRACKER
+    __sync_add_and_fetch(&trackingInfo.firstReturn, 1);
+#endif
 
 #ifdef DEBUG
     pthread_mutex_lock(&lineReturnedLock);
@@ -144,16 +153,20 @@ FirstChildDone:
 SecondChildDone: // We cannot make function calls before we confirm first child
                  // has already returned.
     // stacklet ===========================
-    restoreRegisters();
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
         {
-            //saveRegisters();
+            //saveRegisters(); // same reason as above
             suspendStub();
         }
     }
+    restoreRegisters();
     // ====================================
+
+#ifdef TRACKER
+    __sync_add_and_fetch(&trackingInfo.secondReturn, 1);
+#endif
 
 #ifdef DEBUG
     pthread_mutex_lock(&lineReturnedLock);
@@ -203,6 +216,11 @@ startfib(int n, int numthreads)
 
     threadId = (long)0; // main thread's id is 0
     systemStack = systemStackInit();
+
+#ifdef BENCHMARK
+    gettimeofday(&startTime, NULL);
+#endif
+
     fib(a);
 
     // Only one thread can reach here. It does not have to the main thread;
@@ -216,14 +234,34 @@ main(int argc, char** argv)
     if (argc < 2) die("Need at least one argument to run, n."
                       "If 2, then second is # of threads");
     int n = atoi(argv[1]);
+    if (n > 46) die("cannot verify if n > 46");
     if (argc == 3) numthreads = atoi(argv[2]);
-    printf("Will run fib(%d) on %d thread(s)\n", n, numthreads);
+    printf("*** setup ***\n"
+           "Will run fib(%d) on %d thread(s)\n\n", n, numthreads);
 
     int x = startfib(n, numthreads);
 
-    printf("fib(%d) = %d\n", n, x);
+    assert(x == result[n]);
+    printf("*** result ***\n"
+           "fib(%d) = %d (verified)\n\n", n, x);
+
 #ifdef TRACKER
-    printf("fib called %d times, forked %d times\n", trackingInfo.fib, trackingInfo.fork);
+    printf("*** tracker info ***\n"
+           "called %d times\n"
+           "forked %d times\n"
+           "first child returns %d times\n"
+           "second child returns %d times\n"
+           "suspend %d times\n\n",
+           trackingInfo.fib, trackingInfo.fork, trackingInfo.firstReturn,
+           trackingInfo.secondReturn, trackingInfo.suspend);
+#endif
+
+#ifdef BENCHMARK
+    gettimeofday(&endTime, NULL);
+    double elapsed = (endTime.tv_sec - startTime.tv_sec) +
+                     (endTime.tv_usec - startTime.tv_usec) / 1000000.0;
+    printf("*** benchmark ***\n"
+           "time elapsed: %lf\n\n", elapsed);
 #endif
 
     exit(EXIT_SUCCESS);

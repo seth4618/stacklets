@@ -6,6 +6,17 @@
 
 //#define MACOS
 
+#ifdef TRACKER
+typedef struct {
+    int fib;
+    int fork;
+    int firstReturn;
+    int secondReturn;
+    int suspend;
+} TrackingInfo;
+extern TrackingInfo trackingInfo;
+#endif
+
 typedef uint64_t Registers[16];
 
 typedef struct {
