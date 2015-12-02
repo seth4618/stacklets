@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "debug.h"
 
-int readyQId;
+static int readyQId;
 
 void readyQInit()
 {
@@ -35,3 +35,9 @@ void deqReadyQ()
     //DEBUG_PRINT("deqReadyQ with adr %p.\n", origFront->adr); XXX crash here
     free(origFront);
 }
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
