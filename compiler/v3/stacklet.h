@@ -21,12 +21,19 @@ extern __thread int threadId;
 
 typedef uint64_t Registers[16];
 
-typedef struct {
+typedef struct stubstruct Stub;
+
+struct stubstruct {
     void* stubRoutine;
     void* parentPC;
     void* parentSP;
     void* parentStubBase;
-} Stub;
+    Stub* next;
+    Stub* prev;
+    int allocatorThread;	/* thread that is creating the stacklet */
+    int seedThread;		/* thread that created the seed */
+    void* pad2;
+};
 
 extern __thread void* systemStack;
 extern pthread_mutex_t readyQLock;
@@ -124,6 +131,29 @@ asm volatile("movq %[Asp],%%rsp \n"\
                  :\
 		 : "eax")
 
+#if 1
+#define switchToSysStackAndFinishStub(buf,ss) do {\
+asm volatile("#switch from stacket sp to system sp and finish up stub\n"\
+             "movq %%rsp,%%rdx \n"\
+             "movq %[AsystemStack],%%rsp \n"\
+             "movq %[Abuf],%%rdi \n"\
+             "movq %[Ass],%%rsi \n"\
+             "call finishStubRoutine \n"\
+             : \
+             : [Abuf] "r" (buf),\
+               [Ass] "r" (ss),\
+               [AsystemStack] "m" (systemStack)\
+             : "rdi", "rdx", "rsi");} while (0)
+#define resumeParent(sp, pc, base) do {\
+	asm volatile("#switch to parent and resume\n" \
+	             "movq %[AparentSB], %[AStubBase] \n"\
+                     "movq %[Asp],%%rsp \n"\
+                     "jmp *%[Apc] \n"\
+	             : [AStubBase] "=m" (stubBase) \
+	             : [Asp] "r" (sp),\
+		       [Apc] "r" (pc),\
+		     [AparentSB] "r" (base));} while (0)
+#else 
 #ifdef MACOS
 #define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
 asm volatile("movq %[AparentSB], %[AStubBase] \n"\
@@ -162,6 +192,7 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
                [AsystemStack] "m" (systemStack),\
                [AparentSB] "r" (parentSB)\
              : "rdi", "rbx", "rax");} while (0)
+#endif
 #endif
 
 #define restoreStackPointer(x) do { \
