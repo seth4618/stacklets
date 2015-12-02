@@ -1,3 +1,4 @@
+#!/usr/bin/python
 import sys
 import csv
 from subprocess import *
@@ -7,12 +8,12 @@ from parse import *
 titles = ["n","pthreads","called","forked","elapsed"]
 
 def benchmark(n, pthreads, reps):
-  with open('mb.csv', 'wb') as myfile:
+  with open('bm.csv', 'wb') as myfile:
     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
     wr.writerow(titles)
     for i in range(0, reps):
       result = [n, pthreads]
-      output = Popen(["./fib", str(n), str(pthreads)], stdout=PIPE).communicate()[0]
+      output = Popen(["../fib", str(n), str(pthreads)], stdout=PIPE).communicate()[0]
       buf = StringIO.StringIO(output)
       for line in buf:
           r = parse("called {called} times\n", line)
