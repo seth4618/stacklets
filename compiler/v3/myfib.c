@@ -97,7 +97,6 @@ fib(void* F)
     int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
-    void* localStubBase = stubBase; // used more than 12 hours to find this bug...
     int ptid = threadId;
     saveRegisters();
     seedStackUnlock(threadId); // uh.... need to lock until here..
@@ -124,7 +123,6 @@ SecondChildSteal: // We cannot make function calls here!
     //recoverParentTID(ptid);
     firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
-    stubBase = localStubBase;	/* SCG:what is local stubbase? */
     saveRegisters();
 #ifdef TRACKER
     __sync_add_and_fetch(&trackingInfo.fork, 1);

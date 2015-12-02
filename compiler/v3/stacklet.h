@@ -25,12 +25,10 @@ typedef struct {
     void* stubRoutine;
     void* parentPC;
     void* parentSP;
-    void* parentStubBase;
 } Stub;
 
 extern __thread void* systemStack;
 extern pthread_mutex_t readyQLock;
-extern __thread void* stubBase;
 
 #define SYSTEM_STACK_SIZE   (8192*2)
 #define STACKLET_SIZE       81920
@@ -41,6 +39,11 @@ void stubRoutine();
 void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid);
 void suspend();
 void yield(void);
+
+#define getStackletStub(stackletStub) do {\
+asm volatile("movq %%rsp, %[AstackletStub] \n"\
+             : [AstackletStub] "=r" (stackletStub) \
+             :);} while (0)
 
 #define labelhack(x) \
     asm goto("" : : : : x)
@@ -125,9 +128,8 @@ asm volatile("movq %[Asp],%%rsp \n"\
 		 : "eax")
 
 #ifdef MACOS
-#define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
-asm volatile("movq %[AparentSB], %[AStubBase] \n"\
-             "movq %[Abuf],%%rdi \n"\
+#define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
+asm volatile("movq %[Abuf],%%rdi \n"\
              "movq %[AsystemStack],%%rsp \n"\
              "pushq %[Asp] \n"\
              "pushq %[Aadr] \n"\
@@ -136,17 +138,15 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
              "popq %%rax \n"\
              "movq %%rax,%%rsp \n"\
              "jmp *%%rbx \n"\
-             : [AStubBase] "=m" (stubBase) \
+             :\
              : [Abuf] "r" (buf),\
                [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
-               [AsystemStack] "m" (systemStack),\
-               [AparentSB] "r" (parentSB)\
+               [AsystemStack] "m" (systemStack)\
              : "rdi", "rbx", "rax");} while (0)
 #else
-#define switchToSysStackAndFreeAndResume(buf,sp,adr,parentSB) do {\
-asm volatile("movq %[AparentSB], %[AStubBase] \n"\
-             "movq %[Abuf],%%rdi \n"\
+#define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
+asm volatile("movq %[Abuf],%%rdi \n"\
              "movq %[AsystemStack],%%rsp \n"\
              "pushq %[Asp] \n"\
              "pushq %[Aadr] \n"\
@@ -155,12 +155,11 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
              "popq %%rax \n"\
              "movq %%rax,%%rsp \n"\
              "jmp *%%rbx \n"\
-             : [AStubBase] "=m" (stubBase) \
+             :\
              : [Abuf] "r" (buf),\
                [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
-               [AsystemStack] "m" (systemStack),\
-               [AparentSB] "r" (parentSB)\
+               [AsystemStack] "m" (systemStack)\
              : "rdi", "rbx", "rax");} while (0)
 #endif
 

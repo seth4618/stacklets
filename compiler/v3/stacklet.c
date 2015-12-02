@@ -16,7 +16,6 @@ int numberOfThreads;
 pthread_mutex_t readyQLock;
 
 // there is no stacklet stub for the main stack
-__thread void* stubBase = (void*)-1; 
 
 #ifdef TRACKER
 TrackingInfo trackingInfo;
@@ -51,12 +50,13 @@ stackletInit(int numThreads)
 void
 stubRoutine()
 {
-    Stub* stackletStub = (Stub *)((char *)stubBase - sizeof(Stub));
-    void* buf = (char *)stubBase - STACKLET_SIZE;
+    Stub* stackletStub;
+    getStackletStub(stackletStub);
+    void* buf = (char *)stackletStub + sizeof(Stub) - STACKLET_SIZE;
     DEBUG_PRINT("Free a stacklet.\n");
  
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
-            stackletStub->parentPC, stackletStub->parentStubBase);
+            stackletStub->parentPC);
 }
 
 // Create a new stacklet to run the seed which we got from tid.
@@ -71,18 +71,11 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int
     DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
     DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
-    void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;
-    Stub* stackletStub = (Stub *)((char *)newStubBase - sizeof(Stub));
+    Stub* stackletStub = (Stub *)((char *)stackletBuf + STACKLET_SIZE - sizeof(Stub));
 
-    DPL("new stacklet on %d at %p\n", threadId, newStubBase);
-
-
-    stackletStub->parentStubBase = stubBase;
     stackletStub->parentSP = parentSP;
     stackletStub->parentPC = parentPC;
     stackletStub->stubRoutine = stubRoutine;
-
-    stubBase = newStubBase;
 
     switchAndJmpWithArg(stackletStub, func, arg);
 }
@@ -151,9 +144,6 @@ yield(void)
 
     DEBUG_PRINT("Put self in readyQ and suspend\n");
     Registers saveArea;
-    void* localStubBase = stubBase;
-    DEBUG_PRINT("stacklet %p cannot be freed\n", stubBase - STACKLET_SIZE);
-    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
@@ -163,9 +153,6 @@ yield(void)
 
 Resume:
     restoreRegisters();
-    stubBase = localStubBase;
-    DEBUG_PRINT("stacklet %p can be freed\n", stubBase - STACKLET_SIZE);
-    DEBUG_PRINT("Restore stubBase to be %p.\n", stubBase);
     DEBUG_PRINT("Resumed a ready thread.\n");
 }
 

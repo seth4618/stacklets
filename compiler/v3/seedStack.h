@@ -23,6 +23,8 @@ void pushSeed(Seed* seed, int tid, int lock);
 // pop top seed from tid's stack.  if unlock==1, release lock afterwards
 void popSeed(int tid, int unlock);
 
+void releaseSeed(Seed* seed, int tid);
+
 // get and return top seed from tid's stack.  DON'T change ptrs if
 // returning a non-null seed, then lock for tid's stack will be
 // grabbed. Otherwise not
