@@ -49,11 +49,11 @@ message *dequeue(queue *q) {
 
 		return NULL;
 	} 
-		message *msg = n -> msg;
-		free(n);
+	message *msg = n -> msg;
 	spinlock_unlock(&q -> lock);
+	free(n);
 
-		return msg;
+	return msg;
 	
 }
 

@@ -4,6 +4,11 @@
 #include "malloc.h"
 #include "stddef.h"
 
+#define CACHE_LINE_SIZE                   64
+
+#define r_align(n, r)                     (((n) + (r) - 1) & -(r))
+#define cache_align(n)                    r_align(n , CACHE_LINE_SIZE)
+#define pad_to_cache_line(n)              (cache_align(n) - (n))
 typedef void (*callback_t)(void*);
 typedef struct message_t
 {
@@ -23,6 +28,8 @@ typedef struct queue_t
 	node *head;
 	node *tail;
 	spinlock_t lock;
+    char    pad[pad_to_cache_line(2 * sizeof(void *) +
+                        sizeof(spinlock_t))];
 }queue;
 
 void init_queue(queue *q);
