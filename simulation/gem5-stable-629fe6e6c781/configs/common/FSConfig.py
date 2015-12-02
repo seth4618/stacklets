@@ -122,7 +122,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc=None, ruby=False, cmdline=None):
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())
-    self.disk2.childImage(disk('linux-bigswap2.img'))
+    self.disk2.childImage(disk('linux-x86.img'))
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()
@@ -379,7 +379,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())
-    self.disk2.childImage(disk('linux-bigswap2.img'))
+    self.disk2.childImage(disk('linux-x86.img'))
     self.malta = BaseMalta()
     self.malta.attachIO(self.iobus)
     self.malta.ide.pio = self.iobus.master
@@ -503,7 +503,7 @@ def makeX86System(mem_mode, numCPUs=1, mdesc=None, self=None, Ruby=False):
     disk0 = CowIdeDisk(driveID='master')
     disk2 = CowIdeDisk(driveID='master')
     disk0.childImage(mdesc.disk())
-    disk2.childImage(disk('linux-bigswap2.img'))
+    disk2.childImage(disk('linux-x86.img'))
     self.pc.south_bridge.ide.disks = [disk0, disk2]
 
     # Add in a Bios information structure.
