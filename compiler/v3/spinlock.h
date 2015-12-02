@@ -11,6 +11,7 @@
 # define mySpinInitLock pthread_mutex_init
 # define mySpinLock pthread_mutex_lock
 # define mySpinUnlock pthread_mutex_unlock
+# define SpinLockType pthread_mutex_t
 #else
  not done yet
 #endif
