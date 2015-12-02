@@ -10,10 +10,13 @@
 #include <assert.h>
 
 __thread void* systemStack;
-pthread_mutex_t seedStackLock;
+__thread int threadId;
+int numberOfThreads;
+
 pthread_mutex_t readyQLock;
 
-__thread void* stubBase = (void*)-1; // there is no stacklet stub for the main stack
+// there is no stacklet stub for the main stack
+__thread void* stubBase = (void*)-1; 
 
 void*
 systemStackInit()
@@ -28,15 +31,15 @@ systemStackInit()
 void
 lockInit()
 {
-    assert(pthread_mutex_init(&seedStackLock, NULL) == 0);
     assert(pthread_mutex_init(&readyQLock, NULL) == 0);
 }
 
 void
-stackletInit()
+stackletInit(int numThreads)
 {
+    numberOfThreads = numThreads;
     lockInit();
-    seedStackInit();
+    seedStackInit(numThreads);
     readyQInit();
 }
 
@@ -51,18 +54,23 @@ stubRoutine()
             stackletStub->parentPC, stackletStub->parentStubBase);
 }
 
-// Create a new stacklet to run the seed.
+// Create a new stacklet to run the seed which we got from tid.
+// seedStack of tid is currently locked on entry, but must be released
 void
-stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
+stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid)
 {
     // We can only unlock here because we cannot make function in
     // "SecondChildSteal"
-    pthread_mutex_unlock(&seedStackLock);
+    DPL("sfork from %p:%p@%d\n", parentSP, parentPC, tid);
+    seedStackUnlock(tid);
     DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
     DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
     void* newStubBase = (char *)stackletBuf + STACKLET_SIZE;
     Stub* stackletStub = (Stub *)((char *)newStubBase - sizeof(Stub));
+
+    DPL("new stacklet on %d at %p\n", threadId, newStubBase);
+
 
     stackletStub->parentStubBase = stubBase;
     stackletStub->parentSP = parentSP;
@@ -74,6 +82,23 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
     switchAndJmpWithArg(stackletStub, func, arg);
 }
 
+// Only return to caller if no seed available.
+// If available, we will cleanup and start executing seed
+static void
+getSeedIfAvailableFrom(int tid)
+{
+    // look at seedStack.  If there is stuff there, grab it
+    Seed* seed = peekSeed(tid);
+    if (seed != NULL) {
+	// remember, lock for my seedStack has been grabbed!
+	void* adr = seed->adr;
+	void* sp = seed->sp;
+	releaseSeed(seed, tid);
+	DPL(">%p:%p(%d)\n", sp, adr, tid);
+	switchAndJmp(sp, adr, tid);
+    }
+}
+
 // Context switch to another user thread in readyQ (explicit seed) or in seed
 // stack (implicity seed).
 //
@@ -82,21 +107,13 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg)
 void
 suspend()
 {
+    dprintLine("suspend\n");
     for (;;)
     {
-        // look at seedStack.  If there is stuff there, grab it
-        pthread_mutex_lock(&seedStackLock);
-        Seed* seed = seedDummyHead->next;
-        if (seed != NULL)
-        {
-            void* adr = seed->adr;
-            void* sp = seed->sp;
-            popSeed(seed);
-            switchAndJmp(sp, adr);
-        }
-        pthread_mutex_unlock(&seedStackLock);
-
-        // look at ready Q.  If there is stuff there, grab one and start it
+	// first look in my seedQ.  If there is work there, grab it and go
+	getSeedIfAvailableFrom(threadId);
+	
+	// Now, look in global readyQ.  If there is work there, grab it and go
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
@@ -104,33 +121,47 @@ suspend()
             void* adr = ready->adr;
             void* sp = ready->sp;
             deqReadyQ();
-            switchAndJmp(sp, adr);
+            switchAndJmp(sp, adr, -1);
         }
+
+	// No easily available work.  So randomly search for work from other seedQs.  If you find one, grab it and Go.
+	// Try 3 times, then check other stuff
+	int i;
+	for (i=0; i<3; i++) {
+	    int x = (threadId+i)%numberOfThreads; /* this should be a random number */
+	    getSeedIfAvailableFrom(x);
+	}
     }
 }
 
-// Yield to another user thread.
-//void
-//yield(void)
-//{
-//    labelhack(Resume);
-//
-//    DEBUG_PRINT("Put self in readyQ and suspend\n");
-//    Registers saveArea;
-//    void* localStubBase = stubBase;
-//    DEBUG_PRINT("stacklet %p cannot be freed\n", stubBase - STACKLET_SIZE);
-//    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
-//    saveRegisters();
-//    void* stackPointer;
-//    getStackPointer(stackPointer);
-//    enqReadyQ(&&Resume, stackPointer);
-//
-//    suspendStub();
-//
-//Resume:
-//    restoreRegisters();
-//    stubBase = localStubBase;
-//    DEBUG_PRINT("stacklet %p can be freed\n", stubBase - STACKLET_SIZE);
-//    DEBUG_PRINT("Restore stubBase to be %p.\n", stubBase);
-//    DEBUG_PRINT("Resumed a ready thread.\n");
-//}
+// Yield to another thread.
+void
+yield(void)
+{
+    labelhack(Resume);
+
+    DEBUG_PRINT("Put self in readyQ and suspend\n");
+    Registers saveArea;
+    void* localStubBase = stubBase;
+    DEBUG_PRINT("stacklet %p cannot be freed\n", stubBase - STACKLET_SIZE);
+    DEBUG_PRINT("Store stubBase in localStubBase %p\n", localStubBase);
+    saveRegisters();
+    void* stackPointer;
+    getStackPointer(stackPointer);
+    enqReadyQ(&&Resume, stackPointer);
+
+    suspendStub();
+
+Resume:
+    restoreRegisters();
+    stubBase = localStubBase;
+    DEBUG_PRINT("stacklet %p can be freed\n", stubBase - STACKLET_SIZE);
+    DEBUG_PRINT("Restore stubBase to be %p.\n", stubBase);
+    DEBUG_PRINT("Resumed a ready thread.\n");
+}
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
