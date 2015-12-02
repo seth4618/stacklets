@@ -20,3 +20,9 @@ ReadyThreadHead* readyDummyHead;
 void readyQInit();
 void enqReadyQ(void* resumeAdr, void *stackPointer);
 void deqReadyQ();
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
