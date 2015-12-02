@@ -10,3 +10,9 @@ typedef struct {
     int input;
     int output;
 } Foo;
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
