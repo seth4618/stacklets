@@ -7,14 +7,15 @@
 #include <assert.h>
 #include <unistd.h>
 
-__thread long threadId;
-
 #ifdef DEBUG
 volatile int line;
 pthread_mutex_t lineLock;
 int lineReturned[300000000];
 pthread_mutex_t lineReturnedLock;
 #endif
+
+static int suspCtr = 0;
+static int suspHere = 3;
 
 void
 fib(void* F)
@@ -28,6 +29,8 @@ fib(void* F)
 
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
+
+    DPL(">fib(%d)\n", f->input);
 
     if (f->input <= 2)
     {
@@ -43,6 +46,13 @@ fib(void* F)
         return;
     }
 
+#if 0
+    if (suspCtr++ >= suspHere) {
+        suspCtr = 0;
+        yield();
+    }
+#endif
+
 #ifdef DEBUG
     pthread_mutex_lock(&lineLock);
     int volatile localLine = line++;
@@ -56,36 +66,37 @@ fib(void* F)
     a->input = f->input - 1;
     b->input = f->input - 2;
 
+#if 0
     // longer execution like this?
     struct timespec ts;
     ts.tv_sec = 0;
     ts.tv_nsec = 10;
     nanosleep(&ts, NULL);
+#endif
 
     // stacklet ===========================
     void* stackPointer;
     getStackPointer(stackPointer);
     Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
-    pthread_mutex_lock(&seedStackLock);
-    pushSeed(seed);
+    pushSeed(seed, threadId, 1);
     int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     void* localStubBase = stubBase; // used more than 12 hours to find this bug...
+    int ptid = threadId;
     saveRegisters();
-    pthread_mutex_unlock(&seedStackLock); // uh.... need to lock until here..
+    seedStackUnlock(threadId); // uh.... need to lock until here..
     // ====================================
 
     fib(a);
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
-    pthread_mutex_lock(&seedStackLock);
+    seedStackLock(threadId);
     goto *firstChildReturnAdr;
 
-FirstChildDoneNormally:
+ FirstChildDoneNormally:
     // stacklet ===========================
-    popSeed(seed);
-    pthread_mutex_unlock(&seedStackLock);
+    popSeed(threadId, 1);	       /* also releases lock */
     // ====================================
 
     fib(b);
@@ -95,17 +106,19 @@ FirstChildDoneNormally:
 SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
     restoreRegisters();
+    //recoverParentTID(ptid);
     firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
-    stubBase = localStubBase;
+    stubBase = localStubBase;	/* SCG:what is local stubbase? */
     saveRegisters();
-    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b);
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b, ptid);
     // ====================================
 
 FirstChildDone:
     // stacklet ===========================
+    dprintLine("fib(%d) has first child returned\n", f->input);
     restoreRegisters();
-    pthread_mutex_unlock(&seedStackLock);
+    seedStackUnlock(threadId);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
@@ -156,6 +169,7 @@ void *thread(void *arg)
   threadId = (long)arg;
   systemStack = systemStackInit();
   suspend();
+  fprintf(stderr, "Got back from suspend!\n");
 }
 
 void createPthreads(int numthreads)
@@ -173,7 +187,7 @@ void createPthreads(int numthreads)
 int 
 startfib(int n, int numthreads)
 {
-    stackletInit();
+    stackletInit(numthreads);
     createPthreads(numthreads);
 
 #ifdef DEBUG
@@ -205,6 +219,13 @@ main(int argc, char** argv)
     printf("Will run fib(%d) on %d thread(s)\n", n, numthreads);
 
     int x = startfib(n, numthreads);
+    fprintf(stderr, "fib(%d) = %d\n", n, x);
     printf("fib(%d) = %d\n", n, x);
     exit(EXIT_SUCCESS);
 }
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
