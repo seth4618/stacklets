@@ -17,6 +17,7 @@ void bp(void);
 void die(char* str);
 
 void dprintLine(char* fmt, ...);
+void vdprintLine(char* fmt, ...);
 
 #ifdef DLINE
 # define DPL(fmt, args...)	dprintLine(fmt, ## args)
