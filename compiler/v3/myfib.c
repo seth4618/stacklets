@@ -124,7 +124,8 @@ FirstChildDone:
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
         {
-            saveRegisters();
+            //saveRegisters(); // !!! Cannot save registers here, because the
+                               // second child may have already returned.
             suspendStub();
         }
     }
@@ -148,7 +149,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
         {
-            saveRegisters();
+            //saveRegisters();
             suspendStub();
         }
     }
