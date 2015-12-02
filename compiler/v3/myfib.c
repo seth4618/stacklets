@@ -9,6 +9,13 @@
 
 __thread long threadId;
 
+#ifdef TRACKER
+struct {
+    int fib;
+    int fork;
+} trackingInfo;
+#endif
+
 #ifdef DEBUG
 volatile int line;
 pthread_mutex_t lineLock;
@@ -25,6 +32,10 @@ fib(void* F)
     labelhack(SecondChildSteal);
     labelhack(FirstChildDone);
     labelhack(SecondChildDone);
+
+#ifdef TRACKER
+    __sync_add_and_fetch(&trackingInfo.fib, 1);
+#endif
 
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
@@ -99,6 +110,9 @@ SecondChildSteal: // We cannot make function calls here!
     syncCounter = 2;
     stubBase = localStubBase;
     saveRegisters();
+#ifdef TRACKER
+    __sync_add_and_fetch(&trackingInfo.fork, 1);
+#endif
     stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b);
     // ====================================
 
@@ -205,6 +219,11 @@ main(int argc, char** argv)
     printf("Will run fib(%d) on %d thread(s)\n", n, numthreads);
 
     int x = startfib(n, numthreads);
+
     printf("fib(%d) = %d\n", n, x);
+#ifdef TRACKER
+    printf("fib called %d times, forked %d times\n", trackingInfo.fib, trackingInfo.fork);
+#endif
+
     exit(EXIT_SUCCESS);
 }
