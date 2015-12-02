@@ -69,6 +69,10 @@ void
 popSeed(int tid, int unlock)
 {
     Seed* origHead = seedStacks[tid];
+    if (origHead == NULL) {
+	dprintLine("popping on SS@%d, but nothing there?\n", tid);
+	assert(0);
+    }
     assert(origHead != NULL);
     Seed* next = origHead->next;
     seedStacks[tid] = next;
