@@ -15,6 +15,7 @@ typedef struct {
     int suspend;
 } TrackingInfo;
 extern TrackingInfo trackingInfo;
+#endif
 
 extern __thread int threadId;
 
