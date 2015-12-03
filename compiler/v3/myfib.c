@@ -53,8 +53,7 @@ fib(void* F)
 
 #ifdef DEBUG
         pthread_mutex_lock(&lineLock);
-        DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
-            threadId, f->input, line++);
+        dprintLine("[n = %d, line = %d]\n", f->input, line++);
         pthread_mutex_unlock(&lineLock);
 #endif
 
@@ -72,8 +71,7 @@ fib(void* F)
 #ifdef DEBUG
     pthread_mutex_lock(&lineLock);
     int volatile localLine = line++;
-    DEBUG_PRINT("[threadId = %ld, n = %d, line = %d]\n",
-        threadId, f->input, localLine);
+    dprintLine("[n = %d, line = %d]\n", f->input, localLine);
     pthread_mutex_unlock(&lineLock);
 #endif
 
@@ -111,7 +109,8 @@ fib(void* F)
 
  FirstChildDoneNormally:
     // stacklet ===========================
-    popSeed(threadId, 1);	       /* also releases lock */
+    popSeed(ptid, 1, seed->id);	       /* also releases lock */
+                                       // ptid not threadId!
     // ====================================
 
     fib(b);
@@ -133,8 +132,7 @@ SecondChildSteal: // We cannot make function calls here!
 
 FirstChildDone:
     // stacklet ===========================
-    dprintLine("fib(%d) has first child returned\n", f->input);
-    restoreRegisters();
+//    dprintLine("fib(%d) has first child returned\n", f->input);
     seedStackUnlock(threadId);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
@@ -159,6 +157,7 @@ FirstChildDone:
     pthread_mutex_unlock(&lineReturnedLock);
 #endif
 
+    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a->output + b->output;
     return;
 
@@ -187,6 +186,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     pthread_mutex_unlock(&lineReturnedLock);
 #endif
 
+    dprintLine("fib(%d) has second child returned\n", f->input);
     f->output = a->output + b->output;
     return;
 }
@@ -250,13 +250,19 @@ main(int argc, char** argv)
     int n = atoi(argv[1]);
     if (n > 46) die("cannot verify if n > 46");
     if (argc == 3) numthreads = atoi(argv[2]);
+
+#ifndef CLEAN
     printf("*** setup ***\n"
            "Will run fib(%d) on %d thread(s)\n\n", n, numthreads);
+#endif
 
     int x = startfib(n, numthreads);
     assert(x == result[n]);
+
+#ifndef CLEAN
     printf("*** result ***\n"
            "fib(%d) = %d (verified)\n\n", n, x);
+#endif
 
 #ifdef TRACKER
     TrackingInfo* finalTrackingInfo = getFinalTrackingInfo();
@@ -278,7 +284,6 @@ main(int argc, char** argv)
            "time elapsed: %lf\n\n", elapsed);
 #endif
 
-    printf("fib(%d) = %d\n", n, x);
     exit(EXIT_SUCCESS);
 }
 

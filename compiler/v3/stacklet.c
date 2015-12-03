@@ -1,7 +1,7 @@
 // @file stacklet.c
 
 #include "stacklet.h"
-#include "stdio.h"
+#include <stdio.h>
 #include "seedStack.h"
 #include "readyQ.h"
 #include "debug.h"
@@ -53,8 +53,8 @@ stubRoutine()
     Stub* stackletStub;
     getStackletStub(stackletStub);
     void* buf = (char *)stackletStub + sizeof(Stub) - STACKLET_SIZE;
-    DEBUG_PRINT("Free a stacklet.\n");
- 
+    dprintLine("free a stacklet.\n");
+
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
             stackletStub->parentPC);
 }
@@ -68,9 +68,8 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int
     // "SecondChildSteal"
     DPL("sfork from %p:%p@%d\n", parentSP, parentPC, tid);
     seedStackUnlock(tid);
-    DEBUG_PRINT("Forking a stacklet.\n");
+    dprintLine("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
-    DEBUG_PRINT("\tAllocate stackletBuf %p\n", stackletBuf); //XXX crash here
     Stub* stackletStub = (Stub *)((char *)stackletBuf + STACKLET_SIZE - sizeof(Stub));
 
     stackletStub->parentSP = parentSP;
@@ -93,7 +92,8 @@ getSeedIfAvailableFrom(int tid)
 	void* sp = seed->sp;
 	releaseSeed(seed, tid);
 	DPL(">%p:%p(%d)\n", sp, adr, tid);
-	switchAndJmp(sp, adr, tid);
+//	switchAndJmp(sp, adr, tid);
+	switchAndJmp(sp, adr);
     }
 }
 
@@ -119,11 +119,12 @@ suspend()
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
-            assert(0);
+//            assert(0);
             void* adr = ready->adr;
             void* sp = ready->sp;
             deqReadyQ();
-            switchAndJmp(sp, adr, -1);
+//            switchAndJmp(sp, adr, -1);
+            switchAndJmp(sp, adr);
         }
 
 	// No easily available work.  So randomly search for work from other seedQs.  If you find one, grab it and Go.

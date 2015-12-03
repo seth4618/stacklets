@@ -69,7 +69,7 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
              : "rdi", "rsi", "rdx", "rcx");} while (0)
 #else
 #define stackletForkStub(parentPC, parentSP, func, arg, tid) do {	\
-asm volatile("\t#calling stackletfork\n"\
+asm volatile("\t#calling stackletFork\n"\
 	     "movq %[AparentPC], %%rdi \n"\
              "movq %[AparentSP], %%rsi \n"\
              "movq %[Afunc], %%rdx \n"\
@@ -100,22 +100,28 @@ asm volatile("movq %[Aarg], %%rdi \n"\
 // used to start running a child steal routine.  We are stealing from thread tid.
 // the steal routine will assume %rax has tid from whom we are stealing
 // See recoverParentTID
-#define switchAndJmp(sp,adr,tid) do {		\
+//#define switchAndJmp(sp,adr,tid) do {		\
+//asm volatile("movq %[Asp],%%rsp \n"\
+//             "movl %[Itid], %%eax \n"\
+//             "jmp *%[Aadr] \n"\
+//             :\
+//             : [Asp] "r" (sp),\
+//	       [Itid] "r" (tid),\
+//               [Aadr] "r" (adr));} while(0)
+#define switchAndJmp(sp,adr) do {		\
 asm volatile("movq %[Asp],%%rsp \n"\
-             "movl %[Itid], %%eax \n"\
              "jmp *%[Aadr] \n"\
              :\
              : [Asp] "r" (sp),\
-	       [Itid] "r" (tid),\
                [Aadr] "r" (adr));} while(0)
 
 // right after restoring registers this is needed
 // see switchAndJmp
-#define recoverParentTID(tid) \
-    asm volatile("movl %%eax,%[Itid]"\
-		 : [Itid] "=r" (tid)	\
-                 :\
-		 : "eax")
+//#define recoverParentTID(tid) \
+//    asm volatile("movl %%eax,%[Itid]"\
+//		 : [Itid] "=r" (tid)	\
+//                 :\
+//		 : "eax")
 
 #ifdef MACOS
 #define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
