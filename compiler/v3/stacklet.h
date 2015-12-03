@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
+#include "spinlock.h"
 
 //#define MACOS
 
@@ -36,11 +37,22 @@ struct stubstruct {
 };
 
 extern __thread void* systemStack;
-extern pthread_mutex_t readyQLock;
+extern SpinLockType readyQLock;
 extern __thread void* stubBase;
 
 #define SYSTEM_STACK_SIZE   (8192*2)
-#define STACKLET_SIZE       81920
+#define STACKLET_POWER		14
+#define STACKLET_SIZE       (1<<STACKLET_POWER)
+
+// return base of an allocated stacklet, i.e., ptr returned by calloc
+#define getBase(sp)	((void*)(((long long int)(sp)) & (-1LL<<STACKLET_POWER)))
+
+// get ptr to stub for this stacklet
+#define getStubAdr(sp)	(getBase(sp) + (STACKLET_SIZE-sizeof(Stub)))
+
+// return the old stubbase address for this stacklet
+#define getOldStubBase(sp) (getBase(sp)+STACKLET_SIZE)
+
 
 void stackletInit(int numThreads);
 void* systemStackInit();
@@ -100,6 +112,8 @@ asm volatile("\t#calling stackletfork\n"\
                [sysStack] "m" (systemStack)\
              : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
 #endif
+
+void firstFork(void (*func)(void*), void* arg);
 
 #define switchAndJmpWithArg(sp, adr, arg) do {\
 asm volatile("movq %[Aarg], %%rdi \n"\
@@ -266,6 +280,12 @@ asm volatile("movq %[AparentSB], %[AStubBase] \n"\
                    [indexR15] "m" (saveArea[13]),\
                    [indexAX] "m" (saveArea[14]));} while (0)
 
+
+#define clobberCallerSave() \
+    asm volatile("# make sure caller save regs are saved here\n"\
+		: \
+       		: \
+		 : "rbp", "rbx", "r12", "r13", "r14", "r15")
 
 // Local Variables:
 // mode: c           
