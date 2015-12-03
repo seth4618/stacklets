@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include "tracker.h"
 
 #ifdef DEBUG
 volatile int line;
@@ -39,7 +40,7 @@ fib(void* F)
     labelhack(SecondChildDone);
 
 #ifdef TRACKER
-    __sync_add_and_fetch(&trackingInfo.fib, 1);
+    trackingInfo[threadId]->fib++;
 #endif
 
     Foo* f = (Foo *)F;
@@ -125,7 +126,7 @@ SecondChildSteal: // We cannot make function calls here!
     syncCounter = 2;
     saveRegisters();
 #ifdef TRACKER
-    __sync_add_and_fetch(&trackingInfo.fork, 1);
+    trackingInfo[threadId]->fork++;
 #endif
     stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b, ptid);
     // ====================================
@@ -148,7 +149,7 @@ FirstChildDone:
     // ====================================
 
 #ifdef TRACKER
-    __sync_add_and_fetch(&trackingInfo.firstReturn, 1);
+    trackingInfo[threadId]->firstReturn++;
 #endif
 
 #ifdef DEBUG
@@ -176,7 +177,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     // ====================================
 
 #ifdef TRACKER
-    __sync_add_and_fetch(&trackingInfo.secondReturn, 1);
+    trackingInfo[threadId]->secondReturn++;
 #endif
 
 #ifdef DEBUG
@@ -196,6 +197,7 @@ void *thread(void *arg)
   systemStack = systemStackInit();
   suspend();
   fprintf(stderr, "Got back from suspend!\n");
+  assert(0);
 }
 
 void createPthreads(int numthreads)
@@ -257,14 +259,15 @@ main(int argc, char** argv)
            "fib(%d) = %d (verified)\n\n", n, x);
 
 #ifdef TRACKER
+    TrackingInfo* finalTrackingInfo = getFinalTrackingInfo();
     printf("*** tracker info ***\n"
            "called %d times\n"
            "forked %d times\n"
            "first child returns %d times\n"
            "second child returns %d times\n"
            "suspend %d times\n\n",
-           trackingInfo.fib, trackingInfo.fork, trackingInfo.firstReturn,
-           trackingInfo.secondReturn, trackingInfo.suspend);
+           finalTrackingInfo->fib, finalTrackingInfo->fork, finalTrackingInfo->firstReturn,
+           finalTrackingInfo->secondReturn, finalTrackingInfo->suspend);
 #endif
 
 #ifdef BENCHMARK

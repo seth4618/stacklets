@@ -2,7 +2,7 @@ CC=gcc
 # -DDEBUG -DTRACKER -DBENCHMARK
 CFLAGS=-g -O1 -DTRACKER -DBENCHMARK
 LIBS = -lpthread
-OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o
+OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o tracker.o
 
 fib: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)

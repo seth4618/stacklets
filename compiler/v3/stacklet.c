@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "myfib.h"
 #include <assert.h>
+#include "tracker.h"
 
 __thread void* systemStack;
 __thread int threadId;
@@ -16,10 +17,6 @@ int numberOfThreads;
 pthread_mutex_t readyQLock;
 
 // there is no stacklet stub for the main stack
-
-#ifdef TRACKER
-TrackingInfo trackingInfo;
-#endif
 
 void*
 systemStackInit()
@@ -44,6 +41,9 @@ stackletInit(int numThreads)
     lockInit();
     seedStackInit(numThreads);
     readyQInit();
+#ifdef TRACKER
+    trackerInit(numThreads);
+#endif
 }
 
 // running at the base of the stacklet to return to its parent.
@@ -106,7 +106,7 @@ void
 suspend()
 {
 #ifdef TRACKER
-    __sync_add_and_fetch(&trackingInfo.suspend, 1);
+    trackingInfo[threadId]->suspend++;
 #endif
 
     dprintLine("suspend\n");
