@@ -12,17 +12,16 @@ static int current_id;
 static Seed** seedStacks;
 
 // 1 lock per thread
-static pthread_mutex_t* seedStackLocks;
-
+static SpinLockType* seedStackLocks;
 
 void 
 seedStackInit(int numThreads)
 {
     seedStacks = calloc(numThreads, sizeof(Seed*));
-    seedStackLocks = calloc(numThreads, sizeof(pthread_mutex_t));
+    seedStackLocks = calloc(numThreads, sizeof(SpinLockType));
     int i;
     for (i=0; i<numThreads; i++) {
-	assert(mySpinInitLock(seedStackLocks+i, NULL) == 0);
+	mySpinInitLock(seedStackLocks+i);
     }
 }
 
