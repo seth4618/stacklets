@@ -7,6 +7,9 @@ from parse import *
 
 titles = ["n","pthreads","called","forked","elapsed"]
 
+#time elapsed: 2.07
+#time elapsed after init: 2.07
+
 def benchmark(n, pthreads, reps):
   with open('bm.csv', 'wb') as myfile:
     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
@@ -24,9 +27,13 @@ def benchmark(n, pthreads, reps):
           if r is not None:
             result.append(r['forked'])
             continue
-          r = parse("time elapsed: {elapsed}\n", line)
+          r = parse("time elapsed: {elapsed1}\n", line)
           if r is not None:
-            result.append(r['elapsed'])
+            result.append(r['elapsed1'])
+            continue
+          r = parse("time elapsed after init: {elapsed2}\n", line)
+          if r is not None:
+            result.append(r['elapsed2'])
             continue
       print result
       wr.writerow(result)

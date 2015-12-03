@@ -108,7 +108,7 @@ suspend()
     trackingInfo[threadId]->suspend++;
 #endif
 
-    dprintLine("suspend\n");
+//    dprintLine("suspend\n");
     for (;;)
     {
 	// first look in my seedQ.  If there is work there, grab it and go

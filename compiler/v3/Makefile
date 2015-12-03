@@ -1,6 +1,6 @@
 CC=gcc
 # -DDEBUG -DTRACKER -DBENCHMARK -DCLEAN
-CFLAGS=-g -O1
+CFLAGS=-g -O1 -DBENCHMARK -DTRACKER
 LIBS = -lpthread
 OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o tracker.o
 

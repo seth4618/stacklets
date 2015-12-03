@@ -18,6 +18,7 @@ pthread_mutex_t lineReturnedLock;
 
 #ifdef BENCHMARK
 struct timeval startTime;
+struct timeval startTimeAfterInit;
 struct timeval endTime;
 #endif
 
@@ -155,7 +156,7 @@ FirstChildDone:
     pthread_mutex_unlock(&lineReturnedLock);
 #endif
 
-    dprintLine("fib(%d) has first child returned\n", f->input);
+//    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a->output + b->output;
     return;
 
@@ -184,7 +185,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     pthread_mutex_unlock(&lineReturnedLock);
 #endif
 
-    dprintLine("fib(%d) has second child returned\n", f->input);
+//    dprintLine("fib(%d) has second child returned\n", f->input);
     f->output = a->output + b->output;
     return;
 }
@@ -213,6 +214,10 @@ void createPthreads(int numthreads)
 int 
 startfib(int n, int numthreads)
 {
+#ifdef BENCHMARK
+    gettimeofday(&startTime, NULL);
+#endif
+
     stackletInit(numthreads);
     createPthreads(numthreads);
 
@@ -230,7 +235,7 @@ startfib(int n, int numthreads)
     systemStack = systemStackInit();
 
 #ifdef BENCHMARK
-    gettimeofday(&startTime, NULL);
+    gettimeofday(&startTimeAfterInit, NULL);
 #endif
 
     fib(a);
@@ -257,6 +262,18 @@ main(int argc, char** argv)
     int x = startfib(n, numthreads);
     assert(x == result[n]);
 
+#ifdef BENCHMARK
+    gettimeofday(&endTime, NULL);
+    double elapsed = (endTime.tv_sec - startTime.tv_sec) +
+                     (endTime.tv_usec - startTime.tv_usec) / 1000000.0;
+    double elapsedAfterInit = (endTime.tv_sec - startTimeAfterInit.tv_sec) +
+                              (endTime.tv_usec - startTimeAfterInit.tv_usec) / 1000000.0;
+    printf("*** benchmark ***\n"
+           "time elapsed: %.3lf\n"
+           "time elapsed after init: %.3lf\n\n",
+           elapsed, elapsedAfterInit);
+#endif
+
 #ifndef CLEAN
     printf("*** result ***\n"
            "fib(%d) = %d (verified)\n\n", n, x);
@@ -272,14 +289,6 @@ main(int argc, char** argv)
            "suspend %d times\n\n",
            finalTrackingInfo->fib, finalTrackingInfo->fork, finalTrackingInfo->firstReturn,
            finalTrackingInfo->secondReturn, finalTrackingInfo->suspend);
-#endif
-
-#ifdef BENCHMARK
-    gettimeofday(&endTime, NULL);
-    double elapsed = (endTime.tv_sec - startTime.tv_sec) +
-                     (endTime.tv_usec - startTime.tv_usec) / 1000000.0;
-    printf("*** benchmark ***\n"
-           "time elapsed: %lf\n\n", elapsed);
 #endif
 
     exit(EXIT_SUCCESS);
