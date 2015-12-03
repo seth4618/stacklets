@@ -1,0 +1,24 @@
+Locking library:
+---------------
+
+This folder contains the code that implements locking using user level
+interrupts.
+
+make -f Makefile_lib produces uli.so which can be linked to any application
+using it.
+
+Microbenchmark: 
+--------------
+
+myapp.c does a simple concurrent increment of counter using our locking
+implementation. This can be changed to any other lock for comparision.
+
+make builds the myapp benchmark.
+
+Simulation: 
+-----------
+
+If you have simulated user level interrupts, #define SIM in u_interrupt.h,
+and change the macro definitions of DUI,EUI and SENDI to call your simulated
+functions.  Compile using make -f Makefile_lib.
+
