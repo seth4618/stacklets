@@ -9,6 +9,8 @@ typedef struct Seed {
     struct Seed* prev;
     struct Seed* next;
     int id;
+    int pusherId;
+    int stackId;
 } Seed;
 
 // must be called by MAIN thread (AND ONLY MAIN THREAD)
