@@ -1,0 +1,4 @@
+For detailed initial steps we took to implement stacklets, please refer to the
+README in "v2" directory.
+
+Here we are talking about how we run multiple pthreads.

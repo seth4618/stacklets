@@ -5,7 +5,7 @@ CSAPP_SRC = .
 
 
 #when compiling with -O2, make this 1
-OPT = -DCOMPILING_OPTION=0
+OPT = -DCOMPILING_OPTION=1 -O1
 #OPT = -O0 -DOPTS_ON=1
 #DEBUGOPTS = -fno-stack-protector -O0 -DOPTS_ON=0
 LINK = -static
@@ -13,9 +13,9 @@ CFLAGS =  -g -Wall $(OPT) -I $(CSAPP_INC) -I .
 LDLIBS = -pthread
 
 #optimization flags for user program and mythread_64
-tt_fibonacci_64.o : CFLAGS+= -O0
-mythreads_64.o : CFLAGS+= -O0
-sbuffree.o : CFLAGS+= -O0
+tt_fibonacci_64.o : CFLAGS+= -O1
+mythreads_64.o : CFLAGS+= -O1
+sbuffree.o : CFLAGS+= -O1
 
 PROGS =	tt_fibonacci_64
 
