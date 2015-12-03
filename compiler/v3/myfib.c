@@ -104,7 +104,7 @@ fib(void* F)
     fib(a);
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
-    seedStackLock(threadId);
+    seedStackLock(ptid);
     goto *firstChildReturnAdr;
 
  FirstChildDoneNormally:
@@ -120,7 +120,6 @@ fib(void* F)
 SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
     restoreRegisters();
-    //recoverParentTID(ptid);
     firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
     saveRegisters();
@@ -132,8 +131,7 @@ SecondChildSteal: // We cannot make function calls here!
 
 FirstChildDone:
     // stacklet ===========================
-//    dprintLine("fib(%d) has first child returned\n", f->input);
-    seedStackUnlock(threadId);
+    seedStackUnlock(ptid);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
@@ -249,7 +247,7 @@ main(int argc, char** argv)
                       "If 2, then second is # of threads");
     int n = atoi(argv[1]);
     if (n > 46) die("cannot verify if n > 46");
-    if (argc == 3) numthreads = atoi(argv[2]);
+    if (argc >= 3) numthreads = atoi(argv[2]);
 
 #ifndef CLEAN
     printf("*** setup ***\n"

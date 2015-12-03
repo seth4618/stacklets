@@ -53,7 +53,7 @@ stubRoutine()
     Stub* stackletStub;
     getStackletStub(stackletStub);
     void* buf = (char *)stackletStub + sizeof(Stub) - STACKLET_SIZE;
-    dprintLine("free a stacklet.\n");
+    DEBUG_PRINT("free a stacklet.\n");
 
     switchToSysStackAndFreeAndResume(buf, stackletStub->parentSP,
             stackletStub->parentPC);
@@ -68,7 +68,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int
     // "SecondChildSteal"
     DPL("sfork from %p:%p@%d\n", parentSP, parentPC, tid);
     seedStackUnlock(tid);
-    dprintLine("Forking a stacklet.\n");
+    DEBUG_PRINT("Forking a stacklet.\n");
     void* stackletBuf = calloc(1, STACKLET_SIZE);
     Stub* stackletStub = (Stub *)((char *)stackletBuf + STACKLET_SIZE - sizeof(Stub));
 
@@ -92,7 +92,6 @@ getSeedIfAvailableFrom(int tid)
 	void* sp = seed->sp;
 	releaseSeed(seed, tid);
 	DPL(">%p:%p(%d)\n", sp, adr, tid);
-//	switchAndJmp(sp, adr, tid);
 	switchAndJmp(sp, adr);
     }
 }
@@ -119,11 +118,9 @@ suspend()
         ReadyThread* ready = readyDummyHead->front;
         if (ready != NULL)
         {
-//            assert(0);
             void* adr = ready->adr;
             void* sp = ready->sp;
             deqReadyQ();
-//            switchAndJmp(sp, adr, -1);
             switchAndJmp(sp, adr);
         }
 

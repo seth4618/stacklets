@@ -68,7 +68,6 @@ pushSeed(Seed* seed, int tid, int lock)
 void 
 popSeed(int tid, int unlock, int pop)
 {
-//    dprintLine("lock %d, pop %d\n", tid, pop);
     Seed* origHead = seedStacks[tid];
     if (origHead == NULL) {
 	dprintLine("lock %d, pop %d, popping on SS@%d, but nothing there?\n", tid, pop, tid);
@@ -91,15 +90,6 @@ releaseSeed(Seed* seed, int tid)
     Seed* next = seed->next;
     if (prev != NULL) prev->next = next; else seedStacks[tid] = next;
     if (next != NULL) next->prev = prev;
-
-    if (prev != NULL && next != NULL) dprintLine("lock %d, release %d, prev %d, next %d\n", tid, seed->id, prev->id, next->id);
-    else if (prev != NULL ) dprintLine("lock %d, release %d, prev %d\n", tid, seed->id, prev->id);
-    else if (next != NULL ) dprintLine("lock %d, release %d, next %d\n", tid, seed->id, next->id);
-    else dprintLine("lock %d, release %d\n", tid, seed->id);
-    
-    if (seedStacks[tid] != NULL) dprintLine("head is %d\n", seedStacks[tid]->id);
-    else dprintLine("head is NULL\n");
-
     free(seed);
 }
 
@@ -114,7 +104,6 @@ peekSeed(int tid)
     seedStackLock(tid);
     Seed* seed = seedStacks[tid];
     if (seed == NULL) seedStackUnlock(tid);
-    dprintLine("lock %d, peek %d\n", tid, seed->id);
     return seed;
 }
 

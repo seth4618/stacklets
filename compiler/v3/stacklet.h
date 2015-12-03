@@ -53,11 +53,12 @@ asm volatile("movq %[sysStack], %%rsp \n"\
 #endif
 
 #ifdef MACOS
-#define stackletForkStub(parentPC, parentSP, func, arg) do {\
+#define stackletForkStub(parentPC, parentSP, func, arg, tid) do {\
 asm volatile("movq %[AparentPC], %%rdi \n"\
              "movq %[AparentSP], %%rsi \n"\
              "movq %[Afunc], %%rdx \n"\
              "movq %[Aarg], %%rcx \n"\
+             "movl %[TIDarg], %%r8d \n"\
              "movq %[sysStack], %%rsp \n"\
              "call _stackletFork \n"\
              :\
@@ -65,8 +66,9 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
                [AparentSP] "r" (parentSP),\
                [Afunc] "r" (func),\
                [Aarg] "r" (arg),\
+               [TIDarg] "r" (tid),\
                [sysStack] "m" (systemStack)\
-             : "rdi", "rsi", "rdx", "rcx");} while (0)
+             : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
 #else
 #define stackletForkStub(parentPC, parentSP, func, arg, tid) do {	\
 asm volatile("\t#calling stackletFork\n"\
