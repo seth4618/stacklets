@@ -62,6 +62,7 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "debug/Stacklet.hh"
 
 int
 divideFromConf(uint32_t conf)
@@ -366,7 +367,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 Tick
 X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 {
-    DPRINTF(LocalApic, "Interrupts::%s cpu id = %d\n", __func__, cpu->cpuId());
+    DPRINTF(Stacklet, "Interrupts::%s cpu id = %d\n", __func__, cpu->cpuId());
     assert(!pkt->isError());
     assert(pkt->cmd == MemCmd::MessageResp);
     if (--pendingIPIs == 0) {

@@ -74,7 +74,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 #include "sim/vptr.hh"
-//#include "dev/x86/intdev.hh"
+#include "debug/Stacklet.hh"
 
 using namespace std;
 
@@ -661,7 +661,7 @@ stacklet_eui(ThreadContext *tc, uint16_t mask)
    * after completing the handling of a user-level interrupt, we enable
    * user-level interrupts to be open to accepting further interrupts.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s called with mask %u\n", __func__, mask);
+  DPRINTF(Stacklet, "PseudoInst::%s called with mask %u\n", __func__, mask);
   return 0;
 }
 
@@ -674,7 +674,7 @@ stacklet_dui(ThreadContext *tc, uint16_t mask)
    * user-level interrupts and interrupts occuring at the time will be
    * treated as packet drops.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s called with mask %u\n", __func__, mask);
+  DPRINTF(Stacklet, "PseudoInst::%s called with mask %u\n", __func__, mask);
   return 0;
 }
 
@@ -685,7 +685,7 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
    * This instruction sends a user-level interrupt to another core.
    */
   System *sys = tc->getSystemPtr();
-  DPRINTF(PseudoInst, "PseudoInst::%s source CPU=%d, dest CPU=%d\n", __func__, tc->cpuId(), dest_cpu);
+  DPRINTF(Stacklet, "PseudoInst::%s source CPU=%d, dest CPU=%d\n", __func__, tc->cpuId(), dest_cpu);
 
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
@@ -698,7 +698,7 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
   stacklet_message_t stacklet_msg;
   stacklet_msg.callback = (uint64_t) msg;
   stacklet_msg.p = (uint64_t) (msg + sizeof(uint64_t)); // this is assuming 64 bit architecture
-  DPRINTF(PseudoInst, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
+  DPRINTF(Stacklet, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
   interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
 
   ApicList apics;
@@ -715,7 +715,7 @@ stacklet_moviadr(ThreadContext *tc, Addr addr)
    * This instruction moves the interrupt-handler address to a special
    * register (or variable, in the case of a simulator).
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
   interrupts->savedULIPC = addr;
@@ -729,7 +729,7 @@ stacklet_retuli(ThreadContext *tc)
    * This instruction denotes the return from a user-level interrupt
    * handler.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
   tc->pcState(interrupts->savedULIPC);
@@ -742,7 +742,7 @@ stacklet_getcpuid(ThreadContext *tc)
   /*
    * This instruction sends a user-level interrupt to another core.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
   return tc->cpuId();
 }
 
