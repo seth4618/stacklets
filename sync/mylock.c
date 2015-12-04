@@ -35,6 +35,7 @@ static bool *get_trigger(int id)
 void mylock(struct lock *L)
 {
     int my_id  = get_myid();
+    int save_id;
     bool *my_trigger;
     struct addme_cfd cfd;
     message *msg = (message *)malloc(sizeof(message));
@@ -65,7 +66,10 @@ retry:
             cfd.ask_id = my_id;
 	        msg -> callback = &addme;
 	        msg -> p = &cfd;
-            SENDI(msg, L->owner_id);  /* Our instruction */
+            save_id = L->owner_id;
+            if (save_id == -1)
+                goto retry;
+            SENDI(msg, save_id);  /* Our instruction */
             while (!(*my_trigger)) POLL();
         }
     }
@@ -104,6 +108,7 @@ static void addme(void *p)
     struct addme_cfd *cfd = (struct addme_cfd *)p;
     struct lock *L = (struct lock *)cfd->L;
     int ask_id = (int)cfd->ask_id;
+    int save_id;
     message *msg = (message *)malloc(sizeof(message));
 
     if (my_id == -1) {
@@ -111,6 +116,7 @@ static void addme(void *p)
         return;
     }
     DUI(1);  // Our instruction: disable the uint #1
+retry:
     if (L->owner_id != my_id) {
         if (L->owner_id == -1) {
             L->owner_id = ask_id;
@@ -128,7 +134,10 @@ static void addme(void *p)
 	            }
                 msg->callback = &addme;
                 msg->p = p;
-                SENDI(msg, L->owner_id);
+                save_id = L->owner_id;
+                if (save_id == -1)
+                    goto retry;
+                SENDI(msg, save_id);
             } else {
                 bool *next_trigger = get_trigger(ask_id);
                 *next_trigger = 1;
@@ -141,7 +150,10 @@ static void addme(void *p)
 	        }
             msg->callback = &addme;
             msg->p = p;
-            SENDI(msg, L->owner_id);
+            save_id = L->owner_id;
+            if (save_id == -1)
+                goto retry;
+            SENDI(msg, save_id);
         }
     } else {
         L->owner_id = ask_id;
