@@ -366,6 +366,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 Tick
 X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 {
+    DPRINTF(LocalApic, "Interrupts::%s cpu id = %d\n", __func__, cpu->cpuId());
     assert(!pkt->isError());
     assert(pkt->cmd == MemCmd::MessageResp);
     if (--pendingIPIs == 0) {

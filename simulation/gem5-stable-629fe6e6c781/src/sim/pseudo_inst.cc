@@ -192,9 +192,31 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
       case 0x5b: // work_end_func
         workend(tc, args[0], args[1]);
         break;
+      
+      case 0x55:
+        stacklet_eui(tc, args[0]);
+        break;
 
+      case 0x56:
+        stacklet_dui(tc, args[0]);
+        break;
+
+      case 0x57:
+        stacklet_sendi(tc, args[0], args[1]);
+        break;
+
+      case 0x58:
+        stacklet_getcpuid(tc);
+        break;
+
+      case 0x59:
+        stacklet_retuli(tc);
+        break;
+
+#if 0
       case 0x55: // annotate_func
       case 0x56: // stacklets
+        DPRINTF(PseudoInst, "Trying to execute stacklet functions\n");
         switch(subfunc) {
           case 0x00:
             stacklet_eui(tc, args[0]);
@@ -216,12 +238,13 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
             break;
         }
         break;
+
       case 0x57: // reserved3_func
       case 0x58: // reserved4_func
       case 0x59: // reserved5_func
         warn("Unimplemented m5 op (0x%x)\n", func);
         break;
-
+#endif
       /* SE mode functions */
       case 0x60: // syscall_func
         m5Syscall(tc);
@@ -662,7 +685,7 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
    * This instruction sends a user-level interrupt to another core.
    */
   System *sys = tc->getSystemPtr();
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  DPRINTF(PseudoInst, "PseudoInst::%s source CPU=%d, dest CPU=%d\n", __func__, tc->cpuId(), dest_cpu);
 
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
@@ -675,6 +698,7 @@ stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
   stacklet_message_t stacklet_msg;
   stacklet_msg.callback = (uint64_t) msg;
   stacklet_msg.p = (uint64_t) (msg + sizeof(uint64_t)); // this is assuming 64 bit architecture
+  DPRINTF(PseudoInst, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
   interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
 
   ApicList apics;
