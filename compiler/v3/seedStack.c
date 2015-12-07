@@ -13,16 +13,20 @@ static int current_id;
 static SeedQueue* seedStacks;
 
 // 1 lock per thread
-static SpinLockType* seedStackLocks;
+typedef struct {
+    SpinLockType lock;
+    char buffer[84];
+} Lock;
+static Lock* seedStackLocks;
 
 void 
 seedStackInit(int numThreads)
 {
     seedStacks = calloc(numThreads, sizeof(SeedQueue));
-    seedStackLocks = calloc(numThreads, sizeof(SpinLockType));
+    seedStackLocks = calloc(numThreads, sizeof(Lock));
     int i;
     for (i=0; i<numThreads; i++) {
-	mySpinInitLock(seedStackLocks+i);
+	mySpinInitLock(&(seedStackLocks[i].lock));
     }
 }
 
@@ -30,14 +34,14 @@ seedStackInit(int numThreads)
 void 
 seedStackUnlock(int tid)
 {
-    mySpinUnlock(seedStackLocks+tid);
+    mySpinUnlock(&(seedStackLocks[tid].lock));
 }
 
 // grab lock on tid's seedStack
 void 
 seedStackLock(int tid)
 {
-    mySpinLock(seedStackLocks+tid);
+    mySpinLock(&(seedStackLocks[tid].lock));
 }
 
 Seed* 
