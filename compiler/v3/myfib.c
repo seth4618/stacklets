@@ -116,6 +116,8 @@ fib(void* F)
 
     fib(b);
     f->output = a->output + b->output;
+    free(a);
+    free(b);
     return;
 
 SecondChildSteal: // We cannot make function calls here!
@@ -158,6 +160,8 @@ FirstChildDone:
 
 //    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a->output + b->output;
+    free(a);
+    free(b);
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
@@ -187,6 +191,8 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 
 //    dprintLine("fib(%d) has second child returned\n", f->input);
     f->output = a->output + b->output;
+    free(a);
+    free(b);
     return;
 }
 
@@ -239,9 +245,11 @@ startfib(int n, int numthreads)
 #endif
 
     fib(a);
+    int rc = a->output;
+    free(a);
 
     // Only one thread can reach here. It does not have to the main thread;
-    return a->output;
+    return rc;
 }
 
 int
