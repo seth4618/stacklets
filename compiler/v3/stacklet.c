@@ -12,6 +12,8 @@
 #include "myassert.h"
 #include "tracker.h"
 
+#include "myfib.h"
+
 __thread void* systemStack;
 __thread int threadId;
 int numberOfThreads;
@@ -57,7 +59,8 @@ removeStacklet(int tid, Stub* stub)
     mySpinLock(&stackletInfoLock);
     for (ptr = sinfos; (ptr != NULL) && (ptr != stub); ptr = ptr->next);
     if (ptr == NULL) {
-	dprintLine("Expected to find stub %p from %d  ->%p  %p<-\n", stub, tid, stub->next, stub->prev);
+	dprintLine("Expected to find stub %p from %d  ->%p  %p<-\n", 
+		   stub, tid, stub->next, stub->prev);
 	showStacklets(0);
 	myassert(ptr != NULL, "Expected to find stub %p from %d\n", stub, tid);
 	mySpinUnlock(&stackletInfoLock);
@@ -79,10 +82,13 @@ static void
 showStacklets(int grablock)
 {
     if (grablock) mySpinLock(&stackletInfoLock);
-    fprintf(stderr, "Stacklets: Allocated:%d, Deallocated:%d, Mismatched:%d\n", sltsAlloc, sltsDealloc, sltsMismatched);
+    fprintf(stderr, "Stacklets: Allocated:%d, Deallocated:%d, Mismatched:%d\n", 
+	    sltsAlloc, sltsDealloc, sltsMismatched);
     Stub* ptr;
     for (ptr = sinfos; ptr != NULL; ptr = ptr->next) {
-	fprintf(stderr, "\t%p: sp:%p @ pc:%p alloc:%d seed:%d\n", ptr, ptr->parentSP, ptr->parentPC, ptr->allocatorThread, ptr->seedThread);
+	fprintf(stderr, "\t%p: sp:%p @ pc:%p alloc:%d seed:%d\n", ptr, 
+		ptr->parentSP, ptr->parentPC, 
+		ptr->allocatorThread, ptr->seedThread);
     }
     if (grablock) mySpinUnlock(&stackletInfoLock);
 }
@@ -158,9 +164,12 @@ stubRoutine()
     Stub* stackletStub;
     getStackletStub(stackletStub);
     void* buf = (void*)( (
-		         ((long long unsigned)stackletStub)+RE_ALIGNMENT_FUDGE+ 	// deal with some pushing of sp
-		         (sizeof(Stub) - STACKLET_SIZE)		// get from stub ptr to base of memory ptr
-			 ) & (-1LL<<(STACKLET_BUF_ZEROS))	// get to alignment boundary
+			  // deal with some pushing of sp
+		         ((long long unsigned)stackletStub)+RE_ALIGNMENT_FUDGE+ 	
+			 // get from stub ptr to base of memory ptr
+		         (sizeof(Stub) - STACKLET_SIZE)		
+			 // get to alignment boundary
+			 ) & (-1LL<<(STACKLET_BUF_ZEROS))	
 		       );
     void* adjustedStub = (Stub *)((char *)buf + STACKLET_SIZE - sizeof(Stub));
     //dprintLine("free a stacklet: %p (OR %p)\n", stackletStub, adjustedStub);
@@ -176,17 +185,19 @@ stubRoutine()
 // Create a new stacklet to run the seed which we got from tid.
 // seedStack of tid is currently locked on entry, but must be released
 void
-stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid)
+stackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
+	     void* arg, int tid)
 {
-    // We can only unlock here because we cannot make function in
+    // We can only unlock here because we cannot make function call in
     // "SecondChildSteal"
     DPL("sfork from %p:%p@%d\n", parentSP, parentPC, tid);
     seedStackUnlock(tid);
+    dprintLine("Forking fib(%d)\n", ((Foo*)arg)->input);
     void* stackletBuf;
     int en = posix_memalign(&stackletBuf, STACKLET_ALIGNMENT, STACKLET_SIZE);
     myassert(en == 0, "Failed to allocate a stacklet");
     //void* stackletBuf = calloc(1, STACKLET_SIZE);
-    Stub* stackletStub = (Stub *)((char *)stackletBuf + STACKLET_SIZE - sizeof(Stub));
+    Stub* stackletStub = (Stub *)((char *)stackletBuf+STACKLET_SIZE-sizeof(Stub));
     //dprintLine("Forked a stacklet: %p\n", stackletStub);
 
     stackletStub->parentSP = parentSP;
@@ -243,11 +254,12 @@ suspend()
             switchAndJmp(sp, adr, -1);
         }
 
-	// No easily available work.  So randomly search for work from other seedQs.  If you find one, grab it and Go.
+	// No easily available work.  So randomly search for work from other seedQs.  
+	// If you find one, grab it and Go.
 	// Try 3 times, then check other stuff
 	int i;
 	for (i=0; i<3; i++) {
-	    int x = (threadId+i)%numberOfThreads; /* this should be a random number */
+	    int x = (threadId+i)%numberOfThreads; // this should be a random number
 	    getSeedIfAvailableFrom(x);
 	}
     }
@@ -274,7 +286,8 @@ Resume:
 }
 
 
-// this allocates a stacklet for the base function and will return the instruction following this.
+// this allocates a stacklet for the base function and 
+// will return the instruction following this.
 
 void 
 firstFork(void (*func)(void*), void* arg)
