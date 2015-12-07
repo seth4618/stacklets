@@ -7,13 +7,14 @@
 #include <assert.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include "myassert.h"
 #include "tracker.h"
 
-#ifdef DEBUG
+#if defined(DEBUG) //||1
 volatile int line;
-pthread_mutex_t lineLock;
+SpinLockType lineLock;
 int lineReturned[300000000];
-pthread_mutex_t lineReturnedLock;
+SpinLockType lineReturnedLock;
 #endif
 
 #ifdef BENCHMARK
@@ -47,17 +48,20 @@ fib(void* F)
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
 
-    DPL(">fib(%d)\n", f->input);
+    void* mysp;
+    asm("movq %%rsp, %[var]" : [var] "=r" (mysp));
+    //dprintLine(">fib(%d)  at %p\n", f->input, mysp);
 
     if (f->input <= 2)
     {
 
-#ifdef DEBUG
-        pthread_mutex_lock(&lineLock);
+#if defined(DEBUG)  //||1
+        mySpinLock(&lineLock);
         dprintLine("[n = %d, line = %d]\n", f->input, line++);
-        pthread_mutex_unlock(&lineLock);
+        mySpinUnlock(&lineLock);
 #endif
 
+	//dprintLine("<fib(%d) = %d  at %p\n", f->input, 1, mysp);
         f->output = 1;
         return;
     }
@@ -69,11 +73,11 @@ fib(void* F)
     }
 #endif
 
-#ifdef DEBUG
-    pthread_mutex_lock(&lineLock);
+#if defined(DEBUG)     //||1
+    mySpinLock(&lineLock);
     int volatile localLine = line++;
     dprintLine("[n = %d, line = %d]\n", f->input, localLine);
-    pthread_mutex_unlock(&lineLock);
+    mySpinUnlock(&lineLock);
 #endif
 
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
@@ -116,6 +120,7 @@ fib(void* F)
 
     fib(b);
     f->output = a->output + b->output;
+    //dprintLine("<fib(%d) = %d  at %p\n", f->input, f->output, mysp);
     return;
 
 SecondChildSteal: // We cannot make function calls here!
@@ -132,6 +137,7 @@ SecondChildSteal: // We cannot make function calls here!
 
 FirstChildDone:
     // stacklet ===========================
+    //dprintLine("fib(%d) has first child returned\n", f->input);
     seedStackUnlock(ptid);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
@@ -150,10 +156,10 @@ FirstChildDone:
 #endif
 
 #ifdef DEBUG
-    pthread_mutex_lock(&lineReturnedLock);
+    mySpinLock(&lineReturnedLock);
     assert(lineReturned[localLine] == 0);
     lineReturned[localLine] = 1;
-    pthread_mutex_unlock(&lineReturnedLock);
+    mySpinUnlock(&lineReturnedLock);
 #endif
 
 //    dprintLine("fib(%d) has first child returned\n", f->input);
@@ -179,10 +185,10 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 #endif
 
 #ifdef DEBUG
-    pthread_mutex_lock(&lineReturnedLock);
+    mySpinLock(&lineReturnedLock);
     assert(lineReturned[localLine] == 0);
     lineReturned[localLine] = 1;
-    pthread_mutex_unlock(&lineReturnedLock);
+    mySpinUnlock(&lineReturnedLock);
 #endif
 
 //    dprintLine("fib(%d) has second child returned\n", f->input);
@@ -222,8 +228,8 @@ startfib(int n, int numthreads)
     createPthreads(numthreads);
 
 #ifdef DEBUG
-    pthread_mutex_init(&lineLock, NULL);
-    pthread_mutex_init(&lineReturnedLock, NULL);
+    mySpinInitLock(&lineLock);
+    mySpinInitLock(&lineReturnedLock);
 #endif
 
     Registers saveArea;
@@ -238,8 +244,12 @@ startfib(int n, int numthreads)
     gettimeofday(&startTimeAfterInit, NULL);
 #endif
 
-    fib(a);
+    //dprintLine("Start first stacklet: %p->input = %d\n", a, a->input);
 
+    // abandon original stack and start running on a stacklet for fib(a)
+    firstFork(fib, a);
+
+    //dprintLine("Finished with first stacklet: %p->output = %d\n", a, a->output);
     // Only one thread can reach here. It does not have to the main thread;
     return a->output;
 }
@@ -260,7 +270,7 @@ main(int argc, char** argv)
 #endif
 
     int x = startfib(n, numthreads);
-    assert(x == result[n]);
+    myassert(x == result[n], "Unexpected Result: %d (should have been %d)\n", x, result[n]);
 
 #ifdef BENCHMARK
     gettimeofday(&endTime, NULL);
@@ -291,6 +301,7 @@ main(int argc, char** argv)
            finalTrackingInfo->secondReturn, finalTrackingInfo->suspend);
 #endif
 
+    printf("fib(%d) = %d\n", n, x);
     exit(EXIT_SUCCESS);
 }
 
