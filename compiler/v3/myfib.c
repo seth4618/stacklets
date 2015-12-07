@@ -109,11 +109,11 @@ fib(void* F)
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
 #endif
-    seedStackLock(ptid);
     goto *firstChildReturnAdr;
 
  FirstChildDoneNormally:
     // stacklet ===========================
+    seedStackLock(ptid);
     releaseSeed(seed, ptid);  // ptid not threadId!
     seedStackUnlock(ptid);
     // ====================================
@@ -141,7 +141,7 @@ SecondChildSteal: // We cannot make function calls here!
 FirstChildDone:
     // stacklet ===========================
     //dprintLine("fib(%d) has first child returned\n", f->input);
-    seedStackUnlock(ptid);
+    //seedStackUnlock(ptid);
     {
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
         if (localSyncCounter != 0)
