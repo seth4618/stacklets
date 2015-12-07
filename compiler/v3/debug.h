@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+//#define DEBUG
+//#define DLINE
+
 #ifdef DEBUG
 #define DEBUG_PRINT(fmt, args...)    fprintf(stderr, fmt, ## args)
 #else
