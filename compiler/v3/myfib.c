@@ -109,7 +109,7 @@ fib(void* F)
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
 #endif
-    // SCG, moved it below: seedStackLock(ptid);
+    //SCG, moved it below: seedStackLock(ptid);
     goto *firstChildReturnAdr;
 
  FirstChildDoneNormally:
@@ -125,14 +125,12 @@ fib(void* F)
     //dprintLine("<fib(%d) = %d  at %p\n", f->input, f->output, mysp);
     return;
 
-SecondChildSteal: // We cannot make function calls here!
+SecondChildSteal: // WE CANNOT MAKE FUNCTION CALLS HERE!
     // stacklet ===========================
     restoreRegisters();
     int volatile syncCounter = 2; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
     firstChildReturnAdr = &&FirstChildDone;
-    //BADPRINT below
-    //dprintLine("Stealing fib(%d)\n", b.input);
     saveRegisters();
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
