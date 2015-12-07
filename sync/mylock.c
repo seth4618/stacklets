@@ -113,6 +113,7 @@ static void addme(void *p)
 
     if (my_id == -1) {
         fprintf(stderr, "ERROR: mylock: Failed to get cpu id\n");
+        RETULI;
         return;
     }
     DUI(1);  // Our instruction: disable the uint #1
@@ -160,6 +161,7 @@ retry:
         pcpu_lock_struct[my_id].waiter_id = ask_id;
     }
     EUI(0xfffe); // Our instruction
+    RETULI;
 }
 
 void init_lock(struct lock *L)
