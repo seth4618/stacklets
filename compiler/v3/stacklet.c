@@ -246,7 +246,7 @@ suspend()
 	// No easily available work.  So randomly search for work from other seedQs.  If you find one, grab it and Go.
 	// Try 3 times, then check other stuff
 	int i;
-	for (i=0; i<3; i++) {
+	for (i=1; i<3; i++) {
 	    int x = (threadId+i)%numberOfThreads; /* this should be a random number */
 	    getSeedIfAvailableFrom(x);
 	}
