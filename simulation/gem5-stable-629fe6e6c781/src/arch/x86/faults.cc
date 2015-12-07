@@ -48,6 +48,7 @@
 #include "debug/Faults.hh"
 #include "sim/full_system.hh"
 #include "arch/x86/interrupts.hh"
+#include "debug/Stacklet.hh"
 
 namespace X86ISA
 {
@@ -313,7 +314,7 @@ namespace X86ISA
     void
     ULI::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     {
-      DPRINTF(Faults, "in ULI handler\n");
+      DPRINTF(Stacklet, "in ULI handler\n");
 
       /*
        * Geting the current PC
@@ -322,17 +323,20 @@ namespace X86ISA
       Addr pc = pcState.pc();
       //uli_node_t node = popTopULI(tc);
       if(node.uli_handler_pc == 0) {
+              DPRINTF(Stacklet,"ASEERTING 0\n");
         assert(0);
       }
 
-      /*
-       * Need to save PC into a custom register (R15).
-       */
-      this->savedPC = (uint64_t) pc;
+      tc->savedULIPC = (uint64_t) pc;
+      tc->savedULISP = tc->readIntReg(StackPointerReg);
+      tc->savedULIDI = tc->readIntReg(INTREG_RDI);
+      tc->savedULIRFLAGS = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
 
       /*
        * Set the PC as the PC retrieved from the queue entry.
        */
+      tc->setIntReg(INTREG_RDI, node.packet_address);
+      tc->setIntReg(StackPointerReg, tc->ULISP);
       tc->pcState(node.uli_handler_pc);
     }
 

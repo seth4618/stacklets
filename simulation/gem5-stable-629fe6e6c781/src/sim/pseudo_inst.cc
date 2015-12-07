@@ -74,7 +74,7 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 #include "sim/vptr.hh"
-//#include "dev/x86/intdev.hh"
+#include "debug/Stacklet.hh"
 
 using namespace std;
 
@@ -192,9 +192,32 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
       case 0x5b: // work_end_func
         workend(tc, args[0], args[1]);
         break;
+      
+      case 0x55:
+        stacklet_uli_toggle(tc, args[0], args[1]);
+        break;
 
+      case 0x56:
+        //stacklet_dui(tc, args[0]);
+        stacklet_setupuli(tc, args[0]);
+        break;
+
+      case 0x57:
+        stacklet_sendi(tc, args[0], args[1],args[2]);
+        break;
+
+      case 0x58:
+        stacklet_getcpuid(tc);
+        break;
+
+      case 0x59:
+        stacklet_retuli(tc);
+        break;
+
+#if 0
       case 0x55: // annotate_func
       case 0x56: // stacklets
+        DPRINTF(PseudoInst, "Trying to execute stacklet functions\n");
         switch(subfunc) {
           case 0x00:
             stacklet_eui(tc, args[0]);
@@ -216,12 +239,13 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
             break;
         }
         break;
+
       case 0x57: // reserved3_func
       case 0x58: // reserved4_func
       case 0x59: // reserved5_func
         warn("Unimplemented m5 op (0x%x)\n", func);
         break;
-
+#endif
       /* SE mode functions */
       case 0x60: // syscall_func
         m5Syscall(tc);
@@ -629,7 +653,7 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
-
+#if 0
 uint64_t
 stacklet_eui(ThreadContext *tc, uint16_t mask)
 {
@@ -638,7 +662,7 @@ stacklet_eui(ThreadContext *tc, uint16_t mask)
    * after completing the handling of a user-level interrupt, we enable
    * user-level interrupts to be open to accepting further interrupts.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s called with mask %u\n", __func__, mask);
+  DPRINTF(Stacklet, "PseudoInst::%s called with mask %u\n", __func__, mask);
   return 0;
 }
 
@@ -651,36 +675,55 @@ stacklet_dui(ThreadContext *tc, uint16_t mask)
    * user-level interrupts and interrupts occuring at the time will be
    * treated as packet drops.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s called with mask %u\n", __func__, mask);
+  DPRINTF(Stacklet, "PseudoInst::%s called with mask %u\n", __func__, mask);
+  return 0;
+}
+#endif
+
+uint64_t
+stacklet_uli_toggle(ThreadContext *tc, uint32_t enable, uint16_t mask)
+{
+  /*
+   * In this instruction we toggle between enabling and disabling user-level
+   * interrupts. If enable == 1, then we enable ULI, otherwise we disable it.
+   */
+  if(enable) {
+    DPRINTF(Stacklet, "PseudoInst::%s called to enable ULI with mask %u\n", __func__, mask);
+  } else {
+    DPRINTF(Stacklet, "PseudoInst::%s called to disable ULI with mask %u\n", __func__, mask);
+  }
   return 0;
 }
 
 uint64_t
-stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
+stacklet_sendi(ThreadContext *tc, Addr callback,Addr p, uint16_t dest_cpu)
 {
   /*
    * This instruction sends a user-level interrupt to another core.
    */
-  System *sys = tc->getSystemPtr();
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  //System *sys = tc->getSystemPtr();
+  DPRINTF(Stacklet, "PseudoInst::%s source CPU=%d, dest CPU=%d\n", __func__, tc->cpuId(), dest_cpu);
 
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
 
   TriggerIntMessage message = 0;
-  message.deliveryMode = 8; // 8 stands for ULI
+  message.deliveryMode = 3; // 3 stands for ULI
   message.vector = 0; // this will be mask eventually
+  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
   interrupts->global_message_counter++;
-  message.global_message_map_key = interrupts->global_message_counter; // position in the global messages queue
+  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
+  message.global_message_map_key = 52;//interrupts->global_message_counter; // position in the global messages queue
   stacklet_message_t stacklet_msg;
-  stacklet_msg.callback = (uint64_t) msg;
-  stacklet_msg.p = (uint64_t) (msg + sizeof(uint64_t)); // this is assuming 64 bit architecture
+  stacklet_msg.callback = callback;
+  stacklet_msg.p = p; // this is assuming 64 bit architecture
+  DPRINTF(Stacklet, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
   interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
 
   ApicList apics;
   apics.push_back(dest_cpu);
   TheISA::IntDevice::IntMasterPort intMasterPort = dynamic_cast<TheISA::IntDevice::IntMasterPort& >(interrupts->getMasterPort("int_master"));
-  intMasterPort.sendMessage(apics, message, sys->isTimingMode());
+  intMasterPort.sendMessage(apics, message, false);
   return 0;
 }
 
@@ -691,10 +734,8 @@ stacklet_moviadr(ThreadContext *tc, Addr addr)
    * This instruction moves the interrupt-handler address to a special
    * register (or variable, in the case of a simulator).
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
-  Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
-  assert(interrupts);
-  interrupts->savedULIPC = addr;
+  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
+  tc->savedULIPC = addr;
   return 0;
 }
 
@@ -705,10 +746,11 @@ stacklet_retuli(ThreadContext *tc)
    * This instruction denotes the return from a user-level interrupt
    * handler.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
-  Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
-  assert(interrupts);
-  tc->pcState(interrupts->savedULIPC);
+  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
+  tc->setIntReg(INTREG_RDI, tc->savedULIDI);
+  tc->setIntReg(StackPointerReg, tc->savedULISP);
+  tc->setMiscReg(MISCREG_RFLAGS, tc->savedULIRFLAGS);
+  tc->pcState(tc->savedULIPC);
   return 0;
 }
 
@@ -718,8 +760,19 @@ stacklet_getcpuid(ThreadContext *tc)
   /*
    * This instruction sends a user-level interrupt to another core.
    */
-  DPRINTF(PseudoInst, "PseudoInst::%s\n", __func__);
+  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
   return tc->cpuId();
+}
+
+uint64_t
+stacklet_setupuli(ThreadContext *tc, Addr stackaddr)
+{
+  /*
+   * This instruction sets up a stack for handling ULIs.
+   */
+  DPRINTF(Stacklet, "PseudoInst::%s\n stack address = %0x\n", __func__, stackaddr);
+  tc->ULISP = stackaddr;
+  return 0;
 }
 
 #if 0

@@ -62,6 +62,7 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 #include "sim/full_system.hh"
+#include "debug/Stacklet.hh"
 
 int
 divideFromConf(uint32_t conf)
@@ -283,6 +284,7 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
         } else if (deliveryMode == DeliveryMode::INIT && !pendingInit) {
             pendingUnmaskableInt = pendingInit = true;
             initVector = vector;
+            DPRINTF(Stacklet, "Inside request interrupt\n");
         } else if (deliveryMode == DeliveryMode::SIPI &&
                 !pendingStartup && !startedUp) {
             pendingUnmaskableInt = pendingStartup = true;
@@ -293,6 +295,7 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
             // it will subsequently be picked up in the commit phase of the pipeline
             pendingUnmaskableInt = pendingULI = true;
             uliVector = vector; // maybe not needed
+            DPRINTF(Stacklet, "Inside requestInterrupt:%d\n",global_message_map_key);
             stacklet_message_t stacklet_msg = global_message_map[global_message_map_key];
             addULI(vector, stacklet_msg.p, stacklet_msg.callback);
             global_message_map.erase(global_message_map_key);
@@ -338,7 +341,12 @@ X86ISA::Interrupts::init()
 Tick
 X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 {
+    //DPRINTF(Stacklet, "Interrupts::%s cpu id = %d, pkt_cmd: %s\n", __func__, cpu->cpuId(),pkt->cmd.toString());
     Addr offset = pkt->getAddr() - x86InterruptAddress(initialApicId, 0);
+    TriggerIntMessage message = pkt->get<TriggerIntMessage>();
+    DPRINTF(Stacklet,
+                    "Interrupts:RecvMessag, delivery mode: %d.\n",
+                    message.deliveryMode);
     assert(pkt->cmd == MemCmd::MessageReq);
     switch(offset)
     {
@@ -366,6 +374,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 Tick
 X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 {
+    //DPRINTF(Stacklet, "Interrupts::%s cpu id = %d\n", __func__, cpu->cpuId());
     assert(!pkt->isError());
     assert(pkt->cmd == MemCmd::MessageResp);
     if (--pendingIPIs == 0) {
@@ -637,7 +646,6 @@ X86ISA::Interrupts::Interrupts(Params * p)
     ISRV = 0;
     IRRV = 0;
 
-    savedULIPC = 0;
     global_message_counter = 0;
 }
 
@@ -829,6 +837,7 @@ X86LocalApicParams::create()
 void
 X86ISA::Interrupts::addULI(uint8_t mask, uint64_t packet_address, uint64_t uli_handler_pc)
 {
+  DPRINTF(Stacklet,"Inside addULI, p:%0x, callback:%0x\n",packet_address, uli_handler_pc);
   uli_node_t node;
   node.mask = mask;
   node.packet_address = packet_address;

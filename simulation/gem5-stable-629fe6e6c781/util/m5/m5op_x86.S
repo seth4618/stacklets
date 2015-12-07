@@ -82,12 +82,14 @@ TWO_BYTE_OP(m5_switchcpu, switchcpu_func)
 TWO_BYTE_OP(m5_addsymbol, addsymbol_func)
 TWO_BYTE_OP(m5_panic, panic_func)
 /* TWO_BYTE_OP(stacklet, stacklet_func) */
-TWO_BYTE_OP(stacklet_eui, stacklet_eui_func)
-TWO_BYTE_OP(stacklet_dui, stacklet_dui_func)
+/*TWO_BYTE_OP(stacklet_eui, stacklet_eui_func)
+TWO_BYTE_OP(stacklet_dui, stacklet_dui_func)*/
+TWO_BYTE_OP(stacklet_uli_toggle, stacklet_uli_toggle_func)
 TWO_BYTE_OP(stacklet_sendi, stacklet_sendi_func)
-TWO_BYTE_OP(stacklet_moviadr, stacklet_moviadr_func)
+/*TWO_BYTE_OP(stacklet_moviadr, stacklet_moviadr_func) */
 TWO_BYTE_OP(stacklet_retuli, stacklet_retuli_func)
 TWO_BYTE_OP(stacklet_getcpuid, stacklet_getcpuid_func)
+TWO_BYTE_OP(stacklet_setupuli, stacklet_setupuli_func)
 
 TWO_BYTE_OP(m5_work_begin, work_begin_func)
 TWO_BYTE_OP(m5_work_end, work_end_func)

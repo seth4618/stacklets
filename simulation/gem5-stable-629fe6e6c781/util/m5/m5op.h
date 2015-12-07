@@ -60,12 +60,14 @@ void m5_switchcpu(void);
 void m5_addsymbol(uint64_t addr, char *symbol);
 void m5_panic(void);
 //uint64_t stacklet(uint64_t arg1, uint64_t arg2);
-uint64_t stacklet_eui(uint16_t mask);
-uint64_t stacklet_dui(uint16_t mask);
-uint64_t stacklet_sendi(void *msg, uint16_t dest_cpu);
+//uint64_t stacklet_eui(uint16_t mask);
+//uint64_t stacklet_dui(uint16_t mask);
+uint64_t stacklet_uli_toggle(uint32_t enable, uint16_t mask);
+uint64_t stacklet_sendi(void *callback,void *p, uint16_t dest_cpu);
 uint64_t stacklet_moviadr(uint64_t addr);
 uint64_t stacklet_retuli();
 uint64_t stacklet_getcpuid();
+uint64_t stacklet_setupuli(uint64_t stackaddr);
 void m5_work_begin(uint64_t workid, uint64_t threadid);
 void m5_work_end(uint64_t workid, uint64_t threadid);
 

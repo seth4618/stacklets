@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
+#include "spinlock.h"
 
 //#define MACOS
 
@@ -11,18 +12,28 @@ extern int numberOfThreads;
 
 typedef uint64_t Registers[16];
 
-typedef struct {
+typedef struct stubstruct Stub;
+
+struct stubstruct {
     void* stubRoutine;
     void* parentPC;
     void* parentSP;
-} Stub;
+    Stub* next;
+    Stub* prev;
+    int allocatorThread;	/* thread that is creating the stacklet */
+    int seedThread;		/* thread that created the seed */
+    void* pad2;
+    void* pad3;
+};
 
 extern __thread void* systemStack;
-extern pthread_mutex_t readyQLock;
+extern SpinLockType readyQLock;
 
-#define SYSTEM_STACK_SIZE   (8192*2)
-#define STACKLET_SIZE       81920
-
+#define SYSTEM_STACK_SIZE   	(8192*2)
+#define STACKLET_SIZE       	81920
+#define STACKLET_BUF_ZEROS	7
+#define STACKLET_ALIGNMENT	(1<<STACKLET_BUF_ZEROS)
+#define RE_ALIGNMENT_FUDGE	((1<<(STACKLET_BUF_ZEROS-1)))
 void stackletInit(int numThreads);
 void* systemStackInit();
 void stubRoutine();
@@ -89,6 +100,8 @@ asm volatile("\t#calling stackletFork\n"\
              : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
 #endif
 
+void firstFork(void (*func)(void*), void* arg);
+
 #define switchAndJmpWithArg(sp, adr, arg) do {\
 asm volatile("movq %[Aarg], %%rdi \n"\
              "movq %[Asp], %%rsp \n"\
@@ -110,7 +123,7 @@ asm volatile("movq %[Aarg], %%rdi \n"\
 //             : [Asp] "r" (sp),\
 //	       [Itid] "r" (tid),\
 //               [Aadr] "r" (adr));} while(0)
-#define switchAndJmp(sp,adr) do {		\
+#define switchAndJmp(sp,adr,tid) do {		\
 asm volatile("movq %[Asp],%%rsp \n"\
              "jmp *%[Aadr] \n"\
              :\
@@ -125,6 +138,27 @@ asm volatile("movq %[Asp],%%rsp \n"\
 //                 :\
 //		 : "eax")
 
+#if 1
+#define switchToSysStackAndFinishStub(buf,ss) do {\
+asm volatile("#switch from stacket sp to system sp and finish up stub\n"\
+             "movq %%rsp,%%rdx \n"\
+             "movq %[AsystemStack],%%rsp \n"\
+             "movq %[Abuf],%%rdi \n"\
+             "movq %[Ass],%%rsi \n"\
+             "call finishStubRoutine \n"\
+             : \
+             : [Abuf] "r" (buf),\
+               [Ass] "r" (ss),\
+               [AsystemStack] "m" (systemStack)\
+             : "rdi", "rdx", "rsi");} while (0)
+#define resumeParent(sp, pc) do {\
+	asm volatile("#switch to parent and resume\n" \
+                     "movq %[Asp],%%rsp \n"\
+                     "jmp *%[Apc] \n"\
+	             : \
+	             : [Asp] "r" (sp),\
+		       [Apc] "r" (pc));} while (0)
+#else 
 #ifdef MACOS
 #define switchToSysStackAndFreeAndResume(buf,sp,adr) do {\
 asm volatile("movq %[Abuf],%%rdi \n"\
@@ -159,6 +193,7 @@ asm volatile("movq %[Abuf],%%rdi \n"\
                [Aadr] "r" (adr),\
                [AsystemStack] "m" (systemStack)\
              : "rdi", "rbx", "rax");} while (0)
+#endif
 #endif
 
 #define restoreStackPointer(x) do { \
@@ -232,6 +267,12 @@ asm volatile("movq %[Abuf],%%rdi \n"\
                    [indexR15] "m" (saveArea[13]),\
                    [indexAX] "m" (saveArea[14]));} while (0)
 
+
+#define clobberCallerSave() \
+    asm volatile("# make sure caller save regs are saved here\n"\
+		: \
+       		: \
+		 : "rbp", "rbx", "r12", "r13", "r14", "r15")
 
 // Local Variables:
 // mode: c           

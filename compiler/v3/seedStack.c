@@ -13,17 +13,16 @@ static int current_id;
 static SeedQueue* seedStacks;
 
 // 1 lock per thread
-static pthread_mutex_t* seedStackLocks;
-
+static SpinLockType* seedStackLocks;
 
 void 
 seedStackInit(int numThreads)
 {
     seedStacks = calloc(numThreads, sizeof(SeedQueue));
-    seedStackLocks = calloc(numThreads, sizeof(pthread_mutex_t));
+    seedStackLocks = calloc(numThreads, sizeof(SpinLockType));
     int i;
     for (i=0; i<numThreads; i++) {
-        assert(mySpinInitLock(seedStackLocks+i, NULL) == 0);
+	mySpinInitLock(seedStackLocks+i);
     }
 }
 
@@ -47,6 +46,7 @@ initSeed(void* adr, void* sp)
     Seed* seed = calloc(1, sizeof(Seed));
     seed->adr = adr;
     seed->sp = sp;
+    //SCG?: Isn't this just for debugging?
     seed->id = __sync_fetch_and_add(&current_id, 1); // multithread
     return seed;
 }
@@ -68,21 +68,6 @@ pushSeed(Seed* seed, int tid, int lock)
       Q->back = seed;
     }
 }
-
-// pop top seed from tid's seed stack.  
-// if unlock, then release lock before we return
-//void 
-//popSeed(int tid, int unlock)
-//{
-//    SeedQueue* Q = &seedStacks[tid];
-//    assert(Q->back != NULL);
-//    Seed* s = Q->back;
-//    Q->back = s->prev;
-//    if (s->prev == NULL) Q->front = NULL;
-//    free(s);
-//
-//    if (unlock) seedStackUnlock(tid);
-//}
 
 // release the seed, free up its memory, etc.
 // assume seedStack for this tid is locked.
