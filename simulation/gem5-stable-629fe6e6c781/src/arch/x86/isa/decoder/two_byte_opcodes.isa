@@ -207,10 +207,10 @@
                               RIP);
                     }}, IsNonSpeculative);
                     0x55: stacklet0({{
-                      PseudoInst::stacklet_eui(xc->tcBase(), Rdi);
+                      PseudoInst::stacklet_uli_toggle(xc->tcBase(), Rdi, Rsi);
                     }}, IsNonSpeculative);
                     0x56: stacklet1({{
-                      PseudoInst::stacklet_dui(xc->tcBase(), Rdi);
+                      PseudoInst::stacklet_setupuli(xc->tcBase(), Rdi);
                     }}, IsNonSpeculative);
                     0x57: stacklet2({{
                       PseudoInst::stacklet_sendi(xc->tcBase(), Rdi, Rsi, Rdx);

@@ -19,10 +19,18 @@ struct lock L;
 
 void * increment_counter(void *arg)
 {
-    int cpu = get_myid();
-    unsigned long myid = (unsigned long)pthread_self();
-    
+    int cpu = GETMYID;
     int i = 0;
+
+    /*
+     * Setup ULI stack.
+     */
+    void *my_stack = (void *) malloc(4096);
+    if(my_stack == NULL) {
+      exit(1);
+    }
+    SETUPULI(my_stack);
+
     for (i = 0; i < 2; ++i)
     {
         POLL();
@@ -33,7 +41,6 @@ void * increment_counter(void *arg)
         myunlock(&L);
         POLL();
         sleep(interval);
-                
     }
     POLL();
     sleep(2);   // Sleep to give time for other threads to send messages

@@ -195,11 +195,12 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         break;
       
       case 0x55:
-        stacklet_eui(tc, args[0]);
+        stacklet_uli_toggle(tc, args[0], args[1]);
         break;
 
       case 0x56:
-        stacklet_dui(tc, args[0]);
+        //stacklet_dui(tc, args[0]);
+        stacklet_setupuli(tc, args[0]);
         break;
 
       case 0x57:
@@ -653,7 +654,7 @@ switchcpu(ThreadContext *tc)
     exitSimLoop("switchcpu");
 }
 
-
+#if 0
 uint64_t
 stacklet_eui(ThreadContext *tc, uint16_t mask)
 {
@@ -676,6 +677,22 @@ stacklet_dui(ThreadContext *tc, uint16_t mask)
    * treated as packet drops.
    */
   DPRINTF(Stacklet, "PseudoInst::%s called with mask %u\n", __func__, mask);
+  return 0;
+}
+#endif
+
+uint64_t
+stacklet_uli_toggle(ThreadContext *tc, uint32_t enable, uint16_t mask)
+{
+  /*
+   * In this instruction we toggle between enabling and disabling user-level
+   * interrupts. If enable == 1, then we enable ULI, otherwise we disable it.
+   */
+  if(enable) {
+    DPRINTF(Stacklet, "PseudoInst::%s called to enable ULI with mask %u\n", __func__, mask);
+  } else {
+    DPRINTF(Stacklet, "PseudoInst::%s called to disable ULI with mask %u\n", __func__, mask);
+  }
   return 0;
 }
 
@@ -740,9 +757,7 @@ stacklet_moviadr(ThreadContext *tc, Addr addr)
    * register (or variable, in the case of a simulator).
    */
   DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
-  Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
-  assert(interrupts);
-  interrupts->savedULIPC = addr;
+  tc->savedULIPC = addr;
   return 0;
 }
 
@@ -754,9 +769,10 @@ stacklet_retuli(ThreadContext *tc)
    * handler.
    */
   DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
-  Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
-  assert(interrupts);
-  tc->pcState(interrupts->savedULIPC);
+  tc->setIntReg(INTREG_RDI, tc->savedULIDI);
+  tc->setIntReg(StackPointerReg, tc->savedULISP);
+  tc->setMiscReg(MISCREG_RFLAGS, tc->savedULIRFLAGS);
+  tc->pcState(tc->savedULIPC);
   return 0;
 }
 
@@ -768,6 +784,17 @@ stacklet_getcpuid(ThreadContext *tc)
    */
   DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
   return tc->cpuId();
+}
+
+uint64_t
+stacklet_setupuli(ThreadContext *tc, Addr stackaddr)
+{
+  /*
+   * This instruction sets up a stack for handling ULIs.
+   */
+  DPRINTF(Stacklet, "PseudoInst::%s\n stack address = %0x\n", __func__, stackaddr);
+  tc->ULISP = stackaddr;
+  return 0;
 }
 
 #if 0

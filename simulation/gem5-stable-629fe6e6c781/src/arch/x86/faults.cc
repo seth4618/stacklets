@@ -328,14 +328,16 @@ namespace X86ISA
       }
       DPRINTF(Stacklet, "ULI PC: %0x\n",node.uli_handler_pc);
 
-      /*
-       * Need to save PC into a custom register (R15).
-       */
-      this->savedPC = (uint64_t) pc;
+      tc->savedULIPC = (uint64_t) pc;
+      tc->savedULISP = tc->readIntReg(StackPointerReg);
+      tc->savedULIDI = tc->readIntReg(INTREG_RDI);
+      tc->savedULIRFLAGS = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
 
       /*
        * Set the PC as the PC retrieved from the queue entry.
        */
+      tc->setIntReg(INTREG_RDI, node.packet_address);
+      tc->setIntReg(StackPointerReg, tc->ULISP);
       tc->pcState(node.uli_handler_pc);
     }
 

@@ -653,7 +653,6 @@ X86ISA::Interrupts::Interrupts(Params * p)
     ISRV = 0;
     IRRV = 0;
 
-    savedULIPC = 0;
     global_message_counter = 0;
 }
 

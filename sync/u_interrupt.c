@@ -23,13 +23,13 @@ void init_uint() {
 
 /* flag: interrupt flag */
 void dui(int flag) {
-    int core_idx = get_myid();
+    int core_idx = GETMYID();
 
 	flags[core_idx] |= flag;
 }
 
 void eui(int flag) {
-    int core_idx = get_myid();
+    int core_idx = GETMYID();
 
 	flags[core_idx] &= flag;   // clear flag
 	POLL();
@@ -51,7 +51,7 @@ void i_handler(int core_idx) {
 }
 
 void poll(void) {
-    int core_idx = get_myid();
+    int core_idx = GETMYID();
 
 	if (flags[core_idx] & SMP_INTFLAG)
 	{

@@ -34,7 +34,7 @@ static bool *get_trigger(int id)
 
 void mylock(struct lock *L)
 {
-    int my_id  = get_myid();
+    int my_id  = GETMYID();
     int save_id;
     bool *my_trigger;
     struct addme_cfd cfd;
@@ -82,7 +82,7 @@ retry:
 void myunlock(struct lock *L)
 {
     bool *next_trigger;
-    int my_id = get_myid();
+    int my_id = GETMYID();
 
     if (L == NULL) {
         fprintf(stderr, "ERROR: myunlock: Lock not allocated! \n");
@@ -104,7 +104,7 @@ void myunlock(struct lock *L)
 
 static void addme(void *p)
 {
-    int my_id = get_myid();
+    int my_id = GETMYID();
     struct addme_cfd *cfd = (struct addme_cfd *)p;
     struct lock *L = (struct lock *)cfd->L;
     int ask_id = (int)cfd->ask_id;
@@ -113,6 +113,7 @@ static void addme(void *p)
 
     if (my_id == -1) {
         fprintf(stderr, "ERROR: mylock: Failed to get cpu id\n");
+        RETULI;
         return;
     }
     DUI(1);  // Our instruction: disable the uint #1
@@ -160,6 +161,7 @@ retry:
         pcpu_lock_struct[my_id].waiter_id = ask_id;
     }
     EUI(0xfffe); // Our instruction
+    RETULI;
 }
 
 void init_lock(struct lock *L)

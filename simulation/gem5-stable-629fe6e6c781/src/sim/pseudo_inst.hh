@@ -89,12 +89,14 @@ void switchcpu(ThreadContext *tc);
 /*
  * Functions for stacklets.
  */
-uint64_t stacklet_eui(ThreadContext *tc, uint16_t mask);
-uint64_t stacklet_dui(ThreadContext *tc, uint16_t mask);
+//uint64_t stacklet_eui(ThreadContext *tc, uint16_t mask);
+//uint64_t stacklet_dui(ThreadContext *tc, uint16_t mask);
+uint64_t stacklet_uli_toggle(ThreadContext *tc, uint32_t enable, uint16_t mask);
 uint64_t stacklet_sendi(ThreadContext *tc, uint64_t callback,uint64_t p, uint16_t dest_cpu);
 uint64_t stacklet_moviadr(ThreadContext *tc, uint64_t addr);
 uint64_t stacklet_retuli(ThreadContext *tc);
 uint64_t stacklet_getcpuid(ThreadContext *tc);
+uint64_t stacklet_setupuli(ThreadContext *tc, uint64_t stackaddr);
 
 void workbegin(ThreadContext *tc, uint64_t workid, uint64_t threadid);
 void workend(ThreadContext *tc, uint64_t workid, uint64_t threadid);

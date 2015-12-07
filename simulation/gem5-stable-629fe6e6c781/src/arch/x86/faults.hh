@@ -434,7 +434,6 @@ namespace X86ISA
     class ULI : public X86Interrupt
     {
       private:
-        uint64_t savedPC;
         uli_node_t node;
       public:
         ULI(uli_node_t node) :

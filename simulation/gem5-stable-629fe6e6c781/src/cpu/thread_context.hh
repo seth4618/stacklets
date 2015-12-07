@@ -117,6 +117,15 @@ class ThreadContext
         Halted
     };
 
+    /*
+     * Variables to be saved for ULI.
+     */
+    uint64_t savedULIPC;
+    uint64_t savedULISP;
+    uint64_t savedULIDI;
+    Addr ULISP;
+    X86ISA::RFLAGS savedULIRFLAGS;
+
     virtual ~ThreadContext() { };
 
     virtual BaseCPU *getCpuPtr() = 0;
