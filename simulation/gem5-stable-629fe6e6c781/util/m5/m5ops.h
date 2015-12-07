@@ -55,15 +55,16 @@
 #define panic_func              0x54
 
 //#define stacklet_func		      0x56 // Reserved for user
-#define stacklet_eui_func      0x55
-#define stacklet_dui_func      0x56
-#define stacklet_sendi_func    0x57
-##define stacklet_moviadr_func  0x0356
+#define stacklet_toggle_uli_func 0x55
+//#define stacklet_dui_func      0x56
+#define stacklet_sendi_func      0x57
+//#define stacklet_moviadr_func  0x0356
 #define stacklet_retuli_func   0x59
 #define stacklet_getcpuid_func 0x58
-#define reserved3_func          0x57 // Reserved for user
-#define reserved4_func          0x58 // Reserved for user
-#define reserved5_func          0x59 // Reserved for user
+#define stacklet_setupuli_func  0x56
+//#define reserved3_func          0x57 // Reserved for user
+//#define reserved4_func          0x58 // Reserved for user
+//#define reserved5_func          0x59 // Reserved for user
 
 #define work_begin_func         0x5a
 #define work_end_func           0x5b

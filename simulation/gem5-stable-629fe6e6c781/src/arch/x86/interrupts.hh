@@ -203,7 +203,6 @@ class Interrupts : public BasicPioDevice, IntDevice
     std::queue<uli_node_t> uli_queue;
     std::map<uint64_t, stacklet_message_t> global_message_map;
     uint64_t global_message_counter;
-    uint64_t savedULIPC;
     void addULI(uint8_t mask, uint64_t packet_address, uint64_t uli_handler_pc);
 
     int getInitialApicId() { return initialApicId; }
