@@ -80,10 +80,10 @@ fib(void* F)
     mySpinUnlock(&lineLock);
 #endif
 
-    Foo* a = (Foo *)calloc(1, sizeof(Foo));
-    Foo* b = (Foo *)calloc(1, sizeof(Foo));
-    a->input = f->input - 1;
-    b->input = f->input - 2;
+    Foo a;
+    Foo b;
+    a.input = f->input - 1;
+    b.input = f->input - 2;
 
 #if 0
     // longer execution like this?
@@ -106,7 +106,7 @@ fib(void* F)
     seedStackUnlock(threadId); // uh.... need to lock until here..
     // ====================================
 
-    fib(a);
+    fib(&a);
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
     seedStackLock(ptid);
@@ -118,10 +118,8 @@ fib(void* F)
     seedStackUnlock(ptid);
     // ====================================
 
-    fib(b);
-    f->output = a->output + b->output;
-    free(a);
-    free(b);
+    fib(&b);
+    f->output = a.output + b.output;
     //dprintLine("<fib(%d) = %d  at %p\n", f->input, f->output, mysp);
     return;
 
@@ -130,11 +128,12 @@ SecondChildSteal: // We cannot make function calls here!
     restoreRegisters();
     firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
+    dprintLine("Stealing fib(%d)\n", b.input);
     saveRegisters();
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
 #endif
-    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b, ptid);
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
     // ====================================
 
 FirstChildDone:
@@ -165,9 +164,7 @@ FirstChildDone:
 #endif
 
 //    dprintLine("fib(%d) has first child returned\n", f->input);
-    f->output = a->output + b->output;
-    free(a);
-    free(b);
+    f->output = a.output + b.output;
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
@@ -196,9 +193,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 #endif
 
 //    dprintLine("fib(%d) has second child returned\n", f->input);
-    f->output = a->output + b->output;
-    free(a);
-    free(b);
+    f->output = a.output + b.output;
     return;
 }
 
