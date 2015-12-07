@@ -110,8 +110,8 @@ fib(void* F)
 
  FirstChildDoneNormally:
     // stacklet ===========================
-    popSeed(ptid, 1, seed->id);	       /* also releases lock */
-                                       // ptid not threadId!
+    releaseSeed(seed, ptid);  // ptid not threadId!
+    seedStackUnlock(ptid);
     // ====================================
 
     fib(b);

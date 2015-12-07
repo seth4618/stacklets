@@ -4,12 +4,13 @@
 #include <assert.h>
 #include "seedStack.h"
 #include "spinlock.h"
+#include <stdio.h>
 
 // for debugging
 static int current_id;
 
 // 1 seed stack per thread
-static Seed** seedStacks;
+static SeedQueue* seedStacks;
 
 // 1 lock per thread
 static pthread_mutex_t* seedStackLocks;
@@ -18,11 +19,11 @@ static pthread_mutex_t* seedStackLocks;
 void 
 seedStackInit(int numThreads)
 {
-    seedStacks = calloc(numThreads, sizeof(Seed*));
+    seedStacks = calloc(numThreads, sizeof(SeedQueue));
     seedStackLocks = calloc(numThreads, sizeof(pthread_mutex_t));
     int i;
     for (i=0; i<numThreads; i++) {
-	assert(mySpinInitLock(seedStackLocks+i, NULL) == 0);
+        assert(mySpinInitLock(seedStackLocks+i, NULL) == 0);
     }
 }
 
@@ -56,40 +57,43 @@ void
 pushSeed(Seed* seed, int tid, int lock)
 {
     if (lock) seedStackLock(tid);
-    Seed* origHead = seedStacks[tid];
-    seedStacks[tid] = seed;
-    seed->next = origHead;
-    seed->prev = NULL;
-    if (origHead) origHead->prev = seed;
+
+    SeedQueue* Q = &seedStacks[tid];
+    if (Q->back) {
+      Q->back->next = seed;
+      seed->prev = Q->back;
+      Q->back = seed;
+    } else {
+      Q->front = seed;
+      Q->back = seed;
+    }
 }
 
 // pop top seed from tid's seed stack.  
 // if unlock, then release lock before we return
-void 
-popSeed(int tid, int unlock, int pop)
-{
-    Seed* origHead = seedStacks[tid];
-    if (origHead == NULL) {
-	dprintLine("lock %d, pop %d, popping on SS@%d, but nothing there?\n", tid, pop, tid);
-	assert(0);
-    }
-    assert(origHead != NULL);
-    Seed* next = origHead->next;
-    seedStacks[tid] = next;
-    if (next != NULL) next->prev = NULL;
-    free(origHead);
-    if (unlock) seedStackUnlock(tid);
-}
+//void 
+//popSeed(int tid, int unlock)
+//{
+//    SeedQueue* Q = &seedStacks[tid];
+//    assert(Q->back != NULL);
+//    Seed* s = Q->back;
+//    Q->back = s->prev;
+//    if (s->prev == NULL) Q->front = NULL;
+//    free(s);
+//
+//    if (unlock) seedStackUnlock(tid);
+//}
 
 // release the seed, free up its memory, etc.
 // assume seedStack for this tid is locked.
 void
 releaseSeed(Seed* seed, int tid)
 {
+    SeedQueue* Q = &seedStacks[tid];
     Seed* prev = seed->prev;
     Seed* next = seed->next;
-    if (prev != NULL) prev->next = next; else seedStacks[tid] = next;
-    if (next != NULL) next->prev = prev;
+    if (prev != NULL) prev->next = next; else Q->front = next;
+    if (next != NULL) next->prev = prev; else Q->back = prev;
     free(seed);
 }
 
@@ -100,11 +104,12 @@ releaseSeed(Seed* seed, int tid)
 Seed*
 peekSeed(int tid)
 {
-    if (seedStacks[tid] == NULL) return NULL;
+    SeedQueue* Q = &seedStacks[tid];
+    if (Q->front == NULL) return NULL;
     seedStackLock(tid);
-    Seed* seed = seedStacks[tid];
-    if (seed == NULL) seedStackUnlock(tid);
-    return seed;
+
+    if (Q->front == NULL) seedStackUnlock(tid);
+    return Q->front;
 }
 
 // Local Variables:
