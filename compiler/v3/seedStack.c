@@ -51,7 +51,7 @@ initSeed(void* adr, void* sp)
     seed->adr = adr;
     seed->sp = sp;
     //SCG?: Isn't this just for debugging?
-    seed->id = __sync_fetch_and_add(&current_id, 1); // multithread
+    //seed->id = __sync_fetch_and_add(&current_id, 1); // multithread
     return seed;
 }
 
