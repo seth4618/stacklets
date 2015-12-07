@@ -48,6 +48,7 @@
 #include "debug/Faults.hh"
 #include "sim/full_system.hh"
 #include "arch/x86/interrupts.hh"
+#include "debug/Stacklet.hh"
 
 namespace X86ISA
 {
@@ -313,7 +314,7 @@ namespace X86ISA
     void
     ULI::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     {
-      DPRINTF(Faults, "in ULI handler\n");
+      DPRINTF(Stacklet, "in ULI handler\n");
 
       /*
        * Geting the current PC
@@ -322,6 +323,7 @@ namespace X86ISA
       Addr pc = pcState.pc();
       //uli_node_t node = popTopULI(tc);
       if(node.uli_handler_pc == 0) {
+              DPRINTF(Stacklet,"ASEERTING 0\n");
         assert(0);
       }
 

@@ -213,7 +213,7 @@
                       PseudoInst::stacklet_dui(xc->tcBase(), Rdi);
                     }}, IsNonSpeculative);
                     0x57: stacklet2({{
-                      PseudoInst::stacklet_sendi(xc->tcBase(), Rdi, Rsi);
+                      PseudoInst::stacklet_sendi(xc->tcBase(), Rdi, Rsi, Rdx);
                     }}, IsNonSpeculative);
                     0x58: stacklet3({{
                       PseudoInst::stacklet_getcpuid(xc->tcBase());

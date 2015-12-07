@@ -202,7 +202,7 @@ pseudoInst(ThreadContext *tc, uint8_t func, uint8_t subfunc)
         break;
 
       case 0x57:
-        stacklet_sendi(tc, args[0], args[1]);
+        stacklet_sendi(tc, args[0], args[1],args[2]);
         break;
 
       case 0x58:
@@ -679,32 +679,34 @@ stacklet_dui(ThreadContext *tc, uint16_t mask)
 }
 
 uint64_t
-stacklet_sendi(ThreadContext *tc, Addr msg, uint16_t dest_cpu)
+stacklet_sendi(ThreadContext *tc, Addr callback,Addr p, uint16_t dest_cpu)
 {
   /*
    * This instruction sends a user-level interrupt to another core.
    */
-  System *sys = tc->getSystemPtr();
+  //System *sys = tc->getSystemPtr();
   DPRINTF(Stacklet, "PseudoInst::%s source CPU=%d, dest CPU=%d\n", __func__, tc->cpuId(), dest_cpu);
 
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
 
   TriggerIntMessage message = 0;
-  message.deliveryMode = 8; // 8 stands for ULI
+  message.deliveryMode = 3; // 3 stands for ULI
   message.vector = 0; // this will be mask eventually
+  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
   interrupts->global_message_counter++;
-  message.global_message_map_key = interrupts->global_message_counter; // position in the global messages queue
+  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
+  message.global_message_map_key = 52;//interrupts->global_message_counter; // position in the global messages queue
   stacklet_message_t stacklet_msg;
-  stacklet_msg.callback = (uint64_t) msg;
-  stacklet_msg.p = (uint64_t) (msg + sizeof(uint64_t)); // this is assuming 64 bit architecture
+  stacklet_msg.callback = callback;
+  stacklet_msg.p = p; // this is assuming 64 bit architecture
   DPRINTF(Stacklet, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
   interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
 
   ApicList apics;
   apics.push_back(dest_cpu);
   TheISA::IntDevice::IntMasterPort intMasterPort = dynamic_cast<TheISA::IntDevice::IntMasterPort& >(interrupts->getMasterPort("int_master"));
-  intMasterPort.sendMessage(apics, message, sys->isTimingMode());
+  intMasterPort.sendMessage(apics, message, false);
   return 0;
 }
 
