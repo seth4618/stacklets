@@ -2,6 +2,10 @@
 #include "myassert.h"
 #include <errno.h>
 
+// uncomment below to get some extra checking on locks
+//#define DEBUG_LOCK 
+
+
 pthread_mutexattr_t pthread_attr;
 
 void
@@ -30,11 +34,13 @@ mySpinLock(pthread_mutex_t *mutex)
 void 
 mySpinUnlock(pthread_mutex_t *mutex)
 {
+#ifdef DEBUG_LOCK
   int rval = pthread_mutex_trylock(mutex);
   if (rval != EBUSY) {
     dprintLine("Trying to unlock %p but it wasn't locked? %d\n", mutex, rval);
     myassert(0, "blah");
   }
+#endif
   int retval = pthread_mutex_unlock(mutex);
   myassert(retval == 0, "Failure to unlock mutex: %d [%s]\n", retval, strerror(retval));
 }
