@@ -16,8 +16,8 @@ void init_uint();
  * The SIM flag denotes that myapp is being run on simulated hardware (which in
  * this case is via gem5.
  */
-#define DUI(x)  stacklet_dui(x)
-#define EUI(x)  stacklet_eui(x)
+#define DUI(x)  stacklet_uli_toggle(0, x)
+#define EUI(x)  stacklet_uli_toggle(1, x)
 #define SENDI(x, y) stacklet_sendi(x, y)
 #define POLL()  printf("polling from within gem5...\n");
 #define RETULI()  stacklet_retuli()
