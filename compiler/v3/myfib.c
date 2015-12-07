@@ -98,8 +98,6 @@ fib(void* F)
     getStackPointer(stackPointer);
     Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
     pushSeed(seed, threadId, 1);
-    int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
-                                  // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     int ptid = threadId;
     saveRegisters();
@@ -107,8 +105,10 @@ fib(void* F)
     // ====================================
 
     fib(&a);
+#if 0
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
+#endif
     seedStackLock(ptid);
     goto *firstChildReturnAdr;
 
@@ -126,10 +126,11 @@ fib(void* F)
 SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
     restoreRegisters();
+    int volatile syncCounter = 2; // "volatile" to prevent deadcode elimination,
+                                  // and also for synchronization.
     firstChildReturnAdr = &&FirstChildDone;
-    syncCounter = 2;
     //BADPRINT below
-    dprintLine("Stealing fib(%d)\n", b.input);
+    //dprintLine("Stealing fib(%d)\n", b.input);
     saveRegisters();
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
