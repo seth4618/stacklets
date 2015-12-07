@@ -49,6 +49,7 @@
 #include <string>
 #include <vector>
 
+#include "sim/global_msg.hh"
 #include "arch/kernel_stats.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
@@ -690,18 +691,39 @@ stacklet_sendi(ThreadContext *tc, Addr callback,Addr p, uint16_t dest_cpu)
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
 
+
+
+  /*
+  System *glob_sys = tc->getSystemPtr();
+  vector<System *>::iterator i = glob_sys->systemList.begin();
+  vector<System *>::iterator end = glob_sys->systemList.end();
+  for(; i !=end; i++)
+  {
+    System *sys = *i;
+    DPRINTF(Stacklet, "Sysname: %s\n",sys->name());
+  }
+
+
+  Interrupts *dst_interrupts = dynamic_cast<Interrupts *>(glob_sys->getThreadContext(dest_cpu)->getCpuPtr()->getInterruptController());
+  assert(dst_interrupts);
+*/
+
+  
   TriggerIntMessage message = 0;
   message.deliveryMode = 3; // 3 stands for ULI
   message.vector = 0; // this will be mask eventually
-  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
-  interrupts->global_message_counter++;
-  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
-  message.global_message_map_key = 52;//interrupts->global_message_counter; // position in the global messages queue
+  //dst_interrupts->global_message_counter++;
+  
+  msg_counter++;
+  
+  message.global_message_map_key = msg_counter;//interrupts->global_message_counter; // position in the global messages queue
   stacklet_message_t stacklet_msg;
   stacklet_msg.callback = callback;
   stacklet_msg.p = p; // this is assuming 64 bit architecture
   DPRINTF(Stacklet, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
-  interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
+  //dst_interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
+  
+  msg_map[msg_counter] = stacklet_msg;
 
   ApicList apics;
   apics.push_back(dest_cpu);

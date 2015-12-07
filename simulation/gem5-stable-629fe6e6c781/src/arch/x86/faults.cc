@@ -326,6 +326,7 @@ namespace X86ISA
               DPRINTF(Stacklet,"ASEERTING 0\n");
         assert(0);
       }
+      DPRINTF(Stacklet, "ULI PC: %0x\n",node.uli_handler_pc);
 
       /*
        * Need to save PC into a custom register (R15).
