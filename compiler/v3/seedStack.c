@@ -108,7 +108,10 @@ peekSeed(int tid)
     if (Q->front == NULL) return NULL;
     seedStackLock(tid);
 
-    if (Q->front == NULL) seedStackUnlock(tid);
+    if (Q->front == NULL) {
+        seedStackUnlock(tid);
+        return NULL; // Q->front might have been changed, need to return NULL
+    }
     return Q->front;
 }
 
