@@ -128,6 +128,7 @@ SecondChildSteal: // We cannot make function calls here!
     restoreRegisters();
     firstChildReturnAdr = &&FirstChildDone;
     syncCounter = 2;
+    //BADPRINT below
     dprintLine("Stealing fib(%d)\n", b.input);
     saveRegisters();
 #ifdef TRACKER
