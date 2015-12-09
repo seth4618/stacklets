@@ -182,6 +182,26 @@ stubRoutine()
 
 
 
+#ifdef ULI
+// tell calling processor that it has some work to do from this processor
+// when done, unlock our seedStack
+stackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
+	     void* arg, int tid)
+{
+    dprintLine("Forking off a remote stacklet from %p:%p\n", parentPC, parentSP);
+    int dest = workRequestingProcesssor;
+    dprintLine("Forking fib(%d) to %d\n", ((Foo*)arg)->input, dest);
+    seedStackUnlock(tid);
+    ForkMsg* msg = (ForkMsg*)getThisReplyMsg(forkHandler);
+    msg->from = threadId;
+    msg->func = func;
+    msg->arg = arg;
+    msg->parentPC = parentPC;
+    msg->parentSP = parentSP;
+    SENDI(msg, dest);
+    RETULI();
+}
+#else
 // Create a new stacklet to run the seed which we got from tid.
 // seedStack of tid is currently locked on entry, but must be released
 void
@@ -208,6 +228,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
 
     switchAndJmpWithArg(stackletStub, func, arg);
 }
+#endif
 
 // Only return to caller if no seed available.
 // If available, we will cleanup and start executing seed
@@ -309,6 +330,49 @@ firstFork(void (*func)(void*), void* arg)
 		 : "rsi", "rdi", "rdx", "rcx", "r8");
     restoreRegisters();
 }
+
+// This is the handler for stealing work.
+// interrupts are OFF on entry.  User MUST turn on before RETULI
+void
+stealHandler(StealReqMsg* sysmsg)
+{
+    // save msg
+    StealReqMsg* msg = sysmsg;
+
+    // see if I have any work
+    Seed* seed = checkMySeedQue();
+    if (seed == NULL) {
+	myEui();
+	int src = getInterruptSrc(msg);
+	setupMsgBuffer(msg, noWorkHandler);
+	SENDI(msg, src);
+	RETULI();
+    }
+    // yes, I have work.  Interrupts are off so I know it is still there
+    void* adr = seed->adr;
+    void* sp = seed->sp;
+    releaseSeed(seed, threadId);
+    // I have seed information & reply buffer.  I can turn on interrupts as soon as I switch stacks
+    switchAndJmp(sp, adr, tid, msg);
+}
+
+// this handler is invoked when a steal request fails
+void 
+noWorkHandler(StealFailMsg* msg)
+{
+    stealFails++;
+    freeMsgBuffer(msg);
+    myEui();
+    RETULI();
+}
+
+// this handler is invoked when a processor is sending us a Fork request (from a steal)
+void
+forkHandler(ForkMsg* sysmsg)
+{
+    
+}
+
 
 // Local Variables:
 // mode: c           
