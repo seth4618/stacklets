@@ -106,7 +106,7 @@ fib(void* F)
     seedStackUnlock(threadId); // uh.... need to lock until here..
     // ====================================
 
-    fib(a);
+    fib(&a);
     restoreRegisters(); // may not need to as we already used "volatile" on
                         // "firstChildReturnAdr"
     seedStackLock(ptid);
@@ -118,7 +118,7 @@ fib(void* F)
     seedStackUnlock(ptid);
     // ====================================
 
-    fib(b);
+    fib(&b);
     f->output = a.output + b.output;
     //dprintLine("<fib(%d) = %d  at %p\n", f->input, f->output, mysp);
     return;
@@ -133,7 +133,7 @@ SecondChildSteal: // We cannot make function calls here!
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
 #endif
-    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)b, ptid);
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
     // ====================================
 
 FirstChildDone:
