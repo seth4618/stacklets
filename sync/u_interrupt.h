@@ -1,6 +1,5 @@
 #ifndef U_INTERRUPT
 #define U_INTERRUPT
-#include "system.h"
 
 typedef void (*callback_t)(void*);
 typedef struct message_t
@@ -8,9 +7,6 @@ typedef struct message_t
 	callback_t callback;
 	void *p;
 } message;
-
-static queue* msg_bufs[NUM_CORES];
-static int flags[NUM_CORES];
 
 void init_uint();
 
@@ -45,7 +41,10 @@ void init_uint();
 void dui(int flag);
 void eui(int flag);
 
-void sendI(message *msg, int target);
+// msg must point to a region of memory where first two elements are pointers to:
+// callback routine which will be invoked on target processor
+// ptr to a memory region passed to callback routine
+void sendI(void *msg, int target);
 
 void i_handler(int core_idx);
 void poll();
