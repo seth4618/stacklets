@@ -3,6 +3,9 @@
 #include "system.h"
 #include <pthread.h>
 
+static queue* msg_bufs[NUM_CORES];
+static int flags[NUM_CORES];
+
 #define SMP_INTFLAG 0x0001
 
 void init_uint() {
