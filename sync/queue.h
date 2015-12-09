@@ -4,13 +4,6 @@
 #include "malloc.h"
 #include "stddef.h"
 
-typedef void (*callback_t)(void*);
-typedef struct message_t
-{
-	callback_t callback;
-	void *p;
-}message;
-
 typedef struct node_t
 {
 	message *msg;
