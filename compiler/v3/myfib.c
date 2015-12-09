@@ -48,9 +48,11 @@ fib(void* F)
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
 
+#ifdef DEBUG
     void* mysp;
     asm("movq %%rsp, %[var]" : [var] "=r" (mysp));
-    //dprintLine(">fib(%d)  at %p\n", f->input, mysp);
+    dprintLine(">fib(%d)  at %p\n", f->input, mysp);
+#endif
 
     if (f->input <= 2)
     {
@@ -80,10 +82,10 @@ fib(void* F)
     mySpinUnlock(&lineLock);
 #endif
 
-    Foo* a = (Foo *)calloc(1, sizeof(Foo));
-    Foo* b = (Foo *)calloc(1, sizeof(Foo));
-    a->input = f->input - 1;
-    b->input = f->input - 2;
+    Foo a;
+    Foo b;
+    a.input = f->input - 1;
+    b.input = f->input - 2;
 
 #if 0
     // longer execution like this?
@@ -98,8 +100,6 @@ fib(void* F)
     getStackPointer(stackPointer);
     Seed* seed = initSeed(&&SecondChildSteal, stackPointer);
     pushSeed(seed, threadId, 1);
-    int volatile syncCounter = 0; // "volatile" to prevent deadcode elimination,
-                                  // and also for synchronization.
     void* volatile firstChildReturnAdr = &&FirstChildDoneNormally;
     int ptid = threadId;
     saveRegisters();
@@ -119,9 +119,7 @@ fib(void* F)
     // ====================================
 
     fib(b);
-    f->output = a->output + b->output;
-    free(a);
-    free(b);
+    f->output = a.output + b.output;
     //dprintLine("<fib(%d) = %d  at %p\n", f->input, f->output, mysp);
     return;
 
@@ -129,7 +127,8 @@ SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
     restoreRegisters();
     firstChildReturnAdr = &&FirstChildDone;
-    syncCounter = 2;
+    int volatile syncCounter = 2; // "volatile" to prevent deadcode elimination,
+                                  // and also for synchronization.
     saveRegisters();
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
@@ -164,10 +163,9 @@ FirstChildDone:
     mySpinUnlock(&lineReturnedLock);
 #endif
 
-//    dprintLine("fib(%d) has first child returned\n", f->input);
-    f->output = a->output + b->output;
-    free(a);
-    free(b);
+AllReturned:
+    //    dprintLine("fib(%d) has first child returned\n", f->input);
+    f->output = a.output + b.output;
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
@@ -195,10 +193,9 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     mySpinUnlock(&lineReturnedLock);
 #endif
 
-//    dprintLine("fib(%d) has second child returned\n", f->input);
-    f->output = a->output + b->output;
-    free(a);
-    free(b);
+    //    dprintLine("fib(%d) has second child returned\n", f->input);
+    goto AllReturned;
+    f->output = a.output + b.output;
     return;
 }
 
