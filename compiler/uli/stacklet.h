@@ -18,12 +18,13 @@ struct stubstruct {
     void* stubRoutine;
     void* parentPC;
     void* parentSP;
+    int parentProc;		/* processor that parent is running on */
+    int pad3;
     Stub* next;
     Stub* prev;
     int allocatorThread;	/* thread that is creating the stacklet */
     int seedThread;		/* thread that created the seed */
     void* pad2;
-    void* pad3;
 };
 
 extern __thread void* systemStack;
