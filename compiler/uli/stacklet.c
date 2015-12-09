@@ -11,6 +11,7 @@
 #include <assert.h>
 #include "myassert.h"
 #include "tracker.h"
+#include "msgs.h"
 
 #include "myfib.h"
 
@@ -331,6 +332,18 @@ firstFork(void (*func)(void*), void* arg)
     restoreRegisters();
 }
 
+static __thread int stealFails;
+
+// this handler is invoked when a steal request fails
+static void 
+noWorkHandler(StealFailMsg* msg)
+{
+    stealFails++;
+    freeMsgBuffer(msg);
+    myEui();
+    RETULI();
+}
+
 // This is the handler for stealing work.
 // interrupts are OFF on entry.  User MUST turn on before RETULI
 void
@@ -340,7 +353,7 @@ stealHandler(StealReqMsg* sysmsg)
     StealReqMsg* msg = sysmsg;
 
     // see if I have any work
-    Seed* seed = checkMySeedQue();
+    Seed* seed = checkMySeedQue(threadId);
     if (seed == NULL) {
 	myEui();
 	int src = getInterruptSrc(msg);
@@ -354,16 +367,6 @@ stealHandler(StealReqMsg* sysmsg)
     releaseSeed(seed, threadId);
     // I have seed information & reply buffer.  I can turn on interrupts as soon as I switch stacks
     switchAndJmp(sp, adr, tid, msg);
-}
-
-// this handler is invoked when a steal request fails
-void 
-noWorkHandler(StealFailMsg* msg)
-{
-    stealFails++;
-    freeMsgBuffer(msg);
-    myEui();
-    RETULI();
 }
 
 // this handler is invoked when a processor is sending us a Fork request (from a steal)
