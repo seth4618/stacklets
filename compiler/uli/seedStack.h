@@ -41,6 +41,8 @@ void seedStackUnlock(int tid);
 // grab lock on tid's seedStack
 void seedStackLock(int tid);
 
+// check top of local seedstack.  If there is something there return it.  No locking.
+Seed* checkMySeedQue(int tid);
 
 // Local Variables:
 // mode: c           
