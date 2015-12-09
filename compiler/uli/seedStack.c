@@ -121,6 +121,15 @@ peekSeed(int tid)
     return Q->front;
 }
 
+// check top of seedstack for proc tid.  If there is something there
+// return it.  No locking.  Only really reliable on local proc
+Seed* checkMySeedQue(int tid)
+{
+    SeedQueue* Q = &seedStacks[tid];
+    return Q->front;
+}
+
+
 // Local Variables:
 // mode: c           
 // c-basic-offset: 4
