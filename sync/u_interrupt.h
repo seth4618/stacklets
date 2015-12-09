@@ -1,9 +1,13 @@
 #ifndef U_INTERRUPT
 #define U_INTERRUPT
-#include "queue.h"
-#include "spinlock.h"
-#include "assert.h"
 #include "system.h"
+
+typedef void (*callback_t)(void*);
+typedef struct message_t
+{
+	callback_t callback;
+	void *p;
+} message;
 
 static queue* msg_bufs[NUM_CORES];
 static int flags[NUM_CORES];
