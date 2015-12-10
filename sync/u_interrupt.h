@@ -22,7 +22,7 @@ void init_uint();
 #define POLL()  printf("polling from within gem5...\n");
 #define RETULI()  stacklet_retuli()
 #define SETUPULI(x) stacklet_setupuli(x)
-#define GETMYID stacklet_getcpuid()
+#define GETMYID() stacklet_getcpuid()
 
 #else
 
@@ -35,7 +35,7 @@ void init_uint();
 #define POLL() poll()
 #define RETULI()  return
 #define SETUPULI(x) return
-#define GETMYID get_myid()
+#define GETMYID() get_myid()
 #endif
 
 void dui(int flag);
