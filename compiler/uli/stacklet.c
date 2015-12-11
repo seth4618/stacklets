@@ -217,7 +217,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     fmsg->arg = arg;
     fmsg->parentPC = parentPC;
     fmsg->parentSP = parentSP;
-    SENDI(fmsg, dest);
+    SENDI((void*)fmsg, dest);
     RETULI();
 }
 #else
@@ -302,7 +302,7 @@ suspend()
 		releaseSeed(seed, threadId);
 		EUI(0);
 		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
-		SENDI(msg, threadId);
+		SENDI((void*)msg, threadId);
 		// the handler will steal the work from myself, creating
 		// the stacklet and enqueing it on the ready Q.  So our
 		// next check will see some work.
@@ -335,7 +335,7 @@ suspend()
 		amStealing = 1;
 		lastReq = x;
 		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
-		SENDI(msg, x);
+		SENDI((void*)msg, x);
 	    }
 	}
     }
@@ -411,7 +411,7 @@ stealHandler(StealReqMsg* sysmsg)
 	myEui();
 	int src = msg->base.from;
 	setupMsgBuffer((BasicMessage* )msg, (callback_t)noWorkHandler);
-	SENDI(msg, src);
+	SENDI((void*)msg, src);
 	RETULI();
     }
     // yes, I have work.  Interrupts are off so I know it is still there
@@ -458,6 +458,26 @@ static void
 returnFromStolenWorkRoutine(ReturnMsg* msg)
 {
 }
+
+// enQ's the current frame on the readyQ.  When deQued from readyQ
+// should return to returnPC with SP setup to caller of this
+// function. Furthermore we are done with the inlet, so return to it.
+void
+finishEnQAndReturn(void* returnSP, void* returnPC)
+{
+    labelhack(Resume);
+    Registers saveArea;
+    saveRegisters();
+    void* stackPointer;
+    getStackPointer(stackPointer);
+    enqReadyQ(&&Resume, stackPointer);
+    // now return to inlet handler
+
+ Resume:
+    restoreRegisters();
+    // manipulate stack ptr to return it to parent frame
+}
+
 
 // Local Variables:
 // mode: c           
