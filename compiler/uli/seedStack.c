@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include "u_interrupt.h"
 
+extern __thread int threadId;
+
 // for debugging
 static int current_id;
 
@@ -123,7 +125,7 @@ peekSeed(int tid)
 
 // check top of seedstack for proc tid.  If there is something there
 // return it.  No locking.  Only really reliable on local proc
-Seed* checkMySeedQue(int tid)
+Seed* checkSeedQue(int tid)
 {
     SeedQueue* Q = &seedStacks[tid];
     return Q->front;
