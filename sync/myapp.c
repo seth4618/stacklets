@@ -1,9 +1,11 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <sched.h>
 #include "mylock.h"
 #include "system.h"
 #include "u_interrupt.h"
@@ -19,7 +21,7 @@ struct lock L;
 
 void * increment_counter(void *arg)
 {
-    int cpu = GETMYID;
+    int cpu = GETMYID();
     int i = 0;
 
     /*
@@ -54,10 +56,15 @@ int main(int argc, void *argv[])
     init_system();
     pthread_t threads[NUM_CORES];
     int i, rc;
-
+    cpu_set_t cpus;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
     init_lock(&L);
     for (i=0; i<NUM_CORES; i++) {
-        rc = pthread_create(&threads[i], NULL, increment_counter, NULL);
+        CPU_ZERO(&cpus);
+        CPU_SET(i, &cpus);
+        pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpus);
+        rc = pthread_create(&threads[i], &attr, increment_counter, NULL);
         if (rc != 0) {
             fprintf(stderr,"Failed to create pthread\n");
             exit(1);
