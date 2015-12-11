@@ -212,6 +212,7 @@ void *thread(void *arg)
 {
   threadId = (long)arg;
   systemStack = systemStackInit();
+  initThread();
   suspend();
   fprintf(stderr, "Got back from suspend!\n");
   assert(0);
