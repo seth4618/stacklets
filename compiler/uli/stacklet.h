@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include <pthread.h>
 #include "spinlock.h"
+#ifdef ULI
+#include "msgs.h"
+#endif
 
 //#define MACOS
 
@@ -38,7 +41,14 @@ extern SpinLockType readyQLock;
 void stackletInit(int numThreads);
 void* systemStackInit();
 void stubRoutine();
+
+
+#ifdef ULI
+void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, BasicMessage* msg);
+#else
 void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid);
+#endif
+
 void suspend();
 void yield(void);
 
@@ -306,7 +316,7 @@ asm volatile("movq %[Abuf],%%rdi \n"\
                  : "rdi");} while (0)
 
 #define getMsgPtrFromDI(msg) \
-    asm volatile("movq %%rdi,%[aMsg]" : [aMsg] "=r" (msg) : "rdi")
+    asm volatile("movq %%rdi,%[aMsg]" : [aMsg] "=r" (msg) : : "rdi")
 
 
 #define clobberCallerSave() \
