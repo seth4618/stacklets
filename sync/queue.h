@@ -3,13 +3,7 @@
 #include "spinlock.h"
 #include "malloc.h"
 #include "stddef.h"
-
-typedef void (*callback_t)(void*);
-typedef struct message_t
-{
-	callback_t callback;
-	void *p;
-}message;
+#include "u_interrupt.h"
 
 typedef struct node_t
 {
