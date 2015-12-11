@@ -17,9 +17,18 @@
 
 __thread void* systemStack;
 __thread int threadId;
+ static __thread int amStealing;	/* set to 1 if we are waiting for a steal req to come back */
+ static __thread int lastReq; 	/* set to last proc we asked work from */
 int numberOfThreads;
 
 SpinLockType readyQLock;
+
+#ifdef ULI
+static void forkHandler(ForkMsg* msg);
+static void stealHandler(StealReqMsg* sysmsg);
+static void returnFromStolenWorkRoutine(ReturnMsg* msg);
+static void setupMsgBuffer(BasicMessage* msg, callback_t handler);
+#endif
 
 //#define TRACK_STACKLETS
 #if defined(TRACK_STACKLETS)
@@ -29,11 +38,6 @@ SpinLockType stackletInfoLock;
 static int sltsAlloc = 0;
 static int sltsDealloc = 0;
 static int sltsMismatched = 0;
-
-#ifdef ULI
-static void forkHandler(ForkMsg* msg);
-#endif
-
 
 static void 
 initStackletInfo(int nt)
@@ -126,6 +130,15 @@ systemStackInit()
 }
 
 void
+initThread(void)
+{
+#ifdef ULI
+    amStealing = 0;
+    lastReq = threadId;
+#endif
+}
+
+void
 lockInit()
 {
     setupLocks();
@@ -200,7 +213,7 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     dprintLine("Forking fib(%d) to %d\n", ((Foo*)arg)->input, dest);
     seedStackUnlock(threadId);
     ForkMsg* fmsg = (ForkMsg*)msg;
-    setupMsgBuffer(fmsg, forkHandler);
+    setupMsgBuffer((BasicMessage* )fmsg, (callback_t)forkHandler);
     fmsg->arg = arg;
     fmsg->parentPC = parentPC;
     fmsg->parentSP = parentSP;
@@ -236,12 +249,15 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
 }
 #endif
 
+#ifndef ULI
+// this is only used in locking version of stacklets
+
 // Only return to caller if no seed available.
 // If available, we will cleanup and start executing seed
 static void
 getSeedIfAvailableFrom(int tid)
 {
-    REMEMBER LOCAL SEED IS LIKE A STEAL FROM OTHER PROC
+    //REMEMBER LOCAL SEED IS LIKE A STEAL FROM OTHER PROC
 
 
     // look at seedStack.  If there is stuff there, grab it
@@ -252,9 +268,10 @@ getSeedIfAvailableFrom(int tid)
 	void* sp = seed->sp;
 	releaseSeed(seed, tid);
 	DPL(">%p:%p(%d)\n", sp, adr, tid);
-	switchAndJmp(sp, adr, tid);
+	//CHANGE switchAndJmp(sp, adr, tid); to make the SENDI
     }
 }
+#endif
 
 // Context switch to another user thread in readyQ (explicit seed) or in seed
 // stack (implicity seed).
@@ -272,8 +289,28 @@ suspend()
     for (;;)
     {
 	
-	// first look in my seedQ.  If there is work there, grab it and go
-	getSeedIfAvailableFrom(threadId);
+	// first look in my seedQ.  If there is work there, create it
+	int tryagain = 1;
+	while (tryagain && checkSeedQue(threadId)) {
+	    // we have some work, now grab it without interference
+	    DUI(0);
+	    Seed* seed = checkSeedQue(threadId);
+	    if (seed != NULL) {
+		tryagain = 0;
+		void* adr = seed->adr;
+		void* sp = seed->sp;
+		releaseSeed(seed, threadId);
+		EUI(0);
+		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
+		SENDI(msg, threadId);
+		// the handler will steal the work from myself, creating
+		// the stacklet and enqueing it on the ready Q.  So our
+		// next check will see some work.
+	    } else {
+		// someone stole it before I could grab it
+		EUI(0);
+	    }
+	}
 	
 	// Now, look in global readyQ.  If there is work there, grab it and go
         ReadyThread* ready = readyDummyHead->front;
@@ -282,26 +319,24 @@ suspend()
             void* adr = ready->adr;
             void* sp = ready->sp;
             deqReadyQ();
-            switchAndJmp(sp, adr, -1);
+            localSwitchAndJmp(sp, adr);
         }
 
 	// already sent steal request, but not heard back yet
-	if (amstealing && !stealfails) continue;
-	// either havn't stolen yet or steal was no good
+	if (amStealing) continue;
 
-	// No easily available work.  So randomly search for work from other seedQs.  
-	// If you find one, grab it and Go.
-	// Try 3 times, then check other stuff
+	// either haven't stolen yet or steal was no good, so check around
 	int i;
-	for (i=0; i<num_procs; i++) {
-
+	for (i=1; i<numberOfThreads; i++) {
 	    int x = (lastReq+i)%numberOfThreads; // this should be a random number
 	    // check x's seedq.  If something there, sendI otherwise continue
-	    amstealing = 1;
-	    last_req=x+1;
-	    sendI(somebody);
-
-	    getSeedIfAvailableFrom(x);
+	    if (checkSeedQue(x)) {
+		// there was something on x's seedQ, so lets try and steal it
+		amStealing = 1;
+		lastReq = x;
+		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
+		SENDI(msg, x);
+	    }
 	}
     }
 }
@@ -357,27 +392,25 @@ static __thread int stealFails;
 static void 
 noWorkHandler(StealFailMsg* msg)
 {
-    amstealing = 0;
-    stealFails++;
+    amStealing = 0;
     freeMsgBuffer(msg);
-    myEui();
     RETULI();
 }
 
 // This is the handler for stealing work.
 // interrupts are OFF on entry.  User MUST turn on before RETULI
-void
+static void
 stealHandler(StealReqMsg* sysmsg)
 {
     // save msg
     StealReqMsg* msg = sysmsg;
 
     // see if I have any work
-    Seed* seed = checkMySeedQue(threadId);
+    Seed* seed = checkSeedQue(threadId);
     if (seed == NULL) {
 	myEui();
 	int src = msg->base.from;
-	setupMsgBuffer(msg, noWorkHandler);
+	setupMsgBuffer((BasicMessage* )msg, (callback_t)noWorkHandler);
 	SENDI(msg, src);
 	RETULI();
     }
@@ -389,7 +422,8 @@ stealHandler(StealReqMsg* sysmsg)
     switchAndJmp(sp, adr, tid, msg);
 }
 
-// this handler is invoked when a processor is sending us a Fork request (from a steal)
+// this handler is invoked when a processor is sending us a Fork
+// request (from a steal)
 static void
 forkHandler(ForkMsg* msg)
 {
@@ -403,18 +437,27 @@ forkHandler(ForkMsg* msg)
     stackletStub->parentProc = msg->base.from;
     enQnewStacklet(msg->func, msg->arg, stackletStub);
     freeMsgBuffer(msg);
+    amStealing = 0;		/* indicate we are done stealing */
     RETULI();
 }
 
 // setup a msg buffer to send from proc on which this is being called.
-void
+static void 
 setupMsgBuffer(BasicMessage* msg, callback_t handler)
 {
-    msg->base.from = threadId;
-    msg->base.systemMsg.callback = handler;
-    msg->base.systemMsg.p = msg;
+    msg->from = threadId;
+    msg->systemMsg.callback = handler;
+    msg->systemMsg.p = msg;
 }
 
+// this handler is run on a processor that had work stolen from it.
+// The child (the sender of this message) is returning to its parent
+// (on this processor) and thus we need to do th sync and get the
+// result into the parent
+static void 
+returnFromStolenWorkRoutine(ReturnMsg* msg)
+{
+}
 
 // Local Variables:
 // mode: c           
