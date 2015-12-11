@@ -22,3 +22,23 @@ If you have simulated user level interrupts, #define SIM_ULI in u_interrupt.h,
 and change the macro definitions of DUI,EUI and SENDI to call your simulated
 functions.  Compile using make -f Makefile_lib.
 
+How to use ULI for synchronization:
+---------------------------------
+
+Running on baremetal:
+
+Applications using this library must invoke INIT_ULI and init_lock() prior
+to spawning parallel threads. INIT_ULI() must be invoked with number of
+cores to run. Applications must ensure that they have atmost as many parallel
+threads as there are cores on the system. init_lock() must be invoked with
+a pointer to struct lock. The applications ought to invoke POLL() at convenient
+places in the code so as to enable servicing of queued interrupts.
+The application can also rely on the default number of cores to invoke INIT_ULI()
+with, using the GET_NR_CPUS() function.
+
+Running in simulation mode:
+
+Applications need to invoke init_lock() as above. In addition to this, they
+will need to invoke SETUPULI() with a pointer to a dynamically allocated
+piece of memory. This is used to setup the stack to handle user level
+interrupts.

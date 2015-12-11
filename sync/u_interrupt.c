@@ -1,5 +1,4 @@
 #include "u_interrupt.h"
-#include "spinlock.h"
 #include "queue.h"
 #include "system.h"
 #include <stdlib.h>
