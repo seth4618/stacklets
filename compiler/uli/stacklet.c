@@ -187,15 +187,14 @@ stubRoutine()
 // tell calling processor that it has some work to do from this processor
 // when done, unlock our seedStack
 stackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
-	     void* arg, int tid)
+	     void* arg, BasicMessage* msg)
 {
     dprintLine("Forking off a remote stacklet from %p:%p\n", parentPC, parentSP);
-    int dest = workRequestingProcesssor;
+    int dest = msg->base.from;
     dprintLine("Forking fib(%d) to %d\n", ((Foo*)arg)->input, dest);
-    seedStackUnlock(tid);
-    ForkMsg* msg = (ForkMsg*)getThisReplyMsg(forkHandler);
-    msg->from = threadId;
-    msg->func = func;
+    seedStackUnlock(threadId);
+    ForkMsg* fmsg = (ForkMsg*)msg;
+    setupMsgBuffer(msg, forkHandler);
     msg->arg = arg;
     msg->parentPC = parentPC;
     msg->parentSP = parentSP;
@@ -371,9 +370,28 @@ stealHandler(StealReqMsg* sysmsg)
 
 // this handler is invoked when a processor is sending us a Fork request (from a steal)
 void
-forkHandler(ForkMsg* sysmsg)
+forkHandler(ForkMsg* msg)
 {
-    
+    void* stackletBuf;
+    int en = posix_memalign(&stackletBuf, STACKLET_ALIGNMENT, STACKLET_SIZE);
+    myassert(en == 0, "Failed to allocate a stacklet");
+    Stub* stackletStub = (Stub *)((char *)stackletBuf+STACKLET_SIZE-sizeof(Stub));
+    stackletStub->parentSP = msg->parentSP;
+    stackletStub->parentPC = msg->parentPC;
+    stackletStub->stubRoutine = returnFromStolenWorkRoutine;
+    stackletStub->parentProc = msg->base.from;
+    enQnewStacklet(msg->func, msg->arg, stackletStub);
+    freeMsgBuffer(msg);
+    RETULI();
+}
+
+// setup a msg buffer to send from proc on which this is being called.
+void
+setupMsgBuffer(BasicMessage* msg, callback_t handler)
+{
+    msg->base.from = threadId;
+    msg->base.systemMsg.callback = handler;
+    msg->base.systemMsg.p = msg;
 }
 
 
