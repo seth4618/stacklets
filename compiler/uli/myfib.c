@@ -172,13 +172,17 @@ AllReturned:
     //    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a.output + b.output;
 #ifdef ULI
-    iAmReady();
+    // assembly hack to transfer control to system stack and enQ this
+    // frame to restart at ResumeLabel and then return to inlet that
+    // called ius.
+    enQAndReturn(&&ResumeLabel);
+ResumeLabel:
 #endif
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
-                 // has already returned.
-    // stacklet ===========================
+                 // has already returned.  
+                 // in ULI model, NO function calls can be made at all!
     {
 #ifdef ULI
 	int localSyncCounter = --syncCounter;
@@ -188,11 +192,14 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 	seedStackUnlock(ptid);
 	if (localSyncCounter != 0) {
 	    //saveRegisters(); // same reason as above
+#ifdef ULI
+	    return;		/* return to calling handler */
+#else
 	    suspendStub();
+#endif
 	}
     }
     restoreRegisters();
-    // ====================================
 
 #ifdef TRACKER
     trackingInfo[threadId]->secondReturn++;
