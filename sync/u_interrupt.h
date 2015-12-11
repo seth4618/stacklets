@@ -30,6 +30,14 @@
 #define GETMYID() get_myid()
 #define INIT_ULI(x) init_uli(x)
 #define GET_NR_CPUS()   get_nr_cpus()
+
+void dui(int flag);
+void eui(int flag);
+void sendI(message *msg, int target);
+void poll();
+int get_myid(void);
+void init_uli(int ncpus);
+int get_nr_cpus(void);
 #endif
 
 typedef void (*callback_t)(void*);
@@ -39,12 +47,5 @@ typedef struct message_t
 	void *p;
 }message;
 
-void dui(int flag);
-void eui(int flag);
-void sendI(message *msg, int target);
-void poll();
-int get_myid(void);
-void init_uli(int ncpus);
-int get_nr_cpus(void);
 
 #endif
