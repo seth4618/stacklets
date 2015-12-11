@@ -125,6 +125,16 @@ asm volatile("movq %[Aarg], %%rdi \n"\
                [Aarg] "r" (arg)\
              : "rdi", "rsi");} while (0)
 
+// used to restart a stacklet which is on the ready queue
+#define localSwitchAndJmp(sp,adr) do {		\
+asm volatile("movq %[Asp],%%rsp \n"\
+             "jmp *%[Aadr] \n"\
+             :\
+             : [Asp] "r" (sp),\
+               [Aadr] "r" (adr)\
+             );} while(0)
+
+
 // used to start running a child steal routine.  We are stealing from thread tid.
 // the steal routine will assume %rax has tid from whom we are stealing
 // See recoverParentTID
