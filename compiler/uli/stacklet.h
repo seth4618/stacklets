@@ -82,13 +82,13 @@ asm volatile("movq %[AparentPC], %%rdi \n"\
                [sysStack] "m" (systemStack)\
              : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
 #else
-#define stackletForkStub(parentPC, parentSP, func, arg, tid) do {	\
+#define stackletForkStub(parentPC, parentSP, func, arg, tid, msg) do {	\
 asm volatile("\t#calling stackletFork\n"\
 	     "movq %[AparentPC], %%rdi \n"\
              "movq %[AparentSP], %%rsi \n"\
              "movq %[Afunc], %%rdx \n"\
              "movq %[Aarg], %%rcx \n"\
-             "movl %[TIDarg], %%r8d \n"\
+             "movq %[aMsg], %%r8 \n"\
              "movq %[sysStack], %%rsp \n"\
              "call stackletFork \n"\
              :\
@@ -96,22 +96,24 @@ asm volatile("\t#calling stackletFork\n"\
                [AparentSP] "r" (parentSP),\
                [Afunc] "r" (func),\
                [Aarg] "r" (arg),\
-               [TIDarg] "r" (tid),\
+               [aMsg] "r" (msg),\
                [sysStack] "m" (systemStack)\
              : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
 #endif
 
 void firstFork(void (*func)(void*), void* arg);
 
-#define switchAndJmpWithArg(sp, adr, arg) do {\
+#define switchAndJmpWithArg(sp, adr, arg, msg) do {	\
 asm volatile("movq %[Aarg], %%rdi \n"\
+             "movq %[Amsg], %%rsi \n"\
              "movq %[Asp], %%rsp \n"\
              "jmp *%[Aadr] \n"\
              :\
              : [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
+               [Amsg] "r" (msg),\
                [Aarg] "r" (arg)\
-             : "rdi");} while (0)
+             : "rdi", "rsi");} while (0)
 
 // used to start running a child steal routine.  We are stealing from thread tid.
 // the steal routine will assume %rax has tid from whom we are stealing
@@ -124,12 +126,15 @@ asm volatile("movq %[Aarg], %%rdi \n"\
 //             : [Asp] "r" (sp),\
 //	       [Itid] "r" (tid),\
 //               [Aadr] "r" (adr));} while(0)
-#define switchAndJmp(sp,adr,tid) do {		\
+#define switchAndJmp(sp,adr,tid,msg) do {		\
 asm volatile("movq %[Asp],%%rsp \n"\
+             "movq %[Amsg], %%rdi \n"\
              "jmp *%[Aadr] \n"\
              :\
              : [Asp] "r" (sp),\
-               [Aadr] "r" (adr));} while(0)
+	       [Amsg] "r" (msg),\
+               [Aadr] "r" (adr)\
+             : "rdi");} while(0)
 
 // right after restoring registers this is needed
 // see switchAndJmp
@@ -267,6 +272,41 @@ asm volatile("movq %[Abuf],%%rdi \n"\
                    [indexR14] "m" (saveArea[12]),\
                    [indexR15] "m" (saveArea[13]),\
                    [indexAX] "m" (saveArea[14]));} while (0)
+
+#define restoreRegistersExceptDI() do { \
+    asm volatile("movq %[indexCX],%%rcx   \n"\
+                 "movq %[indexDX],%%rdx   \n"\
+                 "movq %[indexBX],%%rbx   \n"\
+                 "movq %[indexBP],%%rbp   \n"\
+                 "movq %[indexSI],%%rsi   \n"\
+                 "movq %[indexR8],%%r8    \n"\
+                 "movq %[indexR9],%%r9    \n"\
+                 "movq %[indexR10],%%r10  \n"\
+                 "movq %[indexR11],%%r11  \n"\
+                 "movq %[indexR12],%%r12  \n"\
+                 "movq %[indexR13],%%r13  \n"\
+                 "movq %[indexR14],%%r14  \n"\
+                 "movq %[indexR15],%%r15  \n"\
+                 "movq %[indexAX],%%rax   \n"\
+                 :\
+                 : [indexCX] "m" (saveArea[0]),\
+                   [indexDX] "m" (saveArea[1]),\
+                   [indexBX] "m" (saveArea[2]),\
+                   [indexBP] "m" (saveArea[3]),\
+                   [indexSI] "m" (saveArea[4]),\
+                   [indexR8] "m" (saveArea[6]),\
+                   [indexR9] "m" (saveArea[7]),\
+                   [indexR10] "m" (saveArea[8]),\
+                   [indexR11] "m" (saveArea[9]),\
+                   [indexR12] "m" (saveArea[10]),\
+                   [indexR13] "m" (saveArea[11]),\
+                   [indexR14] "m" (saveArea[12]),\
+                   [indexR15] "m" (saveArea[13]),\
+                   [indexAX] "m" (saveArea[14])\
+                 : "rdi");} while (0)
+
+#define getMsgPtrFromDI(msg) \
+    asm volatile("movq %%rdi,%[aMsg]" : [aMsg] "=r" (msg) : "rdi")
 
 
 #define clobberCallerSave() \
