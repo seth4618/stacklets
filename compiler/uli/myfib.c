@@ -125,7 +125,9 @@ fib(void* F)
 
 SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
-    restoreRegisters();
+    restoreRegistersExceptDI();
+    void* msg;
+    getMsgPtrFromDI(msg);
     firstChildReturnAdr = &&FirstChildDone;
     int volatile syncCounter = 2; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
@@ -133,7 +135,7 @@ SecondChildSteal: // We cannot make function calls here!
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
 #endif
-    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid, msg);
     // ====================================
 
 FirstChildDone:
