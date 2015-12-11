@@ -241,6 +241,9 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
 static void
 getSeedIfAvailableFrom(int tid)
 {
+    REMEMBER LOCAL SEED IS LIKE A STEAL FROM OTHER PROC
+
+
     // look at seedStack.  If there is stuff there, grab it
     Seed* seed = peekSeed(tid);
     if (seed != NULL) {
@@ -268,6 +271,7 @@ suspend()
 //    dprintLine("suspend\n");
     for (;;)
     {
+	
 	// first look in my seedQ.  If there is work there, grab it and go
 	getSeedIfAvailableFrom(threadId);
 	
@@ -281,12 +285,22 @@ suspend()
             switchAndJmp(sp, adr, -1);
         }
 
+	// already sent steal request, but not heard back yet
+	if (amstealing && !stealfails) continue;
+	// either havn't stolen yet or steal was no good
+
 	// No easily available work.  So randomly search for work from other seedQs.  
 	// If you find one, grab it and Go.
 	// Try 3 times, then check other stuff
 	int i;
-	for (i=0; i<3; i++) {
-	    int x = (threadId+i)%numberOfThreads; // this should be a random number
+	for (i=0; i<num_procs; i++) {
+
+	    int x = (lastReq+i)%numberOfThreads; // this should be a random number
+	    // check x's seedq.  If something there, sendI otherwise continue
+	    amstealing = 1;
+	    last_req=x+1;
+	    sendI(somebody);
+
 	    getSeedIfAvailableFrom(x);
 	}
     }
@@ -343,6 +357,7 @@ static __thread int stealFails;
 static void 
 noWorkHandler(StealFailMsg* msg)
 {
+    amstealing = 0;
     stealFails++;
     freeMsgBuffer(msg);
     myEui();
@@ -361,7 +376,7 @@ stealHandler(StealReqMsg* sysmsg)
     Seed* seed = checkMySeedQue(threadId);
     if (seed == NULL) {
 	myEui();
-	int src = getInterruptSrc(msg);
+	int src = msg->base.from;
 	setupMsgBuffer(msg, noWorkHandler);
 	SENDI(msg, src);
 	RETULI();
