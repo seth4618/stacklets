@@ -30,6 +30,11 @@ static int sltsAlloc = 0;
 static int sltsDealloc = 0;
 static int sltsMismatched = 0;
 
+#ifdef ULI
+static void forkHandler(ForkMsg* msg);
+#endif
+
+
 static void 
 initStackletInfo(int nt)
 {
@@ -186,19 +191,20 @@ stubRoutine()
 #ifdef ULI
 // tell calling processor that it has some work to do from this processor
 // when done, unlock our seedStack
+void
 stackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
 	     void* arg, BasicMessage* msg)
 {
     dprintLine("Forking off a remote stacklet from %p:%p\n", parentPC, parentSP);
-    int dest = msg->base.from;
+    int dest = msg->from;
     dprintLine("Forking fib(%d) to %d\n", ((Foo*)arg)->input, dest);
     seedStackUnlock(threadId);
     ForkMsg* fmsg = (ForkMsg*)msg;
-    setupMsgBuffer(msg, forkHandler);
-    msg->arg = arg;
-    msg->parentPC = parentPC;
-    msg->parentSP = parentSP;
-    SENDI(msg, dest);
+    setupMsgBuffer(fmsg, forkHandler);
+    fmsg->arg = arg;
+    fmsg->parentPC = parentPC;
+    fmsg->parentSP = parentSP;
+    SENDI(fmsg, dest);
     RETULI();
 }
 #else
@@ -369,7 +375,7 @@ stealHandler(StealReqMsg* sysmsg)
 }
 
 // this handler is invoked when a processor is sending us a Fork request (from a steal)
-void
+static void
 forkHandler(ForkMsg* msg)
 {
     void* stackletBuf;
