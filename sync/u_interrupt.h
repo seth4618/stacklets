@@ -44,7 +44,7 @@ void eui(int flag);
 // msg must point to a region of memory where first two elements are pointers to:
 // callback routine which will be invoked on target processor
 // ptr to a memory region passed to callback routine
-void sendI(void *msg, int target);
+void sendI(message* msg, int target);
 
 void i_handler(int core_idx);
 void poll();
