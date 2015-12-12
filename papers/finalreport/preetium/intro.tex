@@ -1,5 +1,63 @@
 \section{Introduction}
+Majority of the current computer systems embrace Multicore Architecture for its
+suitability in running applications with inherent parallelism.
+The parallelism can be extracted by the hardware or can be made explicit by the
+software. Some examples of the former are Superscalar and Simultaneous
+MultiThreading class of processors. Compilers can expose parallelism through
+techniques such as loop unrolling or taking hints from the programmer about
+parallel sections of the program such as in OpenMP and Cilk frameworks.
+Programmers can explicitly create parallel threads through system calls such as
+fork() or by using pthread libraries. However parallel applications bring
+in a set of challenges which are typically not seen during sequential execution.
+This paper explains how User Level Interrupts can be used to handle some of them.
 
-INTRO GOES HERE.
+One of the primary challenges in writing parallel applications is to synchronize
+concurrent access to shared data structures. Several locking primitives have
+been proposed in the past to handle synchronization. These primitives either
+use shared variables or message passing primitives to synchronize between
+processors. This paper proposes to use the best of both these worlds with User
+Level Interrupts or ULIs. The motivation comes from the fact that ULIs prevent
+traps into the kernel while still maintaining consistency of shared data
+structures. This helps shift synchronization handling entirely to user space,
+thus giving more flexibility in implementing it in user space,
+and saving on context switch overheads. The paper implements two locking schemes
+using ULIs, which is then evaluated on Gem5 simulator. The simulator emulates
+the core features of interrupt handling such as sending, disabling and enabling
+of user level interrupts, thereby allowing us to evaluate our scheme against the
+traditional locking mechanisms.
+
+The next part of this paper addresses eager parallelism. Programs are said
+to have eager parallelism when they spawn a thread for each piece of code that
+is independent in itself, such as a function call. This works well if there are
+as many processors as there are threads. Otherwise the overhead of creating,
+running and destroying these threads is unnecessary when they are eventually
+going to be run sequentially. It wastes precious memory and cpu capacity. This
+issue was addressed with the lazy thread implementation of such programs wherein
+threads are created only when there are idle cores, else the code executes
+sequentially. Lazy threads use stacklets to allocate an execution frame to each
+thread. Stacklets enable efficient memory management of threads by allocating
+stack space incrementally rather than as a monolithic chunk. If more stack space
+is required, an additional chunk of memory is created and linked with the
+previous. Each time a new stacklet has to be allocated, the thread can trap into
+the kernel which will allocate the same and resume the thread. Alternately when
+the head of the stack is reached, a ULI can be generated to allocate a new
+stacklet by a userspace function itself. Once again, this prevents overhead of a
+context switch into the kernel. This paper sets the foundation for exploring
+this use case of ULIs by implementing Lazy thread handling using stacklets and
+evaluates a simple fibonacci program against the implementation.
+
+This paper thus makes the following contributions:
+
+1. Explores new synchronization primitives using ULIs and evaluates them against
+the traditional locking primitives.
+
+2. Implements Lazy thread handling for improving performance of eagerly parallel
+applications.
+
+3. Highlights the importance of stacklets for multithreaded applications and
+notes the use of ULIs in its implementation.
+
+4. Showcases ULIs as potential solution for handling functions in the user space,
+which are traditionally handled by the kernel.
 
 \lipsum
