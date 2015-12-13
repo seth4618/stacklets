@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-shared -fpic
+CFLAGS=-shared -fpic -g
 LDLIBS=-lpthread
 
 SRCS = u_interrupt.c queue.c spinlock.c system.c atomic_xchange.S
