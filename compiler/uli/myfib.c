@@ -175,8 +175,7 @@ AllReturned:
     // assembly hack to transfer control to system stack and enQ this
     // frame to restart at ResumeLabel and then return to inlet that
     // called ius.
-    enQAndReturn(&&ResumeLabel);
-ResumeLabel:
+    enQAndReturn();
 #endif
     return;
 
@@ -289,6 +288,10 @@ main(int argc, char** argv)
 #ifndef CLEAN
     printf("*** setup ***\n"
            "Will run fib(%d) on %d thread(s)\n\n", n, numthreads);
+#endif
+
+#if defined(ULI)
+    INIT_ULI(numthreads);
 #endif
 
     int x = startfib(n, numthreads);
