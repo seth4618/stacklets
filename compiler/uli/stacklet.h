@@ -113,17 +113,15 @@ asm volatile("\t#calling stackletFork\n"\
 
 void firstFork(void (*func)(void*), void* arg);
 
-#define switchAndJmpWithArg(sp, adr, arg, msg) do {	\
+#define switchAndJmpWithArg(sp, adr, arg) do {	\
 asm volatile("movq %[Aarg], %%rdi \n"\
-             "movq %[Amsg], %%rsi \n"\
              "movq %[Asp], %%rsp \n"\
              "jmp *%[Aadr] \n"\
              :\
              : [Asp] "r" (sp),\
                [Aadr] "r" (adr),\
-               [Amsg] "r" (msg),\
                [Aarg] "r" (arg)\
-             : "rdi", "rsi");} while (0)
+             : "rdi");} while (0)
 
 // used to restart a stacklet which is on the ready queue
 #define localSwitchAndJmp(sp,adr) do {		\
