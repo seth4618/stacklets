@@ -210,7 +210,7 @@ stubRoutine()
 // tell calling processor that it has some work to do from this processor
 // when done, unlock our seedStack
 void
-stackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
+remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
 	     void* arg, BasicMessage* msg)
 {
     dprintLine("Forking off a remote stacklet from %p:%p\n", parentPC, parentSP);
@@ -225,7 +225,8 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     SENDI((void*)fmsg, dest);
     RETULI();
 }
-#else
+#endif
+
 // Create a new stacklet to run the seed which we got from tid.
 // seedStack of tid is currently locked on entry, but must be released
 void
@@ -252,7 +253,6 @@ stackletFork(void* parentPC, void* parentSP, void (*func)(void*),
 
     switchAndJmpWithArg(stackletStub, func, arg);
 }
-#endif
 
 #ifndef ULI
 // this is only used in locking version of stacklets
