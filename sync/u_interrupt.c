@@ -9,33 +9,33 @@ static int nr_cpus = 4;
 static int *flags;
 static queue** msg_bufs;
 
-static void init_uint() {
-	int i = 0;
+static void 
+init_uint(void) 
+{
+  int i = 0;
 
-    flags = calloc(nr_cpus, sizeof(int));
+  flags = calloc(nr_cpus, sizeof(int));
 
-    if (!flags) {
-        fprintf(stderr, "Cannot allocate memory to flags\n");
-        exit(1);
+  if (!flags) {
+    fprintf(stderr, "Cannot allocate memory to flags\n");
+    exit(1);
+  }
+
+  msg_bufs = calloc(nr_cpus, sizeof(queue *));
+  if (!msg_bufs) {
+    fprintf(stderr, "Cannot allocate memory to msg_bufs\n");
+    exit(1);
+  }
+
+  for (i = 0; i < nr_cpus; ++i) {
+    queue *q = (queue*)malloc(sizeof(struct queue_t));
+    if (q == NULL) {
+      return;
     }
-
-    msg_bufs = calloc(nr_cpus, sizeof(queue *));
-    if (!msg_bufs) {
-        fprintf(stderr, "Cannot allocate memory to msg_bufs\n");
-        exit(1);
-    }
-
-	for (i = 0; i < nr_cpus; ++i)
-	{
-		queue *q = (queue*)malloc(sizeof(struct queue_t));
-		if (q == NULL)
-		{
-			return;
-		}
-		msg_bufs[i] = q;
-		init_queue(q);
-		flags[i] = 0;
-	}
+    msg_bufs[i] = q;
+    init_queue(q);
+    flags[i] = 0;
+  }
 }
 
 /* flag: interrupt flag */
@@ -56,14 +56,16 @@ void sendI(message *msg, int target) {
 	enqueue(msg_bufs[target], msg); 
 }
 
-static void i_handler(int core_idx) {
-	queue *q = msg_bufs[core_idx];
-	while(!is_empty(q)) {
-	    message *msg = dequeue(q);
-	    callback_t c = msg -> callback;
-	    (*c)(msg -> p);
-	    free(msg);
-	}
+static void 
+i_handler(int core_idx) 
+{
+  queue *q = msg_bufs[core_idx];
+  while(!is_empty(q)) {
+    message *msg = dequeue(q);
+    callback_t c = msg -> callback;
+    (*c)(msg -> p);
+    free(msg);
+  }
 
 }
 
@@ -95,3 +97,9 @@ int get_nr_cpus(void)
 {
     return nr_cpus;
 }
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
