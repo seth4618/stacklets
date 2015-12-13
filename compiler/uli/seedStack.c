@@ -6,6 +6,7 @@
 #include "spinlock.h"
 #include <stdio.h>
 #include "u_interrupt.h"
+#include "myassert.h"
 
 extern __thread int threadId;
 
@@ -39,7 +40,7 @@ seedStackUnlock(int tid)
 {
 #ifdef ULI
     myassert(tid == threadId, "How can I EUI thread:%d when I am on proc:%d\n", tid, threadId);
-    EUI(1);
+    myeui(1);
 #else
     mySpinUnlock(seedStackLocks+tid);
 #endif
@@ -51,7 +52,7 @@ seedStackLock(int tid)
 {
 #ifdef ULI
     myassert(tid == threadId, "How can I DUI thread:%d when I am on proc:%d\n", tid, threadId);
-    DUI(1);
+    mydui(1);
 #else
     mySpinLock(seedStackLocks+tid);
 #endif
