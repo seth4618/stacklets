@@ -367,6 +367,24 @@ Resume:
 }
 
 
+// enq a new stacklet which has already been created, but for which
+// the initial function has not been executed.  
+static void
+enQnewStacklet(void (*func)(void*), void* arg, void* stackletStub)
+{
+    labelhack(Resume);
+    Registers saveArea;
+    // put on readyQ
+    saveRegisters();
+    void* stackPointer;
+    getStackPointer(stackPointer);
+    enqReadyQ(&&Resume, stackPointer);
+
+ Resume:
+    restoreRegisters();
+    switchAndJmpWithArg(stackletStub, func, arg);
+}
+
 // this allocates a stacklet for the base function and 
 // will return the instruction following this.
 
@@ -398,7 +416,7 @@ static void
 noWorkHandler(StealFailMsg* msg)
 {
     amStealing = 0;
-    freeMsgBuffer(msg);
+    freeMsgBuffer((BasicMessage*)msg);
     RETULI();
 }
 
@@ -441,7 +459,7 @@ forkHandler(ForkMsg* msg)
     stackletStub->stubRoutine = returnFromStolenWorkRoutine;
     stackletStub->parentProc = msg->base.from;
     enQnewStacklet(msg->func, msg->arg, stackletStub);
-    freeMsgBuffer(msg);
+    freeMsgBuffer((BasicMessage*)msg);
     amStealing = 0;		/* indicate we are done stealing */
     RETULI();
 }
