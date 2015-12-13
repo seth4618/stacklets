@@ -335,6 +335,18 @@ asm volatile("movq %[Abuf],%%rdi \n"\
        		: \
 		 : "rbp", "rbx", "r12", "r13", "r14", "r15")
 
+// enq current stacklet on readyq.  called from inlet running on stacklet sp.
+#define enQAndReturn() \
+    asm volatile("# done with inlet, return from ULI\n"	\
+		 "movq %%rsp,%%rdi \n"			\
+    		 "movq $ER%=,%%rsi \n"		\
+    	         "movq %[AsystemStack],%%rsp \n"	\
+    		 "call finishEnQAndReturn\n"		\
+		 "ER%=:				#return here after resume\n"	\
+		 :					\
+		 : [AsystemStack] "m" (systemStack)	\
+		 : "rdi", "rsi")
+
 // Local Variables:
 // mode: c           
 // c-basic-offset: 4
