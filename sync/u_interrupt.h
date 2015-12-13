@@ -1,6 +1,13 @@
 #ifndef U_INTERRUPT
 #define U_INTERRUPT
 
+typedef void (*callback_t)(void*);
+typedef struct message_t
+{
+	callback_t callback;
+	void *p;
+}message;
+
 #ifdef SIM_ULI
 
 /*
@@ -40,12 +47,6 @@ void init_uli(int ncpus);
 int get_nr_cpus(void);
 #endif
 
-typedef void (*callback_t)(void*);
-typedef struct message_t
-{
-	callback_t callback;
-	void *p;
-}message;
 
 
 #endif
