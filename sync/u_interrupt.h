@@ -32,7 +32,7 @@ typedef struct message_t
 #define EUI(x) 	eui(x)
 #define SENDI(x, y) sendI(x, y)
 #define POLL() poll()
-#define RETULI
+#define RETULI()	return
 #define SETUPULI(x)
 #define GETMYID() get_myid()
 #define INIT_ULI(x) init_uli(x)
