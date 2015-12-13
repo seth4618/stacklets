@@ -44,10 +44,9 @@ void stubRoutine();
 
 
 #ifdef ULI
-void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, BasicMessage* msg);
-#else
-void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid);
+void remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, BasicMessage* msg);
 #endif
+void stackletFork(void* parentPC, void* parentSP, void (*func)(void*), void* arg, int tid);
 
 void suspend();
 void yield(void);
@@ -98,9 +97,47 @@ asm volatile("\t#calling stackletFork\n"\
              "movq %[AparentSP], %%rsi \n"\
              "movq %[Afunc], %%rdx \n"\
              "movq %[Aarg], %%rcx \n"\
-             "movq %[aMsg], %%r8 \n"\
+             "movl %[TIDarg], %%r8d \n"\
              "movq %[sysStack], %%rsp \n"\
              "call stackletFork \n"\
+             :\
+             : [AparentPC] "r" (parentPC),\
+               [AparentSP] "r" (parentSP),\
+               [Afunc] "r" (func),\
+               [Aarg] "r" (arg),\
+               [TIDarg] "r" (tid),\
+               [sysStack] "m" (systemStack)\
+             : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
+#endif
+
+#ifdef ULI
+# ifdef MACOS
+#  define remoteStackletForkStub(parentPC, parentSP, func, arg, msg) do {\
+    asm volatile("movq %[AparentPC], %%rdi \n"\
+             "movq %[AparentSP], %%rsi \n"\
+             "movq %[Afunc], %%rdx \n"\
+             "movq %[Aarg], %%rcx \n"\
+             "movl %[TIDarg], %%r8d \n"\
+             "movq %[sysStack], %%rsp \n"\
+             "call _stackletFork \n"\
+             :\
+             : [AparentPC] "r" (parentPC),\
+               [AparentSP] "r" (parentSP),\
+               [Afunc] "r" (func),\
+               [Aarg] "r" (arg),\
+               [TIDarg] "r" (tid),\
+               [sysStack] "m" (systemStack)\
+             : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
+# else
+#  define remoteStackletForkStub(parentPC, parentSP, func, arg, msg) do {	\
+    asm volatile("\t#calling remoteStackletFork\n"\
+	     "movq %[AparentPC], %%rdi \n"\
+             "movq %[AparentSP], %%rsi \n"\
+             "movq %[Afunc], %%rdx \n"\
+             "movq %[Aarg], %%rcx \n"\
+             "movq %[aMsg], %%r8 \n"\
+             "movq %[sysStack], %%rsp \n"\
+             "call remoteStackletFork \n"\
              :\
              : [AparentPC] "r" (parentPC),\
                [AparentSP] "r" (parentSP),\
@@ -109,6 +146,7 @@ asm volatile("\t#calling stackletFork\n"\
                [aMsg] "r" (msg),\
                [sysStack] "m" (systemStack)\
              : "rdi", "rsi", "rdx", "rcx", "r8");} while (0)
+# endif
 #endif
 
 void firstFork(void (*func)(void*), void* arg);
