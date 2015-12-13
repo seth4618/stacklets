@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-static queue* msg_bufs[NUM_CORES];
-static int flags[NUM_CORES];
-
 #define SMP_INTFLAG 0x0001
 static int nr_cpus = 4;
 static int *flags;
