@@ -135,6 +135,7 @@ initThread(void)
 #ifdef ULI
     amStealing = 0;
     lastReq = threadId;
+    initMsgs(0);
 #endif
 }
 
@@ -150,6 +151,10 @@ stackletInit(int numThreads)
 {
     // must init locks before anything else
     lockInit();
+    
+#ifdef ULI
+    initMsgs(numThreads);
+#endif
 
     numberOfThreads = numThreads;
     initStackletInfo(numThreads);
@@ -293,14 +298,14 @@ suspend()
 	int tryagain = 1;
 	while (tryagain && checkSeedQue(threadId)) {
 	    // we have some work, now grab it without interference
-	    DUI(0);
+	    mydui(0);
 	    Seed* seed = checkSeedQue(threadId);
 	    if (seed != NULL) {
 		tryagain = 0;
 		void* adr = seed->adr;
 		void* sp = seed->sp;
 		releaseSeed(seed, threadId);
-		EUI(0);
+		myeui(0);
 		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
 		SENDI((void*)msg, threadId);
 		// the handler will steal the work from myself, creating
@@ -308,7 +313,7 @@ suspend()
 		// next check will see some work.
 	    } else {
 		// someone stole it before I could grab it
-		EUI(0);
+		myeui(0);
 	    }
 	}
 	
@@ -408,7 +413,7 @@ stealHandler(StealReqMsg* sysmsg)
     // see if I have any work
     Seed* seed = checkSeedQue(threadId);
     if (seed == NULL) {
-	myEui();
+	myeui(0);
 	int src = msg->base.from;
 	setupMsgBuffer((BasicMessage* )msg, (callback_t)noWorkHandler);
 	SENDI((void*)msg, src);
@@ -452,8 +457,8 @@ setupMsgBuffer(BasicMessage* msg, callback_t handler)
 
 // this handler is run on a processor that had work stolen from it.
 // The child (the sender of this message) is returning to its parent
-// (on this processor) and thus we need to do th sync and get the
-// result into the parent
+// (on this processor) and thus we need to do the sync.
+// free msg buffer before running return inlet
 static void 
 returnFromStolenWorkRoutine(ReturnMsg* msg)
 {
@@ -462,6 +467,7 @@ returnFromStolenWorkRoutine(ReturnMsg* msg)
 // enQ's the current frame on the readyQ.  When deQued from readyQ
 // should return to returnPC with SP setup to caller of this
 // function. Furthermore we are done with the inlet, so return to it.
+// this function is run on systemstack
 void
 finishEnQAndReturn(void* returnSP, void* returnPC)
 {
@@ -471,11 +477,14 @@ finishEnQAndReturn(void* returnSP, void* returnPC)
     void* stackPointer;
     getStackPointer(stackPointer);
     enqReadyQ(&&Resume, stackPointer);
-    // now return to inlet handler
+    // now return from handler
+    RETULI();
+    return;
 
  Resume:
     restoreRegisters();
     // manipulate stack ptr to return it to parent frame
+    localSwitchAndJmp(returnSP, returnPC);
 }
 
 
