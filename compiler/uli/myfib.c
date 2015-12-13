@@ -135,7 +135,11 @@ SecondChildSteal: // We cannot make function calls here!
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
 #endif
-    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid, msg);
+#ifdef ULI
+    remoteStackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, msg);
+#else
+    stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
+#endif
     // ====================================
 
 FirstChildDone:
