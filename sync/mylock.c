@@ -4,7 +4,6 @@
 #include <sched.h>
 #include <pthread.h>
 #include "u_interrupt.h"
-#include "system.h"
 #include "mylock.h"
 
 static pthread_mutex_t l_mutex;
@@ -13,6 +12,7 @@ struct mylockstruct {
     bool trigger;   // Per-cpu trigger
     int waiter_id;  // my waiter
 };
+
 
 // cfd = call_function_data
 // structure that contains arguments to addme call
@@ -23,7 +23,7 @@ struct addme_cfd
 };
 
 typedef struct mylockstruct mylockstruct_t;
-static mylockstruct_t pcpu_lock_struct[NUM_CORES];
+static mylockstruct_t *pcpu_lock_struct;
 
 static void addme(void *p);
 
@@ -165,9 +165,30 @@ retry:
 
 void init_lock(struct lock *L)
 {
-    int i;
+    int i, ncpus;
 
-    for (i = 0; i < NUM_CORES; i++) {
+    if (!L) {
+        L = malloc(sizeof(struct lock));
+        if (!L) {
+            fprintf(stderr, "Lock could not be allocated\n");
+            exit(1);
+        }
+    }
+    L->owner_id = -1;
+
+    if (pcpu_lock_struct)
+        return;
+
+    ncpus = GET_NR_CPUS();
+
+    pcpu_lock_struct = calloc(ncpus, sizeof(mylockstruct_t));
+    if (!pcpu_lock_struct) {
+        fprintf(stderr, "Cannot allocate memory to pcpu \
+                    lock structures\n");
+        exit(1);
+    }
+
+    for (i = 0; i < ncpus; i++) {
         pcpu_lock_struct[i].trigger = 0;
         pcpu_lock_struct[i].waiter_id = -1;
     }

@@ -3,6 +3,7 @@
 #include "spinlock.h"
 #include "malloc.h"
 #include "stddef.h"
+#include "u_interrupt.h"
 
 typedef struct node_t
 {
