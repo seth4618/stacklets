@@ -1,11 +1,13 @@
 #include "queue.h"
 #include "assert.h"
 
-void init_queue(queue *q) {
-	if (q == NULL) return; 
-	q -> head = NULL;
-	q -> tail = NULL;
-	spinlock_init(&q -> lock);
+void 
+init_queue(queue *q) 
+{
+  if (q == NULL) return; 
+  q -> head = NULL;
+  q -> tail = NULL;
+  spinlock_init(&q -> lock);
 }
 
 int is_empty(queue *q) {
@@ -40,20 +42,21 @@ node *queue_delete(queue *q, node *n) {
 
 
 // redundatn funcitons 
-message *dequeue(queue *q) {
-	spinlock_lock(&q -> lock);
-	node *n = queue_delete(q, q -> head);
-	if (n == NULL)
-	{
-	spinlock_unlock(&q -> lock);
+message *
+dequeue(queue *q) 
+{
+  spinlock_lock(&q -> lock);
+  node *n = queue_delete(q, q -> head);
+  if (n == NULL) {
+    spinlock_unlock(&q -> lock);
+    return NULL;
+  } 
 
-		return NULL;
-	} 
-		message *msg = n -> msg;
-		free(n);
-	spinlock_unlock(&q -> lock);
+  message *msg = n -> msg;
+  free(n);
+  spinlock_unlock(&q -> lock);
 
-		return msg;
+  return msg;
 	
 }
 
@@ -84,3 +87,9 @@ void enqueue(queue *q, message *msg) {
 	spinlock_unlock(&q -> lock);
 	
 }
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
