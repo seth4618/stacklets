@@ -1,8 +1,8 @@
 CC=gcc
 # -DDEBUG -DTRACKER -DBENCHMARK -DCLEAN
-CFLAGS=-g -O1 -DBENCHMARK -DTRACKER -I. -I../../sync -DULI
+CFLAGS=-g -O1 -DBENCHMARK -DTRACKER -I. -I../../sync -DULI -DSIM_ULI
 LIBS = -lpthread
-OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o tracker.o myassert.o spinlock.o u_interrupt.c
+OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o tracker.o myassert.o spinlock.o u_interrupt.o msgs.o
 
 fib: $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS) $(LIBS)
