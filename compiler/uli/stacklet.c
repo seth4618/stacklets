@@ -208,7 +208,6 @@ stubRoutine()
 
 #ifdef ULI
 // tell calling processor that it has some work to do from this processor
-// when done, unlock our seedStack
 void
 remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*), 
 	     void* arg, BasicMessage* msg)
@@ -216,12 +215,12 @@ remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     dprintLine("Forking off a remote stacklet from %p:%p\n", parentPC, parentSP);
     int dest = msg->from;
     dprintLine("Forking fib(%d) to %d\n", ((Foo*)arg)->input, dest);
-    seedStackUnlock(threadId);
     ForkMsg* fmsg = (ForkMsg*)msg;
     setupMsgBuffer((BasicMessage* )fmsg, (callback_t)forkHandler);
     fmsg->arg = arg;
     fmsg->parentPC = parentPC;
     fmsg->parentSP = parentSP;
+    myeui(23);
     SENDI((void*)fmsg, dest);
     RETULI();
 }
@@ -298,14 +297,14 @@ suspend()
 	int tryagain = 1;
 	while (tryagain && checkSeedQue(threadId)) {
 	    // we have some work, now grab it without interference
-	    mydui(0);
+	    mydui(5);
 	    Seed* seed = checkSeedQue(threadId);
 	    if (seed != NULL) {
 		tryagain = 0;
 		void* adr = seed->adr;
 		void* sp = seed->sp;
 		releaseSeed(seed, threadId);
-		myeui(0);
+		myeui(6);
 		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
 		SENDI((void*)msg, threadId);
 		// the handler will steal the work from myself, creating
@@ -313,7 +312,7 @@ suspend()
 		// next check will see some work.
 	    } else {
 		// someone stole it before I could grab it
-		myeui(0);
+		myeui(7);
 	    }
 	}
 	
@@ -425,13 +424,14 @@ noWorkHandler(StealFailMsg* msg)
 static void
 stealHandler(StealReqMsg* sysmsg)
 {
+    mydui(100);
     // save msg
     StealReqMsg* msg = sysmsg;
 
     // see if I have any work
     Seed* seed = checkSeedQue(threadId);
     if (seed == NULL) {
-	myeui(0);
+	myeui(8);
 	int src = msg->base.from;
 	setupMsgBuffer((BasicMessage* )msg, (callback_t)noWorkHandler);
 	SENDI((void*)msg, src);
@@ -442,6 +442,7 @@ stealHandler(StealReqMsg* sysmsg)
     void* sp = seed->sp;
     releaseSeed(seed, threadId);
     // I have seed information & reply buffer.  I can turn on interrupts as soon as I switch stacks
+    dprintLine("stealHandler invoked with %p going to %p with sp:%p\n", msg, adr, sp);
     switchAndJmp(sp, adr, tid, msg);
 }
 
