@@ -116,6 +116,7 @@ fib(void* F)
     // stacklet ===========================
     releaseSeed(seed, ptid);  // ptid not threadId!
     seedStackUnlock(ptid);
+    checkUIMask(1);
     // ====================================
 
     fib(&b);
@@ -137,6 +138,8 @@ SecondChildSteal: // We cannot make function calls here!
 #endif
 #ifdef ULI
     remoteStackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, msg);
+    // SHOULD NEVER RETURN HERE, BUT WE ARE.  BLECH!
+    assert(0);
 #else
     stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
 #endif
@@ -296,6 +299,7 @@ main(int argc, char** argv)
 
 #if defined(ULI)
     INIT_ULI(numthreads);
+    setULIdebugLevel(1);
 #endif
 
     int x = startfib(n, numthreads);
