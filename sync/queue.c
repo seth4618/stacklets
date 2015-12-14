@@ -1,10 +1,11 @@
 #include "queue.h"
 #include "assert.h"
+#include "myassert.h"
 
 void 
 init_queue(queue *q) 
 {
-  if (q == NULL) return; 
+  myassert(q != NULL, "Tried to init a NULL Q");
   q -> head = NULL;
   q -> tail = NULL;
   spinlock_init(&q -> lock);
@@ -21,7 +22,7 @@ int is_empty(queue *q) {
 }
 // requires that n is in the q
 node *queue_delete(queue *q, node *n) {
-	if (q == NULL || n == NULL) return NULL;
+  myassert(!(q == NULL || n == NULL), "deleting Q which is NULL?");
 	if (n -> prev != NULL) {
 		n -> prev -> next = n -> next;
 	} else if (q -> head == n) {
@@ -63,7 +64,7 @@ dequeue(queue *q)
 void enqueue(queue *q, message *msg) {
 
 	node *n = (node *)malloc(sizeof(struct node_t));
-	if (n == NULL) return;
+	myassert(n != NULL, "Failed to malloc a node for the q");
 
     /* First node to be inserted */
     // if (q == NULL) {
