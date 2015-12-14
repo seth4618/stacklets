@@ -1,0 +1,765 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 299.539000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+White found best move at 4,0
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+
+White found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 2277166
+
+
+Cilk Example: game
+	      running on 24 processors
+
+Running time  = 0.297995 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 186.253000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 4,0
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+
+White found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 209498
+
+
+Cilk Example: game
+	      running on 1 processor
+
+Running time  = 0.185747 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 189.132000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 4,0
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 0 0 
+
+White found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 346706
+
+
+Cilk Example: game
+	      running on 2 processors
+
+Running time  = 0.188441 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 166.418000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 4,0
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 0 0 
+
+White found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 443340
+
+
+Cilk Example: game
+	      running on 3 processors
+
+Running time  = 0.165555 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 124.379000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 4,0
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 0 0 
+
+White found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 394085
+
+
+Cilk Example: game
+	      running on 4 processors
+
+Running time  = 0.123354 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 134.031000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+White found best move at 4,0
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+
+White found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 514110
+
+
+Cilk Example: game
+	      running on 5 processors
+
+Running time  = 0.133030 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 89.355000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 4,0
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+
+White found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 502762
+
+
+Cilk Example: game
+	      running on 6 processors
+
+Running time  = 0.088077 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 130.285000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+White found best move at 4,0
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+White found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 0 0 
+
+White found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 814841
+
+
+Cilk Example: game
+	      running on 7 processors
+
+Running time  = 0.129165 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 137.691000 ms
+White found best move at 3,3
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+0 0 0 0 0 
+
+Black found best move at 4,0
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 0,4
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+Black found best move at 1,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 0 0 0 0 
+
+White found best move at 4,1
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 0 0 0 
+
+Black found best move at 4,2
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 1 0 
+1 1 1 0 0 
+
+White found best move at 2,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+1 1 1 0 0 
+
+Black found best move at 3,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 0 0 
+
+White found best move at 4,3
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 0 
+
+Black found best move at 4,4
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+1 1 1 1 1 
+
+White wins. Total # of aborts 921218
+
+
+Cilk Example: game
+	      running on 8 processors
+
+Running time  = 0.136680 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+

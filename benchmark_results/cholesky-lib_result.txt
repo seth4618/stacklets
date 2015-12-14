@@ -1,0 +1,162 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 253.588000 ms
+
+Cilk Example: cholesky
+	      running on 32765 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 1.724051 s
+
+Cilk Example: cholesky
+	      running on 32766 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 865.538000 ms
+
+Cilk Example: cholesky
+	      running on 32766 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 621.898000 ms
+
+Cilk Example: cholesky
+	      running on 32767 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 501.231000 ms
+
+Cilk Example: cholesky
+	      running on 32765 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 410.817000 ms
+
+Cilk Example: cholesky
+	      running on 32765 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 370.741000 ms
+
+Cilk Example: cholesky
+	      running on 32766 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 272.946000 ms
+
+Cilk Example: cholesky
+	      running on 32766 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 242.561000 ms
+
+Cilk Example: cholesky
+	      running on 32767 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+

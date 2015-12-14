@@ -1,0 +1,135 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 9.025000 ms
+
+Cilk Example: bucket
+	      running on 24 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.004060 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 15.346000 ms
+
+Cilk Example: bucket
+	      running on 1 processor
+
+Options: number of elements  n = 64000
+
+Running time  = 0.010325 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 11.068000 ms
+
+Cilk Example: bucket
+	      running on 2 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.005641 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 8.165000 ms
+
+Cilk Example: bucket
+	      running on 3 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.004324 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 8.234000 ms
+
+Cilk Example: bucket
+	      running on 4 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.003891 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 7.321000 ms
+
+Cilk Example: bucket
+	      running on 5 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.003009 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 7.696000 ms
+
+Cilk Example: bucket
+	      running on 6 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.003348 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 7.816000 ms
+
+Cilk Example: bucket
+	      running on 7 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.003489 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 7.259000 ms
+
+Cilk Example: bucket
+	      running on 8 processors
+
+Options: number of elements  n = 64000
+
+Running time  = 0.002724 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
