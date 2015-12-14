@@ -1,3 +1,144 @@
-\section{usinguli}
+\section{Locking using ULI}
 
-preeti and hongli
+We implement two different locking schemes using ULIs. In the first scheme, each
+core executes its own critical section while in the second scheme, server cores
+are designated per lock to execute the critical section protected by the lock on
+behalf of other cores.
+
+\subsection{Locking scheme 1}
+
+Since interrupts are sent and received on cores, the core id is an important
+parameter in this scheme. A lock structure is associated with an owner which is
+the id of the core owning the lock currently. Every other core which requests
+the lock will be put on an implicit queue of waiters in the order of their
+requests. It is an implicit queue due to the following design.
+
+When a core wants a lock, it sends an interrupt to the owner. The owner assigns
+this core as its waiter. More importantly it hands over the ownership of the
+lock to this waiter. It is important to note that, handing over ownership is not
+equivalent to handing over control of the critical section. This happens only
+when the old owner releases the lock and 'triggers' its waiter. When a second
+core wants the lock it sends an interrupt to the new owner and the process is
+repeated as above. One can therefore see that there is a queue of waiters being
+formed with the ownership being passed on to the tail of the queue. This ensures
+fairness of the locking scheme. Figure 1 displays the code for this scheme. Each
+of the above steps is explained in detail below with the help of Figure 1.
+
+\subsubsection{Acquiring the lock}
+
+The function mylock() is called by the cores wanting to enter the critical
+section. Each core tries to set the ownership of the lock if it is not yet owned
+by any other core and checks to see if it indeed got the lock. A barrier in
+between these two steps ensures that every core sees a consistent value of the
+lock owner at the end of the check. If a core wins the race to the ownership of
+the lock it can continue into the critical section, else it has to convey to the
+owner that it is waiting on the lock. It is important to note that the lock can
+get released anytime during this entire process. In this case the core tries to
+take the lock again.
+
+\subsubsection{Sending ULI}
+
+If a core fails to get a lock, it sends an interrupt to the owner of the lock
+through the SENDI-Send Interrupt instruction, by passing a parameter containing
+its id, pointer to the lock in question and the handler to be invoked by the
+recipient of the interrupt. All of this is packaged into a message data
+structure. One can see that our design allows every inter-processor ULI to be
+associated with its own handler.  The core then spins on a per-cpu variable
+which gets triggered when the lock is released. This ensures that every core
+spins on its own cacheline thereby preventing cache contention which is a
+primary source of performance degradation in many locking schemes.
+
+\subsubsection{Handling ULI}
+
+The function addme() is the handler that gets invoked on a SENDI. If the core
+that received the interrupt is indeed the owner, it designates the sender of the
+interrupt as the lock owner, but does not trigger the variable that the sender
+is waiting on. This is so that any further requests for the lock is passed on to
+the next waiter in the queue to maintain fairness. However, if the receiver of
+the interrupt is not the lock owner, it sends an interrupt to the lock owner by
+forwarding it the same message that it received. It is possible that the lock is
+released between the time that the interrupt is sent and it is received. In this
+case, steps similar to the one in mylock() is repeated, except, on the behalf of
+the waiter. Throughout the handling, interrupts need to be disabled just as in
+normal interrupt handling to avoid race conditions. This is done by the
+instructions DUI-Disable ULI, EUI-Enable ULI
+
+\subsubsection{Releasing the lock}
+
+When the owner of the lock releases the lock in myunlock(), it checks to see if
+it has pending waiters and sets the percpu parameter that the waiter is spinning
+on. Otherwise it can reset the lock owner. Here too, since the lock->waiter\_id
+and its percpu trigger are being manipulated, it is required to disable
+interrupts throughout this function. We do not want the check on the waiter\_id
+and the set on the trigger to happen on two different cores as a consequence of
+receiving interrupts.
+
+DUI, EUI and SENDI are the instructions that should be implemented by a system
+with support for user level interrupts. Further ahead, we show how we emulate
+these on baremetal. The section on simulation explains how such a system was
+designed on Gem5.
+
+\subsubsection{Emulating SENDI, DUI, EUI}
+
+Figure 2 shows the code for emulating these instructions on baremetal. Each time
+an interrupt is sent, the message packet is queued on a percpu linked list. When
+an interrupt is received, the core services each message packet from this linked
+list. Disabling interrupts sets a percpu interrupt flag and EUI clears the flag.
+We have designated a flag for ULIs with each bit intending to represent a
+specific type of ULI.  In this case, we designate the lowermost bit as the
+interprocessor ULI which gets set and cleared. These flags are essential for
+emulating receiving of interrupts which is explained in the following section.
+
+\subsubsection{POLL}
+
+We emulate delivery of interrupt by interleaving POLL in between the code. A
+call to POLL checks if the interrupt flag described above is enabled and if so
+invokes i\_handler() shown in Figure 2, which dequeues the messages from the list
+created by SENDI and handles them.  It is at this point that the handler
+embedded within the message is invoked as described in Section 4.3.
+
+\subsubsection{Limitations}
+
+Every thread must have a 1-1 mapping with a core in the system. This is because
+the scheme associates a lock owner, waiter and trigger parameters with a cpu id.
+If a waiter thread is scheduled on another core, the trigger may be set on the
+core that it previously ran on. If a lock owner thread is scheduled on another
+core, all interrupts from waiters may go to a different core. This is the case
+even when multiple threads are scheduled on the same core. We can overcome this
+by transforming the design from a per-cpu to a per-process one. However, this is
+not the focus of this paper.
+
+\subsection{Locking scheme 2}
+
+This scheme is inspired by the Remote Core Locking Mechanism a.k.a RCL lock
+whose aim is to reduce lock contention by designating a server core to handle
+critical sections on the behalf of other cores. This also helps improve locality
+for the critical section since a dedicated core is in charge of executing
+critical sections. 
+
+\subsubsection{RCL lock overview}
+
+The critical sections are converted into function calls so as to be executed on
+the server core as remote procedure calls. Similar to a function, they are
+associated with input parameters and return values. Every client core inserts
+the address of the function to be executed, the input parameters in an array and
+waits for the server core to reset the address of the function to NULL. The
+array is aligned such that each entry falls into a percpu cacheline. The server
+core iterates through the array and executes a function at a time and each time
+it sets the address of the function in the slot to NULL which tells the client
+that it has executed the critical section.
+
+This means that the server core is busy iterating through this array all the
+time without being able to do any other useful work. ULIs can help avoid this
+problem as is described in the next section.
+
+\subsubsection{Using ULIs to implement RCL locks}
+
+Each time a client inserts a function to be executed on the server it can send a
+ULI to the server core by passing a message containing its core id. The server
+services the interrupt by executing the function in the slot equal to the core
+id that was passed by the client. This ensures that the server can continue to
+do useful work while it services the clients. We can in fact now dedicate one
+lock per core and distribute the traffic because the server is capable of
+handling work besides just servicing the remote critical sections. This design
+can be used in any locking scheme that uses the client server model of locking.
