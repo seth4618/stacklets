@@ -45,6 +45,8 @@ void poll();
 int get_myid(void);
 void init_uli(int ncpus);
 int get_nr_cpus(void);
+
+void setULIdebugLevel(int x);
 #endif
 
 #endif
