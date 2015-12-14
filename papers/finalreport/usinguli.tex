@@ -5,6 +5,18 @@ core executes its own critical section while in the second scheme, server cores
 are designated per lock to execute the critical section protected by the lock on
 behalf of other cores.
 
+\begin{figure}
+\begin{code}
+//here is some c code
+main() 
+{
+  // this is a stmt
+  a = foo(1, 2);
+}
+\end{code}
+\caption{This is a figure about locking\label{fig-locking}}
+\end{figure}
+
 \subsection{Locking scheme 1}
 
 Since interrupts are sent and received on cores, the core id is an important
@@ -21,7 +33,7 @@ when the old owner releases the lock and 'triggers' its waiter. When a second
 core wants the lock it sends an interrupt to the new owner and the process is
 repeated as above. One can therefore see that there is a queue of waiters being
 formed with the ownership being passed on to the tail of the queue. This ensures
-fairness of the locking scheme. Figure 1 displays the code for this scheme. Each
+fairness of the locking scheme. Figure~\ref{fig-locking} displays the code for this scheme. Each
 of the above steps is explained in detail below with the help of Figure 1.
 
 \subsubsection{Acquiring the lock}
