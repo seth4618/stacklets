@@ -36,13 +36,16 @@ void releaseSeed(Seed* seed, int tid);
 Seed* peekSeed(int tid);
 
 // release lock on tid's seedStack
-void seedStackUnlock(int tid);
+void _seedStackUnlock(int tid, int ln);
 
 // grab lock on tid's seedStack
-void seedStackLock(int tid);
+void _seedStackLock(int tid, int ln);
 
 // check top of a seedstack.  If there is something there return it.  No locking.
 Seed* checkSeedQue(int tid);
+
+#define seedStackLock(tid)	_seedStackLock(tid, __LINE__)
+#define seedStackUnlock(tid)	_seedStackUnlock(tid, __LINE__)
 
 // Local Variables:
 // mode: c           
