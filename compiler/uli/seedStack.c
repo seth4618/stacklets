@@ -36,11 +36,11 @@ seedStackInit(int numThreads)
 
 // release lock on tid's seedStack
 void 
-seedStackUnlock(int tid)
+_seedStackUnlock(int tid, int line)
 {
 #ifdef ULI
-    myassert(tid == threadId, "How can I EUI thread:%d when I am on proc:%d\n", tid, threadId);
-    myeui(1);
+    myassert(tid == threadId, "How can I EUI thread:%d when I am on proc:%d @%d\n", tid, threadId, line);
+    myeui(line);
 #else
     mySpinUnlock(seedStackLocks+tid);
 #endif
@@ -48,11 +48,11 @@ seedStackUnlock(int tid)
 
 // grab lock on tid's seedStack
 void 
-seedStackLock(int tid)
+_seedStackLock(int tid, int line)
 {
 #ifdef ULI
-    myassert(tid == threadId, "How can I DUI thread:%d when I am on proc:%d\n", tid, threadId);
-    mydui(1);
+    myassert(tid == threadId, "How can I DUI thread:%d when I am on proc:%d @%d\n", tid, threadId, line);
+    mydui(line);
 #else
     mySpinLock(seedStackLocks+tid);
 #endif
