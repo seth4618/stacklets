@@ -222,7 +222,7 @@ remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     fmsg->parentSP = parentSP;
     myeui(23);
     SENDI((void*)fmsg, dest);
-    RETULI();
+    myretuli();
 }
 #endif
 
@@ -437,6 +437,7 @@ stealHandler(StealReqMsg* sysmsg)
 	SENDI((void*)msg, src);
 	RETULI();
     }
+    setupULIret();
     // yes, I have work.  Interrupts are off so I know it is still there
     void* adr = seed->adr;
     void* sp = seed->sp;
