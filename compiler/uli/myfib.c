@@ -265,6 +265,7 @@ startfib(int n, int numthreads)
 
     threadId = (long)0; // main thread's id is 0
     systemStack = systemStackInit();
+    initMsgs(0);
 
 #ifdef BENCHMARK
     gettimeofday(&startTimeAfterInit, NULL);
