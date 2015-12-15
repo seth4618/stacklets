@@ -224,6 +224,10 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 void *thread(void *arg)
 {
   threadId = (long)arg;
+#if defined(ULI)
+  INIT_ULI(0);
+#endif
+
   systemStack = systemStackInit();
   initThread();
   suspend();
@@ -250,6 +254,11 @@ startfib(int n, int numthreads)
     gettimeofday(&startTime, NULL);
 #endif
 
+    threadId = (long)0; // main thread's id is 0
+#if defined(ULI)
+    INIT_ULI(0);
+#endif
+    
     stackletInit(numthreads);
     createPthreads(numthreads);
 
@@ -263,7 +272,6 @@ startfib(int n, int numthreads)
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
 
-    threadId = (long)0; // main thread's id is 0
     systemStack = systemStackInit();
     initMsgs(0);
 
