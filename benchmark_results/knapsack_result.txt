@@ -1,0 +1,153 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 405.741000 ms
+
+Cilk Example: knapsack
+	      running on 24 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 0.402585 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 5.777971 s
+
+Cilk Example: knapsack
+	      running on 1 processor
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 5.777088 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 2.994762 s
+
+Cilk Example: knapsack
+	      running on 2 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 2.993912 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 2.087970 s
+
+Cilk Example: knapsack
+	      running on 3 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 2.086789 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 1.616291 s
+
+Cilk Example: knapsack
+	      running on 4 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 1.615257 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 1.267735 s
+
+Cilk Example: knapsack
+	      running on 5 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 1.266365 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 1.007227 s
+
+Cilk Example: knapsack
+	      running on 6 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 1.005828 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 924.350000 ms
+
+Cilk Example: knapsack
+	      running on 7 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 0.923160 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 824.559000 ms
+
+Cilk Example: knapsack
+	      running on 8 processors
+
+options: problem-file = knapsack-example2.input
+
+Best value is 5698
+
+Running time  = 0.823507 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+

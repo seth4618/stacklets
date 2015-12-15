@@ -1,0 +1,54 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 4.893575 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 2.107775 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 1.509451 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 1.223042 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 1.712186 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 3.055650 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 3.410507 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 3.618724 s
+OK
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 4.064147 s
+OK

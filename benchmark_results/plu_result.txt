@@ -1,0 +1,135 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 828.491000 ms
+
+Cilk Example: plu
+              running on 24 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.783503 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 1.651747 s
+
+Cilk Example: plu
+              running on 1 processor
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 1.614980 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 980.632000 ms
+
+Cilk Example: plu
+              running on 2 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.943782 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 703.432000 ms
+
+Cilk Example: plu
+              running on 3 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.665812 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 610.643000 ms
+
+Cilk Example: plu
+              running on 4 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.572096 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 639.175000 ms
+
+Cilk Example: plu
+              running on 5 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.599984 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 507.928000 ms
+
+Cilk Example: plu
+              running on 6 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.468601 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 535.804000 ms
+
+Cilk Example: plu
+              running on 7 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.490417 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 514.523000 ms
+
+Cilk Example: plu
+              running on 8 processors
+
+Options: (n x n matrix) n = 1024
+
+Running time  = 0.468062 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
