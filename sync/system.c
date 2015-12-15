@@ -4,6 +4,10 @@
 #include "pthread.h"
 #include "spinlock.h"
 #include "assert.h"
+#include "myassert.h"
+
+extern __thread int threadId;
+void dprintLine(char* fmt, ...);
 
 struct mystruct {
     int my_id;  // Per-cpu id
@@ -25,15 +29,18 @@ static int put_myid(long pid)
     for (i = 0; i < ncpus; i++) {
         if (pcpu[i].pid == -1) {
             pcpu[i].pid = pid;
+	    dprintLine("Installing %p as %d\n", pid, i);
             return i;
         }
     }
+    myassert(0, "Failed to find place to put cpuId for %p\n", pid);
     return -1;
 }
 
 //Assert if put_myid() could not find you a slot
 //Ideally each pthread must be associated with  cpu
-int get_myid()
+int 
+get_myid(void)
 {
     int i, ncpus;
     pthread_t pid;
@@ -44,8 +51,7 @@ int get_myid()
 
     spinlock_lock(&sl);
     for (i = 0; i < ncpus; i++) {
-        if (pcpu[i].pid == pid)
-            goto ret;
+	if (pcpu[i].pid == pid) goto ret;
     }
 
     // First time caller
@@ -56,7 +62,8 @@ int get_myid()
         assert(0);
     }
 
-ret:
+ ret:
+    myassert(i == threadId, "get_myid returning wrong id:%d, threadId:%d, PID:%p\n", i, threadId, pid);
     spinlock_unlock(&sl);
     return i;
 }
@@ -66,12 +73,18 @@ void init_pcpu_ids(int ncpus)
     int i;
 
     pcpu = calloc(ncpus, sizeof(mystruct_t));
-    if (!pcpu) {
-        fprintf(stderr, "Cannot allocate memory to pcpu ids\n");
-        exit(1);
-    }
+    myassert(pcpu != NULL, "Cannot allocate memory to pcpu ids\n");
+
     for (i = 0; i < ncpus; i++) {
         pcpu[i].my_id = i;
         pcpu[i].pid = -1;
     }
+    dprintLine("Inited pcpu structure\n");
 }
+
+
+
+// Local Variables:
+// mode: c           
+// c-basic-offset: 4
+// End:
