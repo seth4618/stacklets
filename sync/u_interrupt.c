@@ -13,6 +13,7 @@ static queue** msg_bufs;
 void dprintLine(char* fmt, ...);
 static int uliDebug = 0;
 extern __thread int threadId;
+__thread int internalThreadId;
 
 void
 setULIdebugLevel(int x)
@@ -51,14 +52,14 @@ init_uint(void)
 /* flag: interrupt flag */
 void dui(int flag) {
     int core_idx = GETMYID();
-    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n");
+    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n", core_idx, threadId);
 
 	flags[core_idx] |= flag;
 }
 
 void eui(int flag) {
     int core_idx = GETMYID();
-    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n");
+    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n", core_idx, threadId);
 
 	flags[core_idx] &= flag;   // clear flag
 	POLL();
@@ -69,6 +70,8 @@ sendI(message *msg, int target)
 {
     if (uliDebug > 0) {
 	dprintLine("sendMsg->%d: buffer:%p inlet:%p(%p)\n", target, msg, msg->callback, msg->p);
+	if (target == threadId)
+	    dprintLine("self send: %d\n", target);
     }
     enqueue(msg_bufs[target], msg); 
 }
@@ -76,13 +79,14 @@ sendI(message *msg, int target)
 static void 
 i_handler(int core_idx) 
 {
-    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n");
+    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n", core_idx, threadId);
     queue *q = msg_bufs[core_idx];
     while(!is_empty(q)) {
 	message *msg = dequeue(q);
 	callback_t c = msg -> callback;
 	if (uliDebug > 0) {
-	    dprintLine("Handling: %p(%p)\n", msg->callback, msg->p);
+	    dprintLine("Handling:%p with %p(%p)\n", msg, msg->callback, msg->p);
+	    dprintLine("Is this weird?\n");
 	}
 	(*c)(msg -> p);
 	free(msg);
@@ -94,7 +98,7 @@ void
 poll(void) 
 {
     int core_idx = GETMYID();
-    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n");
+    myassert(core_idx == threadId, "core_idx:%d != threadId:%d\n", core_idx, threadId);
 
     if (flags[core_idx] & SMP_INTFLAG)
 	return;
@@ -106,16 +110,25 @@ void init_uli(int ncpus)
 {
     int i;
 
-    if (ncpus > 0)
+    if (ncpus > 0) {
+	// called before any threads created
         nr_cpus = ncpus;
-
-    init_pcpu_ids(nr_cpus);
-    init_uint();
+	init_uint();
+    } else {
+	// called by each thread before they do anything else
+	internalThreadId = threadId;
+    }
 }
 
 int get_nr_cpus(void)
 {
     return nr_cpus;
+}
+
+int 
+get_myid(void)
+{
+    return internalThreadId;
 }
 
 
