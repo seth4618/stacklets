@@ -4,8 +4,8 @@ CFLAGS=-g -O1 -DBENCHMARK -DTRACKER -I. -DULI -L../../sync
 LIBS = -lpthread -luli
 OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o tracker.o myassert.o spinlock.o msgs.o
 
-fib: $(OBJ)
-	$(CC) -o $@ $^ $(CFLAGS) $(LIBS) 
+fib: $(OBJ) ../../sync/libuli.a
+	$(CC) -o $@ $(OBJ) $(CFLAGS) $(LIBS) 
 
 # pull in dependency info for *existing* .o files
 -include $(addprefix .,$(OBJ:%.o=%.d))
