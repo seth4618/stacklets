@@ -89,7 +89,6 @@ i_handler(int core_idx)
 	    dprintLine("Is this weird?\n");
 	}
 	(*c)(msg -> p);
-	free(msg);
     }
 
 }
