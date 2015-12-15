@@ -1,0 +1,162 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 31.041000 ms
+
+Cilk Example: rectmul
+	      running on 24 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 9961.121462 
+Running time  = 0.026922 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 261.034000 ms
+
+Cilk Example: rectmul
+	      running on 1 processor
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 1052.861548 
+Running time  = 0.254709 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 203.044000 ms
+
+Cilk Example: rectmul
+	      running on 2 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 1359.091983 
+Running time  = 0.197318 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 111.835000 ms
+
+Cilk Example: rectmul
+	      running on 3 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 2494.032253 
+Running time  = 0.107526 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 66.111000 ms
+
+Cilk Example: rectmul
+	      running on 4 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 4287.960090 
+Running time  = 0.062541 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 52.690000 ms
+
+Cilk Example: rectmul
+	      running on 5 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 5456.777129 
+Running time  = 0.049145 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 44.019000 ms
+
+Cilk Example: rectmul
+	      running on 6 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 6473.081947 
+Running time  = 0.041429 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 48.430000 ms
+
+Cilk Example: rectmul
+	      running on 7 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 5864.788348 
+Running time  = 0.045726 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 39.018000 ms
+
+Cilk Example: rectmul
+	      running on 8 processors
+
+Options: x = 512
+         y = 512
+         z = 512
+
+Mflops        = 7383.423144 
+Running time  = 0.036321 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+

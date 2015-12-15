@@ -1,0 +1,135 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 367.126000 ms
+
+Cilk Example: cilksort
+	      running on 24 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.048058 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 784.470000 ms
+
+Cilk Example: cilksort
+	      running on 1 processor
+
+options: number of elements = 3000000
+
+Running time  = 0.614266 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 527.883000 ms
+
+Cilk Example: cilksort
+	      running on 2 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.357475 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 385.031000 ms
+
+Cilk Example: cilksort
+	      running on 3 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.214492 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 366.687000 ms
+
+Cilk Example: cilksort
+	      running on 4 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.189543 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 335.089000 ms
+
+Cilk Example: cilksort
+	      running on 5 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.163021 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 310.015000 ms
+
+Cilk Example: cilksort
+	      running on 6 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.129925 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 299.184000 ms
+
+Cilk Example: cilksort
+	      running on 7 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.115786 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 329.441000 ms
+
+Cilk Example: cilksort
+	      running on 8 processors
+
+options: number of elements = 3000000
+
+Running time  = 0.099694 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+

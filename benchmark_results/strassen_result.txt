@@ -1,0 +1,135 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 61.015000 ms
+
+Cilk Example: strassen
+	      running on 24 processors
+
+Options: n = 512
+
+Running time  = 0.042949 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 395.918000 ms
+
+Cilk Example: strassen
+	      running on 1 processor
+
+Options: n = 512
+
+Running time  = 0.373931 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 155.331000 ms
+
+Cilk Example: strassen
+	      running on 2 processors
+
+Options: n = 512
+
+Running time  = 0.134863 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 94.898000 ms
+
+Cilk Example: strassen
+	      running on 3 processors
+
+Options: n = 512
+
+Running time  = 0.080346 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 76.430000 ms
+
+Cilk Example: strassen
+	      running on 4 processors
+
+Options: n = 512
+
+Running time  = 0.062230 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 67.141000 ms
+
+Cilk Example: strassen
+	      running on 5 processors
+
+Options: n = 512
+
+Running time  = 0.052189 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 59.054000 ms
+
+Cilk Example: strassen
+	      running on 6 processors
+
+Options: n = 512
+
+Running time  = 0.044720 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 66.344000 ms
+
+Cilk Example: strassen
+	      running on 7 processors
+
+Options: n = 512
+
+Running time  = 0.047488 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 68.560000 ms
+
+Cilk Example: strassen
+	      running on 8 processors
+
+Options: n = 512
+
+Running time  = 0.049566 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+

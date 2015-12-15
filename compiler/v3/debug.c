@@ -25,6 +25,18 @@ dprintLine(char* fmt, ...)
   va_end(ap);
 }
 
+void vdprintLine(char* fmt, ...)
+{
+  va_list ap;
+  char buffer[256];
+  sprintf(buffer, "%d:%s", threadId, fmt);
+
+  va_start(ap,fmt);
+  vfprintf(stderr, buffer, ap);
+  fflush(stderr);
+  va_end(ap);
+}
+
 // Local Variables:
 // mode: c           
 // c-basic-offset: 4

@@ -1,0 +1,135 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 39.936000 ms
+
+Cilk Example: fft
+	      running on 24 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.031041 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 365.534000 ms
+
+Cilk Example: fft
+	      running on 1 processor
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.358741 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 174.293000 ms
+
+Cilk Example: fft
+	      running on 2 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.166859 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 115.342000 ms
+
+Cilk Example: fft
+	      running on 3 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.107390 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 79.561000 ms
+
+Cilk Example: fft
+	      running on 4 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.072425 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 91.006000 ms
+
+Cilk Example: fft
+	      running on 5 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.080640 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 77.587000 ms
+
+Cilk Example: fft
+	      running on 6 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.066954 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 55.560000 ms
+
+Cilk Example: fft
+	      running on 7 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.046914 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 50.569000 ms
+
+Cilk Example: fft
+	      running on 8 processors
+
+Options:  number of elements   n = 1048576
+
+Running time  = 0.041506 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+

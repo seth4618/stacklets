@@ -1,19 +1,17 @@
 #ifndef U_INTERRUPT
 #define U_INTERRUPT
-#include "queue.h"
-#include "spinlock.h"
-#include "assert.h"
-#include "system.h"
 
-static queue* msg_bufs[NUM_CORES];
-static int flags[NUM_CORES];
+typedef void (*callback_t)(void*);
+typedef struct message_t
+{
+	callback_t callback;
+	void *p;
+}message;
 
-void init_uint();
-
-#ifdef SIM
+#ifdef SIM_ULI
 
 /*
- * The SIM flag denotes that myapp is being run on simulated hardware (which in
+ * The SIM_ULI flag denotes that myapp is being run on simulated hardware (which in
  * this case is via gem5.
  */
 #define DUI(x)  stacklet_uli_toggle(0, x)
@@ -22,8 +20,9 @@ void init_uint();
 #define POLL()  printf("polling from within gem5...\n");
 #define RETULI()  stacklet_retuli()
 #define SETUPULI(x) stacklet_setupuli(x)
-#define GETMYID stacklet_getcpuid()
-
+#define GETMYID() stacklet_getcpuid()
+#define INIT_ULI(x)
+#define GET_NR_CPUS()   stacklet_nrcpus()
 #else
 
 /*
@@ -33,17 +32,21 @@ void init_uint();
 #define EUI(x) 	eui(x)
 #define SENDI(x, y) sendI(x, y)
 #define POLL() poll()
-#define RETULI()  return
-#define SETUPULI(x) return
-#define GETMYID get_myid()
-#endif
+#define RETULI()
+#define SETUPULI(x)
+#define GETMYID() get_myid()
+#define INIT_ULI(x) init_uli(x)
+#define GET_NR_CPUS()   get_nr_cpus()
 
 void dui(int flag);
 void eui(int flag);
-
 void sendI(message *msg, int target);
-
-void i_handler(int core_idx);
 void poll();
+int get_myid(void);
+void init_uli(int ncpus);
+int get_nr_cpus(void);
+#endif
+
+
 
 #endif

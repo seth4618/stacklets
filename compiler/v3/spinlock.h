@@ -7,12 +7,20 @@
 
 #define USING_PTHREADS 1
 
+extern pthread_mutexattr_t pthread_attr;
+#define PTHREAD_LOCK_TYPE PTHREAD_MUTEX_ERRORCHECK
+
 #if defined(USING_PTHREADS) && (USING_PTHREADS == 1)
-# define mySpinInitLock pthread_mutex_init
-# define mySpinLock pthread_mutex_lock
-# define mySpinUnlock pthread_mutex_unlock
+
+void mySpinInitLock(pthread_mutex_t *mutex);
+void mySpinLock(pthread_mutex_t *mutex);
+void mySpinUnlock(pthread_mutex_t *mutex);
+# define SpinLockType pthread_mutex_t
+
 #else
+
  not done yet
+
 #endif
 
 

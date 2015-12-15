@@ -11,6 +11,11 @@ typedef struct Seed {
     int id;
 } Seed;
 
+typedef struct SeedQueue {
+    struct Seed* front;
+    struct Seed* back;
+} SeedQueue;
+
 // must be called by MAIN thread (AND ONLY MAIN THREAD)
 void seedStackInit(int numThreads);
 
@@ -21,7 +26,7 @@ Seed* initSeed(void* adr, void* sp);
 void pushSeed(Seed* seed, int tid, int lock);
 
 // pop top seed from tid's stack.  if unlock==1, release lock afterwards
-void popSeed(int tid, int unlock, int pop);
+//void popSeed(int tid, int unlock);
 
 void releaseSeed(Seed* seed, int tid);
 

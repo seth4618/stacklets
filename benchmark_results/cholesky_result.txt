@@ -1,0 +1,198 @@
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 24 processors: 587.158000 ms
+
+Cilk Example: cholesky
+	      running on 24 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.356402 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 1 processor: 3.471444 s
+
+Cilk Example: cholesky
+	      running on 1 processor
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 1.714143 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 2 processors: 2.025493 s
+
+Cilk Example: cholesky
+	      running on 2 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 1.120811 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 3 processors: 1.383332 s
+
+Cilk Example: cholesky
+	      running on 3 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.755644 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 4 processors: 1.085684 s
+
+Cilk Example: cholesky
+	      running on 4 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.579360 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 5 processors: 810.724000 ms
+
+Cilk Example: cholesky
+	      running on 5 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.412881 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 6 processors: 680.591000 ms
+
+Cilk Example: cholesky
+	      running on 6 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.346203 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 7 processors: 637.786000 ms
+
+Cilk Example: cholesky
+	      running on 7 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.329657 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
+
+
+RUNTIME SYSTEM STATISTICS:
+
+Wall-clock running time on 8 processors: 565.124000 ms
+
+Cilk Example: cholesky
+	      running on 8 processors
+
+Error: 0.000000
+
+Options: original size     = 1000
+         original nonzeros = 10000
+         input nonzeros    = 10024
+         input blocks      = 8136
+         output nonzeros   = 408972
+         output blocks     = 30323
+
+Running time  = 0.301215 s
+Work          = 0.000000 s
+Critical path = 0.000000 s
+
