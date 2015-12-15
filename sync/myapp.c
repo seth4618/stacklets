@@ -39,7 +39,6 @@ void * increment_counter(void *arg)
         POLL();
         myunlock(&L);
         POLL();
-        sleep(interval);
     }
     POLL();
     sleep(2);   // Sleep to give time for other threads to send messages

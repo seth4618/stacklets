@@ -49,11 +49,10 @@ void mylock(struct lock *L)
 
     if (L->owner_id == -1)
 retry:
-        L->owner_id = my_id;
+        __sync_val_compare_and_swap(&L->owner_id, -1, my_id);
 
-    pthread_mutex_lock(&l_mutex);
-    pthread_mutex_unlock(&l_mutex);
 
+    __sync_synchronize();
     if ((L->owner_id != my_id)) {
         if (L->owner_id == -1) { // It just got freed
             goto retry;
@@ -119,12 +118,9 @@ static void addme(void *p)
 retry:
     if (L->owner_id != my_id) {
         if (L->owner_id == -1) {
-            L->owner_id = ask_id;
+            __sync_val_compare_and_swap(&L->owner_id, -1, ask_id);
 
-            //fence();
-            pthread_mutex_lock(&l_mutex);
-            pthread_mutex_unlock(&l_mutex);
-
+            __sync_synchronize();
 
             if (L->owner_id != ask_id) {
                 if (msg == NULL)
