@@ -738,7 +738,7 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
     }
 }
 
-void
+int
 X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
 {
     assert(checkInterrupts(tc));
@@ -765,12 +765,12 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
               /*
                * CR3 is matching. Now check if in kernel mode.
                */
-              uint64_t cs = tc->readMiscReg(X86ISA::MISCREG_CS);
+              uint64_t cs = tc->readMiscReg(MISCREG_CS);
               if(cs == 0x10) {
-                return;
+                return -1;
               }
             } else {
-              return;
+              return -1;
             }
 
             DPRINTF(LocalApic, "ULI sent to core.\n");
@@ -789,6 +789,7 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
         clearRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, IRRV);
         updateIRRV();
     }
+    return 0;
 }
 
 void
