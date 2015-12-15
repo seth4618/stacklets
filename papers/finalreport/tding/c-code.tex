@@ -1,0 +1,292 @@
+%
+% Copyright (c) 1991 by ucb
+%
+% Permission to use, copy, modify, and distribute this file
+% in any form (electronic, hardcopy, etc.) for any purpose is
+% hereby DENIED without express permission of author.
+%
+% Author:               
+% Version:              84
+% Creation Date:        Fri Apr  2 02:40:10 1993
+% Filename:             c-code.tex
+% History:
+%       SCG     2       Fri Apr  2 02:40:16 1993
+%               made ` and ' really act liek { and } in beginC & endC
+%               added progref, program enviornment, fixed blank lines
+%               in beginC/endC etc.
+%
+
+% ----------------------------------------------------------------
+% CODE FONT text (e.g. {\cf x := 0}).
+% \cf is like \tt, but small and declares underscore to be
+% an ordinary character.
+%\renewcommand{\cf}{\small\tt\catcode`\_=12\catcode`\%=12\catcode`\~=12{}}
+
+% \ttbraces makes \{ and \} generate brace characters.  Use in \tt font.
+\def\ttbraces{\def\{{\relax\char`\{}\def\}{\relax\char`\}}}
+
+% ----------------------------------------------------------------
+% EXAMPLE environment taken from LAKTEX, but with singlespacing and
+% indentation.
+\newdimen\exampleindent
+\exampleindent\leftmargini
+\let\oldexample\example
+%\def\example{\oldexample\singlespacing\leftskip\exampleindent}
+\def\example{\oldexample\leftskip\exampleindent}
+
+%\examplepenalty=10000
+
+% ----------------------------------------------------------------
+% CEXAMPLE environment, like example environment but in code font and
+% allowing { and }
+\newenvironment{cexample}{\begin{example} \cf\ttbraces}{\end{example}}
+
+\def\ttc{\cf\ttbraces}
+% ----------------------------------------------------------------
+% VERBATIM, but ...???
+%\makeatletter
+%\def\verbatim{\small\@verbatim \frenchspacing\@vobeyspaces \@xverbatim}
+%\makeatother
+
+% ----------------------------------------------------------------
+% C CODE DISPLAYS.
+% C code displays are enclosed between \beginC and \endC.
+% Most characters are taken verbatim, in typewriter font,
+% Except:
+%  Commands are still available (beginning with \)
+%    but use ` and ' instead of { and }
+%  Math mode is still available (beginning with $)
+%
+% scg - changed \topsep from 0 to .1in
+% scg - changed \leftmargin from 0 to 2.0em
+% scg - hacked so blank lines do the right thing
+
+\outer\def\beginLC{%
+  \def\par{\leavevmode\endgraf} 
+  \begin{list}{$\bullet$}{%
+    \setlength{\topsep}{0in}
+    \setlength{\parskip}{0in}
+    \setlength{\partopsep}{0in}
+    \setlength{\itemsep}{0in}
+    \setlength{\parsep}{0in}
+    \setlength{\leftmargin}{0in}
+    \setlength{\rightmargin}{0in}
+    \setlength{\itemindent}{0in}
+  }\item[]  \catcode`\{=12
+  \catcode`\}=12
+  \catcode`\&=12
+  \catcode`\#=12
+  \catcode`\%=12
+  \catcode`\~=12
+  \catcode`\_=12
+  \catcode`\^=12
+  \catcode`\~=12
+  \catcode`\!=12
+  \catcode`\'=2
+  \catcode`\`=1\obeyspaces\obeylines\footnotesize\tt}
+
+%  \catcode`\'=12
+%  \catcode`\`=12
+
+
+\outer\def\endLC{%
+  \end{list}
+  }
+
+\newlength{\minilinelen}
+\setlength{\minilinelen}{\textwidth}
+\addtolength{\minilinelen}{-6em}
+
+\outer\def\beginC{%
+\hspace{4em}\begin{minipage}[t]{\minilinelen}
+\vspace{-\abovedisplayskip}
+    \begin{list}{$\bullet$}{%
+    \setlength{\topsep}{1ex}
+    \setlength{\parskip}{0in}
+    \setlength{\partopsep}{0in}
+    \setlength{\itemsep}{0in}
+    \setlength{\parsep}{0in}
+    \setlength{\leftmargin}{4em}
+    \setlength{\rightmargin}{0in}
+    \setlength{\itemindent}{0in}
+  }\item[]  \catcode`\{=12
+  \catcode`\}=12
+  \catcode`\&=12
+  \catcode`\#=12
+  \catcode`\%=12
+  \catcode`\~=12
+  \catcode`\_=12
+  \catcode`\^=12
+  \catcode`\~=12
+  \catcode`\!=12
+  \catcode`\'=2
+  \catcode`\`=1\obeyspaces\def\par{\leavevmode\endgraf}%
+\obeylines\footnotesize\tt}
+
+%  \catcode`\'=12
+%  \catcode`\`=12
+
+
+\outer\def\endC{%
+  \end{list}
+%  \vspace{-1.5ex}
+  \end{minipage}
+  }
+
+% WHy is this here? {\obeyspaces\gdef {\ }}
+
+% ----------------------------------------------------------------
+% CODE environment for producing C code with the following capabilities
+%
+%       lines are numbered on the left, starting from 1
+%       \cs will be recognized by tex as the command \cs
+%               the active chars {} are replaced by `'
+%       \llabel{foo} will have \ref{foo} produce a reference to the line #
+%       \linelabel{foo} is short for \llabel{line-foo} and can be referenced
+%       with \lref{foo}.  (see also \proglref, \lineref}
+%       tabs will generate an error, so replace tabs with spaces.
+%
+%       If you want centering and such, put it in a minipage of 0in width
+%
+%       This is not really a verbatim environment.  The heart of this
+%       is a tabbing enviroment, so \=. \+, etc % should be used with 
+%       care. (but \' and \` produce ' and ` respectively
+%
+%       example use:  
+%       \begin{code} 
+%       foo()
+%       {
+%           int a_b = 1 % 2;    \linelabel{decl}
+%       }
+%       \end{code}
+%       In the above text, \lineref{decl} declares the variable {\cf a_b}.
+%
+%       KNOWN BUG: '#' can not be the first character!
+%
+\makeatletter
+
+%
+% define the length of the numbers on the left
+%
+\newlength{\codenumwidth}
+\setlength{\codenumwidth}{3em}
+
+%
+% define the into and outof verbatim character codes
+%
+\def\my@verb{\catcode`\{=12
+  \catcode`\}=12
+  \catcode`\&=12
+  \catcode`\#=12
+  \catcode`\%=12
+  \catcode`\~=12
+  \catcode`\_=12
+  \catcode`\^=12
+  \catcode`\~=12
+  \catcode`\!=12
+  \catcode`\'=2
+  \catcode`\`=1
+}
+
+\def\my@reg{\catcode`\{=1
+  \catcode`\}=2}
+
+%
+% define the counters and \refsetcount, which does the set usually
+% done in \refstepcounter (which won't work here do to how tabbing
+% defines things
+%
+\@definecounter{progline}
+\def\progline{\refstepcounter{progline}}
+
+\def\refsetcounter#1{\let\@tempa\protect
+\def\protect{\noexpand\protect\noexpand}%
+\edef\@currentlabel{\csname p@#1\endcsname\csname the#1\endcsname}%
+\let\protect\@tempa}
+
+%
+% define the line label commands and \lref
+%
+{\catcode`\{=12 \catcode`\}=12 \catcode`\'=2 \catcode`\`=1
+\gdef\llabel{#1}`\label`#1'\showdefhere`#1''
+\gdef\linelabel{#1}`\label`line-#1'\showdefhere`line-#1'''  % brace hack }
+\def\lref#1{\ref{line-#1}\showref{line-#1}}
+
+%
+% number lines and adjust the reference counter
+%
+\def\my@adv{\\ \refstepcounter{progline} \theprogline\>\refsetcounter{progline}\obeyspaces\my@verb {}}
+\def\my@advnonum{\\ \refstepcounter{progline} \>\refsetcounter{progline}\obeyspaces\my@verb {}}
+
+{\gdef\hacki{\catcode`\^^I=13}
+% turn on objeylines so we can fool around with ^^M 
+% EVERY LINE MUST END WITH A %
+%
+\makeatletter \obeylines%
+%
+% define the code environment
+%
+% touch next character -- eliminate any leading ^^M 
+\gdef\code{\@ifnextchar.\mYcode\mYcode}% 
+\gdef\coden{\@ifnextchar.\mYcoden\mYcoden}% 
+%
+% the real definition of code is here
+%
+\gdef\mYcode{%
+%redefine end so it turns {} back on.
+\let\my@end=\end\def\end{\my@reg\@ifnextchar.{\my@end}{\my@end}}%
+%remove any added space above display
+\vspace{-\abovedisplayskip}%
+%make ^^M active and set it to \mytabcr
+\obeylines\let^^M\mytabcr%
+%make us small and in tt font
+\footnotesize\tt%
+%reset line counter
+\global\setcounter{progline}{0}%
+%define \' and \` to insert ' and `
+\def\@tablab{'}\def\@tabrj{`}%
+%make tab an active char with no defintion, so it gives us an error
+\hacki%
+%put us in tabbing mode with room for the line numbers on left
+\tabbing \hbox to \codenumwidth{} \= \kill \my@adv}%
+%
+% define the end-code environment (which just takes us out of tabbing)
+\gdef\endcode{\endtabbing}%
+% this is ^^M, check for \end so last line has no \\ 
+% and otherwise do an \my@adv
+\gdef\mytabcr{\@ifnextchar\end{}{\my@adv}}
+%
+% the real definition of code (no number) is here
+%
+\gdef\mYcoden{%
+%redefine end so it turns {} back on.
+\let\my@end=\end\def\end{\my@reg\@ifnextchar.{\my@end}{\my@end}}%
+%remove any added space above display
+\vspace{-\abovedisplayskip}%
+%make ^^M active and set it to \mytabcr
+\obeylines\let^^M\mytabcrn%
+%make us small and in tt font
+\footnotesize\tt%
+%reset line counter
+\global\setcounter{progline}{0}%
+%define \' and \` to insert ' and `
+\def\@tablab{'}\def\@tabrj{`}%
+%make tab an active char with no defintion, so it gives us an error
+\hacki%
+%put us in tabbing mode with room for the line numbers on left
+\tabbing \hbox to 0em{} \= \kill \my@advnonum}%
+%
+% define the end-code environment (which just takes us out of tabbing)
+\gdef\endcoden{\endtabbing}%
+% this is ^^M, check for \end so last line has no \\ 
+% and otherwise do an \my@adv
+\gdef\mytabcrn{\@ifnextchar\end{}{\my@advnonum}}}
+\makeatother
+
+% ----------------------------------------------------------------
+% labels are references for the program environment and code
+
+\newcommand{\progref}[1]{Program~\ref{prog-#1}\showref{prog-#1}}
+\newcommand{\lineref}[1]{Line~\lref{#1}}
+\newcommand{\linerefs}[2]{Lines~\lref{#1}--\lref{#2}}
+\newcommand{\proglref}[2]{Line~\ref{prog-#1}.\lref{#2}\showref{prog-#1}}
