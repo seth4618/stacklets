@@ -6,15 +6,59 @@ are designated per lock to execute the critical section protected by the lock on
 behalf of other cores.
 
 \begin{figure}
-\begin{code}
-//here is some c code
-main() 
+\begin{code} 
+void mylock(struct lock *L)
 {
-  // this is a stmt
-  a = foo(1, 2);
+    int my_id  = GETMYID();
+    int save_id;
+    bool *my_trigger;
+    struct args arg;
+    message *msg = our_allocate();
+
+    my_trigger = get_trigger(my_id);
+
+    if (L->owner_id == -1)
+retry:
+        __sync_val_compare_and_swap(&L->owner_id, -1, my_id);
+
+    __sync_synchronize();
+
+    if ((L->owner_id != my_id)) {
+        if (L->owner_id == -1) {
+            goto retry;
+        } else {
+            arg.L = L;
+            arg.ask_id = my_id;
+            msg->callback = &addme;
+            msg->param = arg;
+            save_id = L->owner_id;
+            if (save_id == -1)
+                goto retry;
+            SENDI(msg, save_id);
+            while (!(*my_trigger));
+        }
+    }
+    *my_trigger = 0;
+}
+
+void myunlock(struct lock *L)
+{
+    bool *next_trigger;
+    int my_id = GETMYID();
+
+    DUI(1);
+    if (pcpu_lock_struct[my_id].waiter_id != -1) {
+        next_trigger = get_trigger(pcpu_lock_struct[my_id].waiter_id);
+        *next_trigger = 1;
+        pcpu_lock_struct[my_id].waiter_id = -1;
+    } else {
+        L->owner_id = -1;
+    }
+
+    EUI(0xfffe);
 }
 \end{code}
-\caption{This is a figure about locking\label{fig-locking}}
+\caption{Locking using ULI\label{fig-locking}}
 \end{figure}
 
 \subsection{Locking scheme 1}
@@ -33,8 +77,9 @@ when the old owner releases the lock and 'triggers' its waiter. When a second
 core wants the lock it sends an interrupt to the new owner and the process is
 repeated as above. One can therefore see that there is a queue of waiters being
 formed with the ownership being passed on to the tail of the queue. This ensures
-fairness of the locking scheme. Figure~\ref{fig-locking} displays the code for this scheme. Each
-of the above steps is explained in detail below with the help of Figure 1.
+fairness of the locking scheme. Figure~\ref{fig-locking} displays the lock,
+unlock primitives for this scheme. Each of the above steps is explained in
+detail below with the help of this figure.
 
 \subsubsection{Acquiring the lock}
 
@@ -60,20 +105,69 @@ which gets triggered when the lock is released. This ensures that every core
 spins on its own cacheline thereby preventing cache contention which is a
 primary source of performance degradation in many locking schemes.
 
+\begin{figure}
+\begin{code} 
+static void addme(void *p)
+{
+    int my_id = GETMYID();
+    struct args *arg = (struct args *)p;
+    struct lock *L = (struct lock *)arg->L;
+    int ask_id = (int)arg->ask_id;
+    int save_id;
+    message *msg = our_allocate();
+
+    DUI(1);
+retry:
+    if (L->owner_id != my_id) {
+        if (L->owner_id == -1) {
+            __sync_val_compare_and_swap(&L->owner_id, -1, ask_id);
+
+            __sync_synchronize();
+
+            if (L->owner_id != ask_id) {
+                msg->callback = &addme;
+                msg->param = p;
+                save_id = L->owner_id;
+                if (save_id == -1)
+                    goto retry;
+                SENDI(msg, save_id);
+            } else {
+                bool *next_trigger = get_trigger(ask_id);
+                *next_trigger = 1;
+            }
+        } else {
+            msg->callback = &addme;
+            msg->param = p;
+            save_id = L->owner_id;
+            if (save_id == -1)
+                goto retry;
+            SENDI(msg, save_id);
+        }
+    } else {
+        L->owner_id = ask_id;
+        pcpu_lock_struct[my_id].waiter_id = ask_id;
+    }
+    EUI(0xfffe);
+}
+\end{code}
+\caption{Handling ULI\label{fig-locking_cont}}
+\end{figure}
+
 \subsubsection{Handling ULI}
 
-The function addme() is the handler that gets invoked on a SENDI. If the core
-that received the interrupt is indeed the owner, it designates the sender of the
-interrupt as the lock owner, but does not trigger the variable that the sender
-is waiting on. This is so that any further requests for the lock is passed on to
-the next waiter in the queue to maintain fairness. However, if the receiver of
-the interrupt is not the lock owner, it sends an interrupt to the lock owner by
-forwarding it the same message that it received. It is possible that the lock is
-released between the time that the interrupt is sent and it is received. In this
-case, steps similar to the one in mylock() is repeated, except, on the behalf of
-the waiter. Throughout the handling, interrupts need to be disabled just as in
-normal interrupt handling to avoid race conditions. This is done by the
-instructions DUI-Disable ULI, EUI-Enable ULI
+The function addme() shown in Figure~\ref{fig-locking_cont} is the handler that
+gets invoked on a SENDI. If the core that received the interrupt is indeed the
+owner, it designates the sender of the interrupt as the lock owner, but does not
+trigger the variable that the sender is waiting on. This is so that any further
+requests for the lock is passed on to the next waiter in the queue to maintain
+fairness. However, if the receiver of the interrupt is not the lock owner, it
+sends an interrupt to the lock owner by forwarding it the same message that it
+received. It is possible that the lock is released between the time that the
+interrupt is sent and it is received. In this case, steps similar to the one in
+mylock() is repeated, except, on the behalf of the waiter. Throughout the
+handling, interrupts need to be disabled just as in normal interrupt handling
+to avoid race conditions. This is done by the instructions DUI-Disable ULI,
+EUI-Enable ULI
 
 \subsubsection{Releasing the lock}
 
@@ -92,12 +186,11 @@ designed on Gem5.
 
 \subsubsection{Emulating SENDI, DUI, EUI}
 
-Figure 2 shows the code for emulating these instructions on baremetal. Each time
-an interrupt is sent, the message packet is queued on a percpu linked list. When
-an interrupt is received, the core services each message packet from this linked
-list. Disabling interrupts sets a percpu interrupt flag and EUI clears the flag.
-We have designated a flag for ULIs with each bit intending to represent a
-specific type of ULI.  In this case, we designate the lowermost bit as the
+Each time an interrupt is sent, the message packet is queued on a percpu linked
+list. When an interrupt is received, the core services each message packet from
+this linked list. Disabling interrupts sets a percpu interrupt flag and EUI clears
+the flag. We have designated a flag for ULIs with each bit intending to represent
+a specific type of ULI.  In this case, we designate the lowermost bit as the
 interprocessor ULI which gets set and cleared. These flags are essential for
 emulating receiving of interrupts which is explained in the following section.
 
@@ -105,9 +198,9 @@ emulating receiving of interrupts which is explained in the following section.
 
 We emulate delivery of interrupt by interleaving POLL in between the code. A
 call to POLL checks if the interrupt flag described above is enabled and if so
-invokes i\_handler() shown in Figure 2, which dequeues the messages from the list
-created by SENDI and handles them.  It is at this point that the handler
-embedded within the message is invoked as described in Section 4.3.
+dequeues the messages from the list created by SENDI and handles them.  It is at
+this point that the handler embedded within the message is invoked as described
+in Section 4.3.
 
 \subsubsection{Limitations}
 
