@@ -41,8 +41,11 @@ typedef struct message_t
   void dui(int flag);
   void eui(int flag);
   void sendI(message *msg, int target);
-  void poll();
+  void poll(void);
   int get_myid(void);
+
+  // when called with ncpus>0, sets number of cpus.  
+  // when called with ncpus==0, it inits what is needed for this thread
   void init_uli(int ncpus);
   int get_nr_cpus(void);
 
