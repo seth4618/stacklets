@@ -217,6 +217,7 @@ remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     dprintLine("Forking fib(%d) to %d\n", ((Foo*)arg)->input, dest);
     ForkMsg* fmsg = (ForkMsg*)msg;
     setupMsgBuffer((BasicMessage* )fmsg, (callback_t)forkHandler);
+    fmsg->func = func;
     fmsg->arg = arg;
     fmsg->parentPC = parentPC;
     fmsg->parentSP = parentSP;
@@ -292,7 +293,7 @@ suspend()
 //    dprintLine("suspend\n");
     for (;;)
     {
-	
+	POLL();
 	// first look in my seedQ.  If there is work there, create it
 	int tryagain = 1;
 	while (tryagain && checkSeedQue(threadId)) {
@@ -339,6 +340,7 @@ suspend()
 		amStealing = 1;
 		lastReq = x;
 		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
+		msg->base.from = threadId;
 		SENDI((void*)msg, x);
 	    }
 	}
@@ -374,6 +376,9 @@ enQnewStacklet(void (*func)(void*), void* arg, void* stackletStub)
     labelhack(Resume);
     Registers saveArea;
     // put on readyQ
+
+    dprintLine("put forking stacklet on readyQ: %p will start at %p(%p)\n", stackletStub, func, arg);
+
     saveRegisters();
     void* stackPointer;
     getStackPointer(stackPointer);
@@ -381,6 +386,7 @@ enQnewStacklet(void (*func)(void*), void* arg, void* stackletStub)
 
  Resume:
     restoreRegisters();
+    dprintLine("transfering control to stacklet: %p will start at %p(%p)\n", stackletStub, func, arg);
     switchAndJmpWithArg(stackletStub, func, arg);
 }
 
@@ -443,7 +449,7 @@ stealHandler(StealReqMsg* sysmsg)
     void* sp = seed->sp;
     releaseSeed(seed, threadId);
     // I have seed information & reply buffer.  I can turn on interrupts as soon as I switch stacks
-    dprintLine("stealHandler invoked with %p going to %p with sp:%p\n", msg, adr, sp);
+    dprintLine("stealHandler invoked with %p going to %p with sp:%p -> %d\n", msg, adr, sp, msg->base.from);
     switchAndJmp(sp, adr, tid, msg);
 }
 
