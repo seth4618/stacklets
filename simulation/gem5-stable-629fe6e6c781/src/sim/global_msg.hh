@@ -33,5 +33,7 @@ global_msg *global_msg::Instance()
 */
 std::map<uint64_t, stacklet_message_t> msg_map;
 uint64_t msg_counter;
+
+std::map<uint64_t, uint64_t> cr3_map;
 #endif
 

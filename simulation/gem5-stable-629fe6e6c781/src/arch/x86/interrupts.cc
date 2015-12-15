@@ -63,8 +63,10 @@
 #include "sim/system.hh"
 #include "sim/full_system.hh"
 #include "debug/Stacklet.hh"
+//#include "sim/global_msg.hh"
 
 extern std::map<uint64_t, stacklet_message_t> msg_map;
+extern std::map<uint64_t, uint64_t> cr3_map;
 
 //#include "sim/global_msg.hh"
 
@@ -756,6 +758,21 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
             pendingStartup = false;
             startedUp = true;
         } else if (pendingULI) {
+            uint64_t cr3 = tc->readMiscReg(MISCREG_CR3);
+            std::map<uint64_t, uint64_t>::iterator it;
+            it = cr3_map.find(cr3);
+            if(it != cr3_map.end()) {
+              /*
+               * CR3 is matching. Now check if in kernel mode.
+               */
+              uint64_t cs = tc->readMiscReg(X86ISA::MISCREG_CS);
+              if(cs == 0x10) {
+                return;
+              }
+            } else {
+              return;
+            }
+
             DPRINTF(LocalApic, "ULI sent to core.\n");
             pendingULI = false;
         }

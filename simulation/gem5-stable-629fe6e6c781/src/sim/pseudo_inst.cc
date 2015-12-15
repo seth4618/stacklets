@@ -712,8 +712,6 @@ stacklet_sendi(ThreadContext *tc, Addr callback,Addr p, uint16_t dest_cpu)
   assert(interrupts);
   DPRINTF(Stacklet, "Sendi side: CR3:%0x\n",tc->readMiscReg(MISCREG_CR3));
 
-
-
   /*
   System *glob_sys = tc->getSystemPtr();
   vector<System *>::iterator i = glob_sys->systemList.begin();
@@ -745,7 +743,7 @@ stacklet_sendi(ThreadContext *tc, Addr callback,Addr p, uint16_t dest_cpu)
   //dst_interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
   
   msg_map[msg_counter] = stacklet_msg;
-
+  cr3_map[tc->readMiscReg(MISCREG_CR3)] = message.global_message_map_key;
   ApicList apics;
   apics.push_back(dest_cpu);
   TheISA::IntDevice::IntMasterPort intMasterPort = dynamic_cast<TheISA::IntDevice::IntMasterPort& >(interrupts->getMasterPort("int_master"));
