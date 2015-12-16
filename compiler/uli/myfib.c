@@ -48,10 +48,12 @@ fib(void* F)
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
 
-#ifdef DEBUG
-    void* mysp;
-    asm("movq %%rsp, %[var]" : [var] "=r" (mysp));
-    dprintLine(">fib(%d)  at %p\n", f->input, mysp);
+#if defined(DEBUG)&&0
+    if (threadId == 1) {
+	void* mysp;
+	asm("movq %%rsp, %[var]" : [var] "=r" (mysp));
+	dprintLine(">fib(%d)  at %p\n", f->input, mysp);
+    }
 #endif
 
     if (f->input <= 2)
