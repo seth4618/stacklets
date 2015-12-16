@@ -200,6 +200,20 @@ asm volatile("movq %[Asp],%%rsp \n"\
 //                 :\
 //		 : "eax")
 
+#ifdef ULI
+#define switchToSysStackAndFinishStolenWork(ss) do {\
+asm volatile("#switch from stacket sp to system sp and finish up returning from stolen work\n"\
+             "movq %%rsp,%%rdi \n"\
+             "movq %[AsystemStack],%%rsp \n"\
+             "movq %[Ass],%%rsi \n"\
+             "call finishDoneWithStolenWork \n"\
+             : \
+             : [Ass] "r" (ss),\
+               [AsystemStack] "m" (systemStack)\
+             : "rdi", "rsi");} while (0)
+
+#endif
+
 #if 1
 #define switchToSysStackAndFinishStub(buf,ss) do {\
 asm volatile("#switch from stacket sp to system sp and finish up stub\n"\
