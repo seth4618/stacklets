@@ -30,7 +30,8 @@ typedef StealReqMsg StealFailMsg;
 
 typedef struct {
     BasicMessage base;
-    // FINISH THIS
+    void* parentPC;
+    void* parentSP;
 } ReturnMsg;
 
 #define MAX_MSG_SIZE	sizeof(ForkMsg)
