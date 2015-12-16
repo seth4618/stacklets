@@ -487,7 +487,14 @@ static void
 returnInletHandler(ReturnMsg* msg)
 {
     dprintLine("returninlet:from=%d %p(%p)\n", msg->base.from, msg->parentPC, msg->parentSP);
-    myassert(0, "Not Done Yet\n");
+    void* adr = msg->parentPC;
+    void* sp = msg->parentSP;
+#if 0
+    need to free msg buffer
+    call adr with stack set to sp.
+    then on return switch back to system stack
+    then do retuli				   
+#endif
 }
 
 void
