@@ -299,7 +299,7 @@ class Interrupts : public BasicPioDevice, IntDevice
      */
     bool hasPendingUnmaskable() const { return pendingUnmaskableInt; }
     Fault getInterrupt(ThreadContext *tc);
-    void updateIntrInfo(ThreadContext *tc);
+    int updateIntrInfo(ThreadContext *tc);
 
     /*
      * Serialization.

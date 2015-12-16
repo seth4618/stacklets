@@ -40,6 +40,7 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/stacktrace.hh"
 #include "arch/x86/generated/decoder.hh"
 #include "arch/x86/faults.hh"
 #include "arch/x86/isa_traits.hh"
@@ -326,18 +327,46 @@ namespace X86ISA
               DPRINTF(Stacklet,"ASEERTING 0\n");
         assert(0);
       }
+      DPRINTF(Stacklet, "ULI PC: %0x\n",node.uli_handler_pc);
+
 
       tc->savedULIPC = (uint64_t) pc;
       tc->savedULISP = tc->readIntReg(StackPointerReg);
       tc->savedULIDI = tc->readIntReg(INTREG_RDI);
       tc->savedULIRFLAGS = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
+      DPRINTF(Stacklet,"Current pc: %0x, RSP: %0x, RDI: %0x, RFLAGS: %0x, thred_ctx:%0x\n",(uint64_t)pc,(uint64_t)(tc->savedULISP),
+                              (uint64_t)(tc->savedULIDI), (uint64_t)(tc->savedULIRFLAGS), (uint64_t)tc);
 
+      
+      DPRINTF(Stacklet,"CS:%0x,DS:%0x,ES:%0x,SS:%0x",(uint64_t)(tc->readMiscReg(MISCREG_CS)),
+                              (uint64_t)(tc->readMiscReg(MISCREG_DS)),(uint64_t)(tc->readMiscReg(MISCREG_ES)),
+                              (uint64_t)(tc->readMiscReg(MISCREG_SS)));
       /*
        * Set the PC as the PC retrieved from the queue entry.
        */
+      if(tc->readMiscReg(MISCREG_CS) == 0x10)
+      {
+        //kernel mode
+        tc->was_kernel_mode = 1;
+        tc->setMiscReg(MISCREG_CS, 0x33);
+        tc->setMiscReg(MISCREG_DS, 0);
+        tc->setMiscReg(MISCREG_ES, 0);
+
+      }
+      else
+      {
+        tc->was_kernel_mode = 0;
+      }
+
+      DPRINTF(Stacklet, "Receiving side: CR3:%0x\n",tc->readMiscReg(MISCREG_CR3));
+
       tc->setIntReg(INTREG_RDI, node.packet_address);
       tc->setIntReg(StackPointerReg, tc->ULISP);
       tc->pcState(node.uli_handler_pc);
+      //X86ISA::ProcessInfo* procInfo = new X86ISA::ProcessInfo(tc);
+      //int pid = procInfo->pid(tc->readIntReg(StackPointerReg));
+      DPRINTF(Stacklet,"Setting CS to :%0x\n",tc->readMiscReg(MISCREG_CS));
+      DPRINTF(Stacklet,"Setting RSP to: %0x, RDI to: %0x\n",(uint64_t)(tc->readIntReg(INTREG_RSP)),(uint64_t)(node.packet_address));
     }
 
 } // namespace X86ISA

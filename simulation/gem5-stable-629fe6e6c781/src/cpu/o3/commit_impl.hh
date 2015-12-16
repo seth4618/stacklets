@@ -67,6 +67,7 @@
 #include "params/DerivO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
+//#include "sim/global_msg.hh"
 
 using namespace std;
 
@@ -983,8 +984,32 @@ DefaultCommit<Impl>::commitInsts()
     while (num_committed < commitWidth) {
         // Check for any interrupt that we've already squashed for
         // and start processing it.
-        if (interrupt != NoFault)
-            handleInterrupt();
+        if (interrupt != NoFault) {
+          /*
+           * Check if interrupt is a ULI. If so, check for CR3 of ThreadContext
+           * and its CS to determine if it is kernel mode. If CR3 is different or
+           * if CS says it is in kernel mode, don't handle interrupt.
+           */
+#if 0
+          if(std::dynamic_pointer_cast<X86ISA::ULI *>(interrupt) != NULL) {
+            uint64_t cr3 = cpu->threadContexts[0]->readMiscReg(X86ISA::MISCREG_CR3);
+            std::map<uint64_t, uint64_t>::iterator it;
+            it = cr3_map.find(cr3);
+            if(it != cr3_map.end()) {
+              /*
+               * CR3 is matching. Now check if in kernel mode.
+               */
+              uint64_t cs = cpu->threadContexts[0]->readMiscReg(X86ISA::MISCREG_CS);
+              if(cs == 0x10) {
+                continue;
+              }
+            } else {
+              continue;
+            }
+          }
+#endif
+          handleInterrupt();
+        }
 
         ThreadID commit_thread = getCommittingThread();
 

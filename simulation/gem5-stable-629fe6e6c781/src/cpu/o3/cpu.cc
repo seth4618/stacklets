@@ -949,10 +949,10 @@ FullO3CPU<Impl>::processInterrupts(const Fault &interrupt)
     // @todo: Allow other threads to handle interrupts.
 
     assert(interrupt != NoFault);
-    this->interrupts->updateIntrInfo(this->threadContexts[0]);
-
-    DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
-    this->trap(interrupt, 0, nullptr);
+    if(this->interrupts->updateIntrInfo(this->threadContexts[0]) != -1) {
+      DPRINTF(O3CPU, "Interrupt %s being handled\n", interrupt->name());
+      this->trap(interrupt, 0, nullptr);
+    }
 }
 
 template <class Impl>

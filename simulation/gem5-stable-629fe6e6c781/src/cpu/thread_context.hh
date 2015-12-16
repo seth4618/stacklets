@@ -123,6 +123,7 @@ class ThreadContext
     uint64_t savedULIPC;
     uint64_t savedULISP;
     uint64_t savedULIDI;
+    uint64_t was_kernel_mode;
     Addr ULISP;
     X86ISA::RFLAGS savedULIRFLAGS;
 

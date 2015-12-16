@@ -49,6 +49,8 @@
 #include <string>
 #include <vector>
 
+#include "arch/x86/stacktrace.hh"
+#include "sim/global_msg.hh"
 #include "arch/kernel_stats.hh"
 #include "arch/utility.hh"
 #include "arch/vtophys.hh"
@@ -688,9 +690,9 @@ stacklet_uli_toggle(ThreadContext *tc, uint32_t enable, uint16_t mask)
    * interrupts. If enable == 1, then we enable ULI, otherwise we disable it.
    */
   if(enable) {
-    DPRINTF(Stacklet, "PseudoInst::%s called to enable ULI with mask %u\n", __func__, mask);
+    //DPRINTF(Stacklet, "PseudoInst::%s called to enable ULI with mask %u\n", __func__, mask);
   } else {
-    DPRINTF(Stacklet, "PseudoInst::%s called to disable ULI with mask %u\n", __func__, mask);
+    //DPRINTF(Stacklet, "PseudoInst::%s called to disable ULI with mask %u\n", __func__, mask);
   }
   return 0;
 }
@@ -703,23 +705,45 @@ stacklet_sendi(ThreadContext *tc, Addr callback,Addr p, uint16_t dest_cpu)
    */
   //System *sys = tc->getSystemPtr();
   DPRINTF(Stacklet, "PseudoInst::%s source CPU=%d, dest CPU=%d\n", __func__, tc->cpuId(), dest_cpu);
-
+   //X86ISA::ProcessInfo* procInfo = new X86ISA::ProcessInfo(tc);
+   //int pid = procInfo->pid(tc->readIntReg(StackPointerReg));
+  //DPRINTF(Stacklet, "Pid when sending:%d\n",pid);
   Interrupts * interrupts = dynamic_cast<Interrupts *>(tc->getCpuPtr()->getInterruptController());
   assert(interrupts);
+  DPRINTF(Stacklet, "Sendi side: CR3:%0x\n",tc->readMiscReg(MISCREG_CR3));
 
+  /*
+  System *glob_sys = tc->getSystemPtr();
+  vector<System *>::iterator i = glob_sys->systemList.begin();
+  vector<System *>::iterator end = glob_sys->systemList.end();
+  for(; i !=end; i++)
+  {
+    System *sys = *i;
+    DPRINTF(Stacklet, "Sysname: %s\n",sys->name());
+  }
+
+
+  Interrupts *dst_interrupts = dynamic_cast<Interrupts *>(glob_sys->getThreadContext(dest_cpu)->getCpuPtr()->getInterruptController());
+  assert(dst_interrupts);
+*/
+
+  
   TriggerIntMessage message = 0;
   message.deliveryMode = 3; // 3 stands for ULI
   message.vector = 0; // this will be mask eventually
-  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
-  interrupts->global_message_counter++;
-  DPRINTF(Stacklet, "Global msg map  key val: %d\n", interrupts->global_message_counter);
-  message.global_message_map_key = 52;//interrupts->global_message_counter; // position in the global messages queue
+  //dst_interrupts->global_message_counter++;
+  
+  msg_counter++;
+  
+  message.global_message_map_key = msg_counter;//interrupts->global_message_counter; // position in the global messages queue
   stacklet_message_t stacklet_msg;
   stacklet_msg.callback = callback;
   stacklet_msg.p = p; // this is assuming 64 bit architecture
   DPRINTF(Stacklet, "PseudoInst:: callback=%0x and p=%0x\n", stacklet_msg.callback, stacklet_msg.p);
-  interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
-
+  //dst_interrupts->global_message_map[message.global_message_map_key] = stacklet_msg;
+  
+  msg_map[msg_counter] = stacklet_msg;
+  cr3_map[tc->readMiscReg(MISCREG_CR3)] = message.global_message_map_key;
   ApicList apics;
   apics.push_back(dest_cpu);
   TheISA::IntDevice::IntMasterPort intMasterPort = dynamic_cast<TheISA::IntDevice::IntMasterPort& >(interrupts->getMasterPort("int_master"));
@@ -747,6 +771,15 @@ stacklet_retuli(ThreadContext *tc)
    * handler.
    */
   DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
+  DPRINTF(Stacklet,"Setting pc: %0x, RSP: %0x, RDI: %0x, RFLAGS: %0x, thread_ctx: %0x\n",(uint64_t)(tc->savedULIPC),(uint64_t)(tc->savedULISP),
+                              (uint64_t)(tc->savedULIDI), (uint64_t)(tc->savedULIRFLAGS), (uint64_t)tc);
+
+  if(tc->was_kernel_mode)
+  {
+    tc->setMiscReg(MISCREG_CS, 0x10);
+    tc->setMiscReg(MISCREG_DS, 18);
+    tc->setMiscReg(MISCREG_ES, 18);
+  }
   tc->setIntReg(INTREG_RDI, tc->savedULIDI);
   tc->setIntReg(StackPointerReg, tc->savedULISP);
   tc->setMiscReg(MISCREG_RFLAGS, tc->savedULIRFLAGS);
@@ -760,7 +793,7 @@ stacklet_getcpuid(ThreadContext *tc)
   /*
    * This instruction sends a user-level interrupt to another core.
    */
-  DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
+  //DPRINTF(Stacklet, "PseudoInst::%s\n", __func__);
   return tc->cpuId();
 }
 
@@ -772,6 +805,7 @@ stacklet_setupuli(ThreadContext *tc, Addr stackaddr)
    */
   DPRINTF(Stacklet, "PseudoInst::%s\n stack address = %0x\n", __func__, stackaddr);
   tc->ULISP = stackaddr;
+  DPRINTF(Stacklet, "Inside SETUPULI, CR3:%0x\n",tc->readMiscReg(MISCREG_CR3));
   return 0;
 }
 
