@@ -67,7 +67,7 @@ in user-space.
 \begin{table}[]
 \centering
 \caption{ULI Instructions}
-\label{uli_instructions}
+\label{tab:uli_instructions}
 \begin{tabular}{lll}
 \hline
 \textbf{Instruction} & \textbf{Opcode} & \textbf{Signature}                                                      \\ \hline
@@ -118,7 +118,7 @@ the interrupt. As of now, we are storing the state in variables that are a part
 of the currently executing thread context. The job of these variables is the
 same, i.e. save state for future restoration.
 
-\subsection{queues for ULI}\label{sec:uli_queue}
+\subsection{Queuing ULIs}\label{sec:uli_queue}
 User-level interrupts, unlike regular non-maskable interrupts, need not be
 received one at a time. Moreover, we cannot necessarily ignore an incoming
 user-level interrupt from a different core because we are servicing one at this
