@@ -1,9 +1,9 @@
 \section{Locking using ULI}
 
-We implement two different locking schemes using ULIs. In the first scheme, each
-core executes its own critical section while in the second scheme, server cores
-are designated per lock to execute the critical section protected by the lock on
-behalf of other cores.
+In this section, we explain two different locking schemes using ULIs. In the
+first scheme, each core executes its own critical section, while in the second
+scheme, server cores are designated per lock to execute the critical section
+protected by the lock on behalf of other cores.
 
 \begin{figure}
 \begin{code} 
@@ -192,7 +192,7 @@ this linked list. Disabling interrupts sets a percpu interrupt flag and EUI clea
 the flag. We have designated a flag for ULIs with each bit intending to represent
 a specific type of ULI.  In this case, we designate the lowermost bit as the
 interprocessor ULI which gets set and cleared. These flags are essential for
-emulating receiving of interrupts which is explained in the following section.
+emulating receiving of interrupts which is explained below..
 
 \subsubsection{POLL}
 
@@ -217,7 +217,7 @@ not the focus of this paper.
 
 This scheme is inspired by the Remote Core Locking Mechanism a.k.a RCL lock
 whose aim is to reduce lock contention by designating a server core to handle
-critical sections on the behalf of other cores. This also helps improve locality
+critical sections on the behalf of other cores \cite{lozi}. This also helps improve locality
 for the critical section since a dedicated core is in charge of executing
 critical sections. 
 
@@ -229,13 +229,13 @@ associated with input parameters and return values. Every client core inserts
 the address of the function to be executed, the input parameters in an array and
 waits for the server core to reset the address of the function to NULL. The
 array is aligned such that each entry falls into a percpu cacheline. The server
-core iterates through the array and executes a function at a time and each time
-it sets the address of the function in the slot to NULL which tells the client
-that it has executed the critical section.
+core iterates through the array, executes a function at a time and sets the
+address of the function in the slot to NULL, which tells the client that the
+server has executed the critical section.
 
 This means that the server core is busy iterating through this array all the
 time without being able to do any other useful work. ULIs can help avoid this
-problem as is described in the next section.
+problem as is described below.
 
 \subsubsection{Using ULIs to implement RCL locks}
 

@@ -1,6 +1,28 @@
 \section{Related Work}
 
-RELATED WORK GOES HERE.
+There has been effort in the past to move I/O interrupt handling into userspace,
+\cite{parker} as opposed to this paper which focuses on synchronous interrupts such as
+interprocessor interrupts and memory overflow in the case of stacklets. 
 
-\lipsum[2-2]
+This saves the overhead incurred due to two sources. One, context switch to
+kernel and two, cache misses incurred due to operating system interrupt handling
+routines. This is especially true in clustered systems where ethernet packets
+can arrive at a phenomenal pace on high speed network interfaces. There are
+concerns though about situations when interrupts cannot be immediately serviced
+in userspace.  This could happen if the process for which the interrupt is
+directed has to wait to be scheduled in. In such cases, interrupt handling can
+be taken over by the kernel as usual.
 
+As a part of the effort to move drivers into userspace, the Linux kernel
+community has tried in the past to handle device interrupts in userspace \cite{website:lkml}. One of
+the approaches has been for the userspace to block on a /proc interface whenever
+interrupts occur. However, the control still switches to the kernel before
+handing over interrupt handling to userspace, thereby still incurring the
+overhead of a context switch into the kernel. Another approach enables userspace
+to register for interrupt handling in the kernel. Here too, the kernel takes
+over control first on an interrupt, before handing it over to userspace.
+
+There have been efforts to handle parallelism in userspace using user level
+threading libraries so as to keep off the overhead incurred due to kernel
+interferrence. But as one can see, none of the above efforts address the issue
+of aiding parallelism through user level interrupts.
