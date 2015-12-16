@@ -48,10 +48,12 @@ fib(void* F)
     Foo* f = (Foo *)F;
     Registers saveArea; //XXX can this make sure saveArea is on the stack
 
-#ifdef DEBUG
-    void* mysp;
-    asm("movq %%rsp, %[var]" : [var] "=r" (mysp));
-    dprintLine(">fib(%d)  at %p\n", f->input, mysp);
+#if defined(DEBUG)&&0
+    if (threadId == 1) {
+	void* mysp;
+	asm("movq %%rsp, %[var]" : [var] "=r" (mysp));
+	dprintLine(">fib(%d)  at %p\n", f->input, mysp);
+    }
 #endif
 
     if (f->input <= 2)
@@ -116,6 +118,7 @@ fib(void* F)
     // stacklet ===========================
     releaseSeed(seed, ptid);  // ptid not threadId!
     seedStackUnlock(ptid);
+    checkUIMask(1);
     // ====================================
 
     fib(&b);
@@ -125,7 +128,9 @@ fib(void* F)
 
 SecondChildSteal: // We cannot make function calls here!
     // stacklet ===========================
-    restoreRegisters();
+    restoreRegistersExceptDI();
+    void* msg;
+    getMsgPtrFromDI(msg);
     firstChildReturnAdr = &&FirstChildDone;
     int volatile syncCounter = 2; // "volatile" to prevent deadcode elimination,
                                   // and also for synchronization.
@@ -133,21 +138,30 @@ SecondChildSteal: // We cannot make function calls here!
 #ifdef TRACKER
     trackingInfo[threadId]->fork++;
 #endif
+#ifdef ULI
+    remoteStackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, msg);
+    // SHOULD NEVER RETURN HERE, BUT WE ARE.  BLECH!
+    assert(0);
+#else
     stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
+#endif
     // ====================================
 
 FirstChildDone:
     // stacklet ===========================
     //dprintLine("fib(%d) has first child returned\n", f->input);
-    seedStackUnlock(ptid);
     {
+#ifdef ULI
+	int localSyncCounter = --syncCounter;
+#else
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
-        if (localSyncCounter != 0)
-        {
-            //saveRegisters(); // !!! Cannot save registers here, because the
-                               // second child may have already returned.
-            suspendStub();
-        }
+#endif
+	seedStackUnlock(ptid);
+	if (localSyncCounter != 0) {
+	    //saveRegisters(); // !!! Cannot save registers here, because the
+	    // second child may have already returned.
+	    suspendStub();
+	}
     }
     restoreRegisters();
     // ====================================
@@ -166,21 +180,34 @@ FirstChildDone:
 AllReturned:
     //    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a.output + b.output;
+#ifdef ULI
+    // assembly hack to transfer control to system stack and enQ this
+    // frame to restart at ResumeLabel and then return to inlet that
+    // called ius.
+    enQAndReturn();
+#endif
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
-                 // has already returned.
-    // stacklet ===========================
+                 // has already returned.  
+                 // in ULI model, NO function calls can be made at all!
     {
+#ifdef ULI
+	int localSyncCounter = --syncCounter;
+#else
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
-        if (localSyncCounter != 0)
-        {
-            //saveRegisters(); // same reason as above
-            suspendStub();
-        }
+#endif
+	seedStackUnlock(ptid);
+	if (localSyncCounter != 0) {
+	    //saveRegisters(); // same reason as above
+#ifdef ULI
+	    return;		/* return to calling handler */
+#else
+	    suspendStub();
+#endif
+	}
     }
     restoreRegisters();
-    // ====================================
 
 #ifdef TRACKER
     trackingInfo[threadId]->secondReturn++;
@@ -193,16 +220,18 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     mySpinUnlock(&lineReturnedLock);
 #endif
 
-    //    dprintLine("fib(%d) has second child returned\n", f->input);
     goto AllReturned;
-    f->output = a.output + b.output;
-    return;
 }
 
 void *thread(void *arg)
 {
   threadId = (long)arg;
+#if defined(ULI)
+  INIT_ULI(0);
+#endif
+
   systemStack = systemStackInit();
+  initThread();
   suspend();
   fprintf(stderr, "Got back from suspend!\n");
   assert(0);
@@ -227,6 +256,11 @@ startfib(int n, int numthreads)
     gettimeofday(&startTime, NULL);
 #endif
 
+    threadId = (long)0; // main thread's id is 0
+#if defined(ULI)
+    INIT_ULI(0);
+#endif
+    
     stackletInit(numthreads);
     createPthreads(numthreads);
 
@@ -240,8 +274,8 @@ startfib(int n, int numthreads)
     Foo* a = (Foo *)calloc(1, sizeof(Foo));
     a->input = n;
 
-    threadId = (long)0; // main thread's id is 0
     systemStack = systemStackInit();
+    initMsgs(0);
 
 #ifdef BENCHMARK
     gettimeofday(&startTimeAfterInit, NULL);
@@ -272,6 +306,11 @@ main(int argc, char** argv)
 #ifndef CLEAN
     printf("*** setup ***\n"
            "Will run fib(%d) on %d thread(s)\n\n", n, numthreads);
+#endif
+
+#if defined(ULI)
+    INIT_ULI(numthreads);
+    setULIdebugLevel(1);
 #endif
 
     int x = startfib(n, numthreads);

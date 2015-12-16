@@ -1,8 +1,18 @@
 CC=gcc
-CFLAGS=-shared -fpic -o
+CFLAGS=-shared -fpic -g
 LDLIBS=-lpthread
 
-uli.so: u_interrupt.c queue.c spinlock.c system.c atomic_xchange.S
-	$(CC) $(CFLAGS) uli.so u_interrupt.c queue.c spinlock.c system.c atomic_xchange.S
+SRCS = u_interrupt.c queue.c spinlock.c atomic_xchange.S
+OBJS = u_interrupt.o queue.o spinlock.o atomic_xchange.o
+
+all: libuli.a uli.so
+
+libuli.a:	$(OBJS)
+	ar ru $@ $^
+	ranlib $@
+
+uli.so: u_interrupt.c queue.c spinlock.c atomic_xchange.S
+	$(CC) $(CFLAGS) -o uli.so $^
 clean:
-	rm -f *.o
+	rm -f *.o *.a *.so
+

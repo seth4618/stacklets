@@ -14,39 +14,42 @@ typedef struct message_t
  * The SIM_ULI flag denotes that myapp is being run on simulated hardware (which in
  * this case is via gem5.
  */
-#define DUI(x)  stacklet_uli_toggle(0, x)
-#define EUI(x)  stacklet_uli_toggle(1, x)
-#define SENDI(x, y) stacklet_sendi(x, y)
-#define POLL()  printf("polling from within gem5...\n");
-#define RETULI()  stacklet_retuli()
-#define SETUPULI(x) stacklet_setupuli(x)
-#define GETMYID() stacklet_getcpuid()
-#define INIT_ULI(x)
-#define GET_NR_CPUS()   stacklet_nrcpus()
-#else
+# define DUI(x)  stacklet_uli_toggle(0, x)
+# define EUI(x)  stacklet_uli_toggle(1, x)
+# define SENDI(x, y) stacklet_sendi(x, y)
+# define POLL()  printf("polling from within gem5...\n");
+# define RETULI()  stacklet_retuli()
+# define SETUPULI(x) stacklet_setupuli(x)
+# define GETMYID() stacklet_getcpuid()
+# define INIT_ULI(x)
+# define GET_NR_CPUS()   stacklet_nrcpus()
 
+#else
 /*
  * The macros below are when running myapp as a regular C program.
  */
-#define DUI(x)	dui(x)
-#define EUI(x) 	eui(x)
-#define SENDI(x, y) sendI(x, y)
-#define POLL() poll()
-#define RETULI()
-#define SETUPULI(x)
-#define GETMYID() get_myid()
-#define INIT_ULI(x) init_uli(x)
-#define GET_NR_CPUS()   get_nr_cpus()
+# define DUI(x)	dui(x)
+# define EUI(x) 	eui(x)
+# define SENDI(x, y) sendI(x, y)
+# define POLL() poll()
+# define RETULI()	return
+# define SETUPULI(x)
+# define GETMYID() get_myid()
+# define INIT_ULI(x) init_uli(x)
+# define GET_NR_CPUS()   get_nr_cpus()
 
-void dui(int flag);
-void eui(int flag);
-void sendI(message *msg, int target);
-void poll();
-int get_myid(void);
-void init_uli(int ncpus);
-int get_nr_cpus(void);
+  void dui(int flag);
+  void eui(int flag);
+  void sendI(message *msg, int target);
+  void poll(void);
+  int get_myid(void);
+
+  // when called with ncpus>0, sets number of cpus.  
+  // when called with ncpus==0, it inits what is needed for this thread
+  void init_uli(int ncpus);
+  int get_nr_cpus(void);
+
+  void setULIdebugLevel(int x);
 #endif
-
-
 
 #endif
