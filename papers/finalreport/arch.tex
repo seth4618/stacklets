@@ -1,4 +1,132 @@
-\section{arch}
+\section{Architectural Modifications for User-Level Interrupts}\label{sec:arch}
+We have made a few architectural modifications in order to realize user-level
+interrupts. At the highest level we had to introduce a new interrupt type in
+addition to the existing interrupts in the X86 64-bit architecture. User-level
+interrupts in our current implementation are treated as non-maskable interrupts,
+and in essence cannot be deferred and must be handled as soon as possible.
+Interrupts are checked during the fetch phase of the out-of-order pipeline
+simulated in Gem5. If a user-level interrupt has been generated, once it has
+been propogated to the intended core, a \textit{pendingNonMaskableInt} flag
+conveys that there is a non-maskable interrupt waiting to be handled. Following
+this, the type of the non-maskable interrupt is checked. \textit{pendingULI}, a
+flag introduced by us in the code-path for handling interrupts denotes the
+existence of a user-level interrupt waiting to be handled. Using the mechanism
+described below the user-level interrupt is serviced.
 
-saurabh
+\subsection{ULI Instructions}
+The following are the new instructions that were added to X86 in Gem5 for being
+able to implement user-level interrupts. The subsections below describe the
+functionality of the instructions in detail and their exact signatures and
+opcodes can be found in Table \ref{tab:uli_instructions}.
 
+\subsubsection{TOGGLEULI}
+TOGGLEULI is used to toggle between enabling and disabling user-level
+interrupts on a given core. Rather than implement separate enable user-level
+interupts and disable user-level interrupts, we implemented one function that
+toggle's the state based on the argument passed to it.
+
+\subsubsection{SENDI}
+This instruction is the main instruction driving user-level interrupts. On
+receiving this instruction we create a message to be send using the X86
+inter-processor interrupt mechanism (described in detail in Sec
+\ref{sec:network}). SENDI sends a message atomically to the intended core. This
+means that the message sending is instantaneous and not scheduled at a later
+time. The response of the message is received in the \textit{recvResponse}
+routine. Currently we assume reliable and correct message delivery, and hence,
+ignore the response. We might need to perform differently in case the SENDI
+mechanism involves responding with a NACK.
+
+\subsubsection{RETULI}
+The RETULI instruction is executed by the user-level interrupt handler when it
+finishes executing its body, just before returning. The behavior of this
+function is similar to \textit{iret} in the traditional interrupt handling
+context. RETULI is entrusted with restoring the state of the processor to what
+it was doing before it was interrupted. This currently involves resetting the
+PC, SP and RDI to their original values before executing the handler.
+
+\subsubsection{GETCPUID}
+It is crucial for multi-core applications intending to use user-level interrupts
+to know which core they are currently running on. This is facilitated by the
+user code calling the GETCPUID function. This is a convenience function that can
+be removed if other mechanisms exist to query the core on which the current
+thread is running.
+
+\subsubsection{SETUPULI}
+Since user-level interrupts are in user land, unlike traditional kernel-level
+interrupts, they need stack space in order to execute their handler. This stack
+space has to be in user-space to correctly match the privilege level of the
+application and for other security reasons. We envision that any application
+using user-level interrupts with start with invoking SETUPULI on every core,
+passing it as argument the pointer to a sizable allocated memory chunk (in our
+example, 4KB). Since this memory chunk is malloc'd by the user, it belongs to
+the virtual address space of the application itself. This enables us to set the
+SP to this value whenever a user-level interrupt needs to be handled, making it
+save all its handler state not just in the context of the application, but also
+in user-space.
+
+\begin{table}[]
+\centering
+\caption{ULI Instructions}
+\label{uli_instructions}
+\begin{tabular}{lll}
+\hline
+\textbf{Instruction} & \textbf{Opcode} & \textbf{Signature}                                                      \\ \hline
+TOGGLEULI          & 0x55            & uint64\_t stacklet\_uli\_toggle(uint32\_t enable, uint16\_t flags)      \\
+SETUPULI             & 0x56            & uint64\_t stacklet\_setupuli(uint64\_t stackaddr)                       \\
+SENDI                & 0x57            & uint64\_t stacklet\_sendi(void *callback, void *p, uint16\_t dest\_cpu) \\
+GETCPUID             & 0x58            & uint64\_t stacklet\_getcpuid()                                          \\
+RETULI               & 0x59            & uint64\_t stacklet\_retuli()
+\end{tabular}
+\end{table}
+
+\subsection{Inter-Processor Interrupt Communication}\label{sec:network}
+The Gem5 simulator has a basic inter-processor network infrastructure in order
+to support inter-processor interrupts (IPIs). We leaverage this framework for
+sending user-level interrupts across cores as well. The infrastructure is
+essentially a message-passing interface (MPI). The sending core needs to
+construct a message to send an interrupt to a different core other than itself.
+The message was originally a 32-bit union, and for all existing purposes (other
+than user-level interrupts) was self-contained, i.e. it could hold the type of
+the interrupt that needed to be invoked on the receiving core along with the
+necessary arguments. The arguments involved in SENDI are not small enough to fit
+in a 32-bit union. We could have possibly increased the size of the message by
+several bytes by cramming the SENDI arguments in the message itself, keeping the
+current self-contained nature of messages. But, rather than making the message
+itself bulky, we chose to increase it by just 4 bytes and made it a 64-bit
+union. Along with the existing fields, we added a 32-bit attribute in the
+message called \textbf{global\_message\_map\_key}. This field is a key of a
+global hash table which maps 32-bit keys to a custom structure that holds all
+the SENDI arguments that we intended to pass to the receiving core. This
+workaround can easily be realized in real architectures by storing the arguments
+temporarily in unused registers till the interrupt was communicated to the
+receiving core, which can then copy it to its local cache regions as it sees
+fit. The receiving core, on receiving an interrupt from a different core
+inspects the message to understand the type of interrupt that it needs to
+generate. If the interrupt is a user-level interrupt, it extracts the key from
+the message and looks up the structure in the \textbf{msg\_map}, from where it
+gets the arguments as sent by the remote core. We push the received user-level
+interrupt in a queue of similar interrupts, which is decribed in more detail in
+section \ref{sec:uli_queue}.
+
+\subsection{Custom Registers}\label{sec:regs}
+As mentioned above, the state of the process currently executing on the core
+handling the user-level interrupt must be saved in order to restore it after
+having serviced the interrupt. Currently we are saving the PC, SP and RDI, but,
+we can imagine additions to this going ahead. For this purpose we would need as
+many registers as the number of registers that could get affected in handling
+the interrupt. As of now, we are storing the state in variables that are a part
+of the currently executing thread context. The job of these variables is the
+same, i.e. save state for future restoration.
+
+\subsection{queues for ULI}\label{sec:uli_queue}
+User-level interrupts, unlike regular non-maskable interrupts, need not be
+received one at a time. Moreover, we cannot necessarily ignore an incoming
+user-level interrupt from a different core because we are servicing one at this
+time. It depends on which user-level interrupts are disabled (using the
+TOGGLEULI instruction mentioned above). But, we can very well imagine
+user-level interrupts being generated for multiple applications simultaneously,
+each of which must be handled somewhere down the line. In order to facilitate
+this requirement, we have a ULI queue in Gem5. Incoming user-level interrupts,
+when detected on receiving cores, are added to a per-core ULI queue. Interrupts
+are serviced from the front of the queue, i.e. in the order that they were
+received.
