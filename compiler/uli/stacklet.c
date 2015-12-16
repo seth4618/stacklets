@@ -26,7 +26,7 @@ SpinLockType readyQLock;
 #ifdef ULI
 static void forkHandler(ForkMsg* msg);
 static void stealHandler(StealReqMsg* sysmsg);
-static void returnFromStolenWorkRoutine(ReturnMsg* msg);
+static void returnFromStolenWorkRoutine(void);
 static void setupMsgBuffer(BasicMessage* msg, callback_t handler);
 #endif
 
@@ -284,13 +284,13 @@ getSeedIfAvailableFrom(int tid)
 // The current user thread will be lost if it is not put into the readyQ before
 // calling this function. This funciton is executed in a separate system stack.
 void
-suspend()
+suspend(void)
 {
 #ifdef TRACKER
     trackingInfo[threadId]->suspend++;
 #endif
 
-//    dprintLine("suspend\n");
+    dprintLine("suspend\n");
     for (;;)
     {
 	POLL();
@@ -481,13 +481,56 @@ setupMsgBuffer(BasicMessage* msg, callback_t handler)
     msg->systemMsg.p = msg;
 }
 
+// this gets run when a child from another proc is done and wants to
+// return to it parent on this proc.
+static void
+returnInletHandler(ReturnMsg* msg)
+{
+    dprintLine("returninlet:from=%d %p(%p)\n", msg->base.from, msg->parentPC, msg->parentSP);
+    myassert(0, "Not Done Yet\n");
+}
+
+void
+finishDoneWithStolenWork(void* oldsp, Stub* stub)
+{
+    removeStacklet(threadId, stackletStub);
+    //DON'T FOR NOW free(buf);
+    suspend();
+    myassert(0, "Should never get here in finishDoneWithStolenWork\n");
+}
+
 // this handler is run on a processor that had work stolen from it.
 // The child (the sender of this message) is returning to its parent
 // (on this processor) and thus we need to do the sync.
 // free msg buffer before running return inlet
 static void 
-returnFromStolenWorkRoutine(ReturnMsg* msg)
+returnFromStolenWorkRoutine(void)
 {
+    // get stackletstub for this tacklet
+    Stub* ss;
+    getStackletStub(ss);
+    void* buf = (void*)( (
+			  // deal with some pushing of sp
+		         ((long long unsigned)ss)+RE_ALIGNMENT_FUDGE+ 	
+			 // get from stub ptr to base of memory ptr
+		         (sizeof(Stub) - STACKLET_SIZE)		
+			 // get to alignment boundary
+			 ) & (-1LL<<(STACKLET_BUF_ZEROS))	
+		       );
+    void* adjustedStub = (Stub *)((char *)buf + STACKLET_SIZE - sizeof(Stub));
+    myassert(ss == adjustedStub, "gss:%p doesn't give same address as adjusted:%p\n", ss, adjustedStub);
+
+    // send info back to invoking parent
+    dprintLine("Returning result to parent:%p(%p) on another proc: %d\n", 
+	       ss->parentPC, ss->parentSP, ss->parentProc);
+    ReturnMsg* msg = (ReturnMsg*)getMsg((callback_t)returnInletHandler);
+    msg->parentPC = ss->parentPC;
+    msg->parentSP = ss->parentSP;
+    msg->base.from = threadId;
+    SENDI((void*)msg, ss->parentProc);
+
+    // switch to system stack and go back to suspend
+    switchToSysStackAndFinishStolenWork(ss);
 }
 
 // enQ's the current frame on the readyQ.  When deQued from readyQ
