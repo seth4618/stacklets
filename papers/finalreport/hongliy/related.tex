@@ -1,0 +1,12 @@
+\section{Related Work}
+
+The concept of user level interrupt is not new. In \cite{parker}, the author discusses the overhead of traditional interrupts (signals) and compares the cache behavior of traditional interrupts and user level interrupts. As ULI will not go into kernel mode for either sending or receiving, and the instruction cache and data cache will not be contaminated during kernel mode, ULI has much better performance than traditional interrupts. 
+
+Other work \cite{jaleel} puts effort on improving TLB interrupt handling by inlining the interrupt handler into reorder buffer, which would suggest there is potential for further lowering the overhead of interrupt handling in architectural level. For example, with ULI, we can implement a lock scheme that inlines its locking and unlocking code in reorder buffer. This may drastically decrease the overhead.
+
+Another motivation for having ULI is that we can move some kernel parts which heavily depend on interrupts to user space. \cite{leslie} introduces user level device drivers, which show good performance. By having a smaller kernel, we can achieve better stability and security.
+
+Lazy thread is introduce in \cite{goldstein}. The idea is to turn every parallel call into a parallel-ready sequential call, which has almost no overhead compared to a normal function call, yet able to upgrade to a real parallel call if any core is idle and needs more work. We will show how we use ULI to implement lazy thread in chapter 5.
+
+
+

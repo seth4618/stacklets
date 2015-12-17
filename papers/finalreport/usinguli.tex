@@ -247,3 +247,52 @@ do useful work while it services the clients. We can in fact now dedicate one
 lock per core and distribute the traffic because the server is capable of
 handling work besides just servicing the remote critical sections. This design
 can be used in any locking scheme that uses the client server model of locking.
+
+\section{Lazy thread using ULI}
+
+In this section, we are going to implement lazy thread \cite{goldstein} using ULI. We will first introduce the concept of lazy thread and stacklet. Then we will explain in detail how we use ULI to implement lazy thread in the case of two parallel sequential calls followed by a join.
+
+\subsection{Lazy thread overview}
+Lazy thread is a compilation technique to reduce the burden of programmers for multicore architectures. The problem this technique tries to solve is how to reduce the overhead of excessive parallelism when the hardware cannot consume. When the programmer has a multicore machine and a problem to solve, he needs to first exploit parallelism of the problem, then he needs to decide how many threads to create and in what fashion to dispatch the parallelism. This complexity also increases the maintenance cost of the software, as the software needs to be rewrite for best performance when the underlying hardware changes. With lazy thread, the programmer can create as many parallel calls as he wants without worrying the overhead of the parallel calls.
+
+The way lazy thread works is that it turns parallel calls into normal function calls while preserve the ability of elevating a normal function call back to a parallel call. We call these special normal function calls \textbf{parallel sequential call}. That is, before a parallel sequential call gets called, if no other cores become idle and steal the work, then the parallel sequential call will become a normal function call. Otherwise the idle core will steal the work by creating a \textbf{stacklet} and execute the work.
+
+A stacklet is a piece of dynamic allocated area used as a stack. The difference between a stacklet and a normal stack is the first function in a normal stack will never return, whereas the first of a stacket will return and the program counter and stack pointer will be changed to the parent of this stacklet. Stacklet makes it possible to elevate a parallel sequential call, which is represented by a seed, into a real parallel call.
+
+As the overhead of a parallel sequential call, if being executed as a normal function call, is almost zero, and the overhead of elevating a parallel sequential call to a real parallel call is no more than traditional parallel call, lazy thread allows programmers to program in multicore environment with ease and makes software compatible even the hardware changes.
+
+Now, with the help of ULI, you will notice in the following implementation of lazy thread we do not have a single shared lock between cores. As we add more cores to computation, the lock contention problem will not occur. This gives us a extensible parallel computing framework.
+
+\subsection{Implementation of lazy thread}
+We will show how to implement lazy thread when we have two parallel calls followed by a join. Assume we have a naive fibonacci function recursively calculates its value.
+\begin{figure}
+\begin{code}
+int fib(int n) {
+    if (n <= 2) return n;
+    int a = parallel call fib(n-1);
+    int b = parallel call fib(n-2);
+    return a + b;
+}
+\end{code}
+\caption{Naive fibonacci function}
+\end{figure}
+
+This function will for sure performs badly because it is creating too many threads and the overhead of thread creation is a lot greater than the work itself. Now we can compile this code, using lazy thread compilation technique, into much more efficient code as the figure shows in a high level representation. ss* in this figure means seed stack.
+
+Now we are going to describe what would happen for each SENDI in the graph.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.6\textwidth]{../hongliy/stacklet}
+\caption{Lazy thread with ULI}
+\end{figure}
+
+\subsubsection{SENDI steal}
+At beginning, thread 1 starts executing fib(n), while thread 2 has no work to do thus it consistently checks the \textbf{seed stack}. A seed stack is a per-thread struct that stores the information (or \textbf{seed}) of the parent function frame's stack pointer and the pc of a code segment which does a piece of work, for example, here the work is to steal the seed. Thread 1 will first push the work of fib(n-2), which is the second parallel sequential call, into the seed stack. Then thread 1 will calls fib(n-1) just like a normal function call. While thread 1 is executing fib(n-1), thread 2 notice there is some work in thread 1's seed stack, so it will use SENDI to send a message to ask thread 1 to give the work to thread 2.
+
+\subsubsection{SENDI fork}
+After thread 1 receives the message from thread 2, it is going to the interrupt handler for steal. It will first pop the seed from the seed stack. It will also change the return address of fib(n-1) so thread 1 will skip executing fib(n-2). Then thread 1 will send a message to thread 2 to ask it to fork a stacklet and execute fib(n-2). After this, thread 1 resumes its work and thread 2 will start to execute fib(n-2).
+
+\subsubsection{SENDI done}
+After thread 2 finishes executing fib(n-2), it will send a message telling thread 1 the work is done. Let's assume thread 1 has already finished fib(n-1) and is currently doing something else. So thread 1 will go into interrupt handler for done. In the handler, thread 1 will put the the fact that fib(n) has been completed (fib(n-1) has been executed in thread 1 and fib(n-2) has been executed in thread 2) into a \textbf{ready queue}. Thread 1 will later check the ready queue to resume any work in there.
+

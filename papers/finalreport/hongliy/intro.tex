@@ -1,0 +1,15 @@
+\section{Introduction}
+
+The idea of user level interrupt (ULI) is simple. In an operating system kernel, we can have an interrupt caused by an exception, an I/O or a system call. The kernel has the ability to disable or enable the interrupt depending on the properties of the code it is running. For example, the kernel may need to disable the interrupt during context switch, which can be seen as a critical section. Unfortunately, we do not have interrupt in user space. So we propose adding several assembly instructions to x86 to give programmers this handy tool.
+
+In linux, the popular way a user program can "surprise" another user program is through signal. But signal has to go through kernel. It would be no good, for example, if we would like to implement a high performance locking scheme in user space using signal because of the overhead.
+
+By making a few changes to CPU architecture, we can decrease the overhead of "surprise" to more or less than a branch instruction - we just need to flush the pipeline! These added instructions would allow programmers to develop user libraries with better performance with ease.
+
+In this paper, we make several contributions:
+\begin{itemize}
+\item Design and simulate several assembly instructions to introduce user level interrupts.
+\item Showcase two use cases of ULI - two lock schemes and lazy thread implementation.
+\end{itemize}
+
+In section 2, we show some related work about ULI, multicore lock schemes and lazy thread. In section 3, we briefly introduce the related instructions. In section 4, we explain in details how we use ULI to implement two lock schemes. In section 5, we use ULI to implement lazy thread. In section 5, we show the required architectural modification to implement ULI related instructions. In section 6, we show some experiments. In section 7, we conclude this paper.
