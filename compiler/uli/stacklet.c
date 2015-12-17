@@ -427,6 +427,7 @@ static __thread int stealFails;
 static void 
 noWorkHandler(StealFailMsg* msg)
 {
+    dprintLine("Handler - no work handler\n");
     amStealing = 0;
     freeMsgBuffer((BasicMessage*)msg);
     RETULI();
@@ -500,7 +501,7 @@ static void
 returnInletHandler(ReturnMsg* msg)
 {
     dprintLine("returninlet:from=%d %p(%p)\n", msg->base.from, msg->parentPC, msg->parentSP);
-    setupULIret2();
+    //setupULIret2();
     void* adr = msg->parentPC;
     void* sp = msg->parentSP;
 
@@ -508,8 +509,12 @@ returnInletHandler(ReturnMsg* msg)
     //call adr with stack set to sp.
     //then on return switch back to system stack
     //then do retuli				   
+
+    // We need to enqueue here rather than do the return in the interrupt
+    // handler. beacuse we have suspendStub in SecondChildDone
+    enqReadyQ(msg->parentPC, msg->parentSP, NULL, threadId);
     freeMsgBuffer((BasicMessage*)msg);
-    localSwitchAndJmp(sp, adr);
+    //localSwitchAndJmp(sp, adr);
 }
 
 void

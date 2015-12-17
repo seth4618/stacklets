@@ -214,6 +214,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 #endif
     //    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a.output + b.output;
+    return;
 
 #ifdef ULI
     // assembly hack to transfer control to system stack and enQ this
@@ -221,18 +222,19 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     // called ius.
 //    enQAndReturn();
     
-    dprintLine("about to call myretuli in SecondChileDone\n");
+    //dprintLine("about to call myretuli in SecondChileDone\n");
     // stacklet ===========================
-    labelhack(AllReturned);
-    getStackPointer(stackPointer);
-    enqReadyQ(&&AllReturned, stackPointer, NULL, threadId);
-    saveRegisters();
-    myretuli();
+    //labelhack(AllReturned);
+    //getStackPointer(stackPointer);
+    //enqReadyQ(&&AllReturned, stackPointer, NULL, threadId);
+    //saveRegisters();
+    // we have to resume
+    //myretuli();
     //RETULI();
 
-AllReturned:
-    restoreRegisters();
-    dprintLine("In AllReturned\n");
+//AllReturned:
+//    restoreRegisters();
+//    dprintLine("In AllReturned\n");
     
     // ====================================
 #endif
@@ -333,7 +335,7 @@ main(int argc, char** argv)
 //#endif
 
     int x = startfib(n, numthreads);
-    myassert(x == result[n], "Unexpected Result: %d (should have been %d)\n", x, result[n]);
+    myassert(x == result[n], "Unexpected Result: %u (should have been %u)\n", x, result[n]);
 
 #ifdef BENCHMARK
     gettimeofday(&endTime, NULL);
