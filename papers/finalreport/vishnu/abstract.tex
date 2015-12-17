@@ -1,0 +1,13 @@
+\begin{abstract}
+Parallel programming has always been hard either due to lack of the inherent
+parallelism or due to the excessive overhead involved in communication and
+synchronization among the processors. In this paper we deal with the latter
+case, where we implement and evaluate a lazy thread initialization that makes
+sure to create parallel threads only when necessary. We reduce the 
+synchronization overhead by using User level interrupts thereby removing the 
+traditional User-Kernel mode switch. To this end, we implement the Stacklet
+mechanism, where the thread stacks form a cactus stack andevaluate this 
+implementation using Gem5. We evaluate our implementation using Gem5 simulator
+with Cilk benchmarks and also some micro benchmarks.
+
+\end{abstract}

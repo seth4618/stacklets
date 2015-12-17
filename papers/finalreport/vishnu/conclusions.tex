@@ -1,0 +1,12 @@
+\section{Conclusions}
+
+Ths usage of stacklets and user-level interrupts shows significant results
+that eliminates excessive parallelism. By reducing the synchronization and
+communication among the cores, we can now concentrate on exploiting the
+parallel nature of the programs. The User level interrupts mechanism shows
+that just by adding a very small number of instructions, we can reduce the
+effect of user-kernel switch for future user-level device drivers. This would
+make the debugging of user drivers much more easier as they are in the user
+mode. By just adding some insructions to the architecure,a couple of registers
+and a tiny bit of memory for stacklet handlers, the lazy thread creation with 
+user-level interrupts could open new ways of exploting parallelism.

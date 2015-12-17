@@ -1,0 +1,43 @@
+\section{Introduction}
+
+There is no denying that we need parallelism and we should try harder for 
+exploting parallelism in the modern day programs. But just by using some
+thread library on every task and protecting a shared resource with lock
+would not give parallelsim to the programs. The thread mechanism we use in
+present day programs does not really know if all the processors are busy or
+some of them are idle. They just create threads and lock the protected
+resources to have mutual exclusion. This would really be a problem when the
+programs spend most of their times in communicating among the threads, locking
+and unlocking resources. We need a way to identify the current exten of 
+parallelism in the system and create the threads only when needed, thereby
+preventing unnecessary performance drop due to the inter-core communication.
+
+In this paper, we solve this problem by using the concept called \textit{Stacklets}.
+Stacklets are just like traditional stacks along with negligible book-keeping
+information to link other stacklets. This mechanism simulates the behaviour of
+a sequential call. Each thread starts like a sequential call just like a normal
+procedure has been called. When there is a need of work for any other processor
+or if the current procedure blocks, then we create a new stacklet and let the
+needy processor steal the work after the current procedure. We call such
+procedure calls \textit{Parallel ready sequential calls}. This mechanism
+creates new parallel threads only when needed thereby reducing the overhead
+involved, had the program used normal threads. With the stealing of one
+processor's work by other, we make sure that the parallel readysequential call
+setup cost is less than that of the eager thread setup mechanism. The overhead
+involved is minimal as there is only 16 bytes added to the stacklet and
+overflow of the stacklets being detected by a simple calculation isntruction.
+
+Another thing we emphasize in this paper is the inter-core communication
+involved when the above mentioned stealing mechanism happens. Usually, any
+inter-core communication would require the intervention of kernel, setting up
+interrupt arguments and finally switching to user mode to finish the stolen
+work. But this mechanism might nullify the benefits of using Stacklets as it
+is obviously a big overhead on every switch of the mode. To this end, we make
+use of User Level Interrupts, to send the message to the other core, without
+switching to the kernel mode. Using gem5 simulator, we simulated these
+instructions, so that all the communication happen in the user mode. The sender
+code just inserts a packet into destination core's queue and the receiver,
+on the next iteration of timer, sees if there is any work and executes it
+accordingly.
+
+\lipsum

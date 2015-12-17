@@ -1,0 +1,23 @@
+\section{Related Work}
+
+The user-level interrupt and locking mechanism is related to the similar
+locking mechanism, \textit{MCS lock} \cite{mellor1991synchronization}. 
+We developed a variant of it to test as a micro benchmark. The usual overhead
+and cache misses involved in mode switch for traditional interrupt handling 
+is explained here \cite{parker}. The un-expected traps into the kernel
+would cause a branch and also potential cache misses would increase the latency
+of the instructions before even calling the user handler. The main concept of
+Stacklets was introduced by Goldstein \cite{goldstein}, in which the mechanism
+of lazy threads and forming the link among all the stacklets was implemented.
+
+Linux has also introduced the concept of User level device drivers. It exposes
+an API to the user to register the driver function. It is not purely user-mode
+driver,as the Linux Kernel takes over first and immediately switches back to 
+user mode calling the user driver. Even though this is considerably better
+than using a conventional interrupts, it still involves the excessive
+branch and cache misses, which we could have avoided just by not using User
+level interrupts.
+
+
+\lipsum[2-2]
+

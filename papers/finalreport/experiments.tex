@@ -1,3 +1,37 @@
 \section{experiments}
 
-vishnu
+\subsection{Running Gem5}
+The gem5 simulator can be run in two modes: Syscall Emulation mode and
+Full system mode.
+
+The Systemcall Emulation mode is useful to run and analyze simple programs that
+perform tasks involving traditional system calls. And the program to simulate
+has to be statically linked because gem5 does not link executables dynamically.
+As the name suggests, this mode is only useful to test user mode programs with
+no modifications to the kernel. Since we need to add new instructions that deal
+with user level interrupts where we queue packets for other cores, this mode
+was not that much of a help.
+
+The FullSystem mode as the name implies takes a kernel image and a disk image
+that has filesystem, boots the kernel and can be used to execute the programs
+from the mounted filesystem. This mode can simulate a complete system that 
+involves interrupt mechanism which is needed for our implementation of the
+stacklets and user level interrupts. 
+
+Gem5 supports simulating various CPUs, caches and also two CPI models,
+out of order and in-order pipelined model. We perform all the micro and macro 
+benchmarks, building kernel on x86 infrastructure. For these experiments, we 
+built a linux kernel, from the source with the smp support so that we can test 
+upto 255 cores. We use a Linux VM to compile the benchmarks to form binaries, 
+which are manually copied into the disk image that gets mounted internal to 
+gem5.
+
+\subsection{Micro benchmarks}
+
+
+
+
+
+
+\subsection{Macro benchmarks}
+
