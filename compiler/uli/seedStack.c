@@ -113,15 +113,24 @@ peekSeed(int tid)
 #ifdef ULI
     myassert(tid == threadId, "How can I peekSeed&lock for thread:%d when I am on proc:%d\n", tid, threadId);
 #endif
+
     SeedQueue* Q = &seedStacks[tid];
-    if (Q->front == NULL) return NULL;
+    Seed* target;
+
+#ifdef SEED_STACK
+    target = Q->back;
+#else
+    target = Q->front;
+#endif
+
+    if (target == NULL) return NULL;
     seedStackLock(tid);
 
-    if (Q->front == NULL) {
+    if (target == NULL) {
         seedStackUnlock(tid);
         return NULL; // Q->front might have been changed, need to return NULL
     }
-    return Q->front;
+    return target;
 }
 
 // check top of seedstack for proc tid.  If there is something there
@@ -129,7 +138,15 @@ peekSeed(int tid)
 Seed* checkSeedQue(int tid)
 {
     SeedQueue* Q = &seedStacks[tid];
-    return Q->front;
+    Seed* target;
+
+#ifdef SEED_STACK
+    target = Q->back;
+#else
+    target = Q->front;
+#endif
+
+    return target;
 }
 
 

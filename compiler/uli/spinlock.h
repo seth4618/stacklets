@@ -24,6 +24,8 @@ void mySpinUnlock(pthread_mutex_t *mutex);
 #endif
 
 
+void setupLocks(void);
+
 // Local Variables:
 // mode: c           
 // c-basic-offset: 4

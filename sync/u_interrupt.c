@@ -86,7 +86,7 @@ i_handler(int core_idx)
 	callback_t c = msg -> callback;
 	if (uliDebug > 0) {
 	    dprintLine("Handling:%p with %p(%p)\n", msg, msg->callback, msg->p);
-	    dprintLine("Is this weird?\n");
+	    //dprintLine("Is this weird?\n");
 	}
 	(*c)(msg -> p);
     }

@@ -140,12 +140,13 @@ SecondChildSteal: // We cannot make function calls here!
 #endif
 #ifdef ULI
     remoteStackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, msg);
-    // SHOULD NEVER RETURN HERE, BUT WE ARE.  BLECH!
-    assert(0);
 #else
     stackletForkStub(&&SecondChildDone, stackPointer, fib, (void *)&b, ptid);
 #endif
     // ====================================
+
+    // SHOULD NEVER RETURN HERE, BUT WE ARE.  BLECH!
+    assert(0);
 
 FirstChildDone:
     // stacklet ===========================
@@ -177,15 +178,7 @@ FirstChildDone:
     mySpinUnlock(&lineReturnedLock);
 #endif
 
-AllReturned:
-    //    dprintLine("fib(%d) has first child returned\n", f->input);
     f->output = a.output + b.output;
-#ifdef ULI
-    // assembly hack to transfer control to system stack and enQ this
-    // frame to restart at ResumeLabel and then return to inlet that
-    // called ius.
-    enQAndReturn();
-#endif
     return;
 
 SecondChildDone: // We cannot make function calls before we confirm first child
@@ -197,7 +190,7 @@ SecondChildDone: // We cannot make function calls before we confirm first child
 #else
         int localSyncCounter = __sync_sub_and_fetch(&syncCounter, 1);
 #endif
-	seedStackUnlock(ptid);
+	//seedStackUnlock(ptid);
 	if (localSyncCounter != 0) {
 	    //saveRegisters(); // same reason as above
 #ifdef ULI
@@ -219,8 +212,31 @@ SecondChildDone: // We cannot make function calls before we confirm first child
     lineReturned[localLine] = 1;
     mySpinUnlock(&lineReturnedLock);
 #endif
+    //    dprintLine("fib(%d) has first child returned\n", f->input);
+    f->output = a.output + b.output;
 
-    goto AllReturned;
+#ifdef ULI
+    // assembly hack to transfer control to system stack and enQ this
+    // frame to restart at ResumeLabel and then return to inlet that
+    // called ius.
+//    enQAndReturn();
+    
+    dprintLine("about to call myretuli in SecondChileDone\n");
+    // stacklet ===========================
+    labelhack(AllReturned);
+    getStackPointer(stackPointer);
+    enqReadyQ(&&AllReturned, stackPointer, NULL, threadId);
+    saveRegisters();
+    myretuli();
+    //RETULI();
+
+AllReturned:
+    restoreRegisters();
+    dprintLine("In AllReturned\n");
+    
+    // ====================================
+#endif
+
 }
 
 void *thread(void *arg)
@@ -258,7 +274,9 @@ startfib(int n, int numthreads)
 
     threadId = (long)0; // main thread's id is 0
 #if defined(ULI)
+    INIT_ULI(numthreads);
     INIT_ULI(0);
+    setULIdebugLevel(1);
 #endif
     
     stackletInit(numthreads);
@@ -285,6 +303,7 @@ startfib(int n, int numthreads)
 
     // abandon original stack and start running on a stacklet for fib(a)
     firstFork(fib, a);
+    dprintLine("returns\n");
     int rc = a->output;
     free(a);
 
@@ -308,10 +327,10 @@ main(int argc, char** argv)
            "Will run fib(%d) on %d thread(s)\n\n", n, numthreads);
 #endif
 
-#if defined(ULI)
-    INIT_ULI(numthreads);
-    setULIdebugLevel(1);
-#endif
+//#if defined(ULI)
+//    INIT_ULI(numthreads);
+//    setULIdebugLevel(1);
+//#endif
 
     int x = startfib(n, numthreads);
     myassert(x == result[n], "Unexpected Result: %d (should have been %d)\n", x, result[n]);

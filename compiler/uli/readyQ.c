@@ -3,39 +3,52 @@
 #include <stdlib.h>
 #include "debug.h"
 
+extern __thread int threadId;
+
 static int readyQId;
 
-void readyQInit()
+// 1 readyQ per thread
+static ReadyThreadHead* readyHead;
+
+void readyQInit(int numThreads)
 {
-    readyDummyHead = (ReadyThreadHead *)calloc(1, sizeof(ReadyThreadHead));
+    readyHead = calloc(numThreads, sizeof(ReadyThreadHead));
 }
 
-void enqReadyQ(void* resumeAdr, void *stackPointer)
+void enqReadyQ(void* resumeAdr, void *stackPointer, void* arg, int tid)
 {
     ReadyThread* ready = (ReadyThread *)calloc(1, sizeof(ReadyThread));
     ready->adr = resumeAdr;
     ready->sp = stackPointer;
+    ready->arg = arg;
     ready->id = readyQId++;
-    if (readyDummyHead->back) {
-        readyDummyHead->back->next = ready;
-        readyDummyHead->back = ready;
+    ReadyThreadHead* head = &readyHead[tid];
+    if (head->back) {
+        head->back->next = ready;
+        head->back = ready;
     } else {
-        readyDummyHead->front = ready;
-        readyDummyHead->back = ready;
+        head->front = ready;
+        head->back = ready;
     }
 }
 
-void deqReadyQ()
+void deqReadyQ(int tid)
 {
-    ReadyThread* origFront = readyDummyHead->front;
-    readyDummyHead->front = origFront->next;
+    ReadyThreadHead* head = &readyHead[tid];
+    ReadyThread* origFront = head->front;
+    head->front = origFront->next;
     if (origFront->next == NULL) {
-        readyDummyHead->back = NULL;
+        head->back = NULL;
     }
     //DEBUG_PRINT("deqReadyQ with adr %p.\n", origFront->adr); XXX crash here
     free(origFront);
 }
 
+ReadyThread* peekReadyQ(int tid)
+{
+    ReadyThreadHead* head = &readyHead[tid];
+    return head->front;
+}
 
 // Local Variables:
 // mode: c           

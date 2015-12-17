@@ -6,6 +6,7 @@
 typedef struct ReadyThread {
     void* adr;
     void* sp;
+    void* arg;
     int id;
     struct ReadyThread* next;
 } ReadyThread;
@@ -15,11 +16,10 @@ typedef struct ReadyThreadHead{
     struct ReadyThread* back;
 } ReadyThreadHead;
 
-ReadyThreadHead* readyDummyHead;
-
-void readyQInit();
-void enqReadyQ(void* resumeAdr, void *stackPointer);
-void deqReadyQ();
+void readyQInit(int numThreads);
+void enqReadyQ(void* resumeAdr, void *stackPointer, void* arg, int tid);
+void deqReadyQ(int tid);
+ReadyThread* peekReadyQ(int tid);
 
 
 // Local Variables:

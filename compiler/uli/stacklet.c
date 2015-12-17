@@ -159,7 +159,7 @@ stackletInit(int numThreads)
     numberOfThreads = numThreads;
     initStackletInfo(numThreads);
     seedStackInit(numThreads);
-    readyQInit();
+    readyQInit(numThreads);
 
 #ifdef TRACKER
     trackerInit(numThreads);
@@ -196,6 +196,7 @@ stubRoutine()
 			 ) & (-1LL<<(STACKLET_BUF_ZEROS))	
 		       );
     void* adjustedStub = (Stub *)((char *)buf + STACKLET_SIZE - sizeof(Stub));
+    //myassert(stackletStub == adjustedStub, "gss:%p doesn't give same address as adjusted:%p\n", stackletStub, adjustedStub);
     //dprintLine("free a stacklet: %p (OR %p)\n", stackletStub, adjustedStub);
     stackletStub = adjustedStub;
  
@@ -221,7 +222,9 @@ remoteStackletFork(void* parentPC, void* parentSP, void (*func)(void*),
     fmsg->arg = arg;
     fmsg->parentPC = parentPC;
     fmsg->parentSP = parentSP;
+    fmsg->base.from = threadId;
     myeui(23);
+    dprintLine("SENDI - ask %d to fork a stacklet\n", dest);
     SENDI((void*)fmsg, dest);
     myretuli();
 }
@@ -295,36 +298,38 @@ suspend(void)
     {
 	POLL();
 	// first look in my seedQ.  If there is work there, create it
-	int tryagain = 1;
-	while (tryagain && checkSeedQue(threadId)) {
-	    // we have some work, now grab it without interference
-	    mydui(5);
-	    Seed* seed = checkSeedQue(threadId);
-	    if (seed != NULL) {
-		tryagain = 0;
-		void* adr = seed->adr;
-		void* sp = seed->sp;
-		releaseSeed(seed, threadId);
-		myeui(6);
-		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
-		SENDI((void*)msg, threadId);
-		// the handler will steal the work from myself, creating
-		// the stacklet and enqueing it on the ready Q.  So our
-		// next check will see some work.
-	    } else {
-		// someone stole it before I could grab it
-		myeui(7);
-	    }
-	}
+	//int tryagain = 1;
+	//while (tryagain && checkSeedQue(threadId)) {
+	//    // we have some work, now grab it without interference
+	//    mydui(5);
+	//    Seed* seed = checkSeedQue(threadId);
+	//    if (seed != NULL) {
+	//	tryagain = 0;
+	//	void* adr = seed->adr;
+	//	void* sp = seed->sp;
+	//	releaseSeed(seed, threadId);
+	//	myeui(6);
+	//	StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
+	//	SENDI((void*)msg, threadId);
+	//	// the handler will steal the work from myself, creating
+	//	// the stacklet and enqueing it on the ready Q.  So our
+	//	// next check will see some work.
+	//    } else {
+	//	// someone stole it before I could grab it
+	//	myeui(7);
+	//    }
+	//}
 	
 	// Now, look in global readyQ.  If there is work there, grab it and go
-        ReadyThread* ready = readyDummyHead->front;
+        ReadyThread* ready = peekReadyQ(threadId);
         if (ready != NULL)
         {
             void* adr = ready->adr;
             void* sp = ready->sp;
-            deqReadyQ();
-            localSwitchAndJmp(sp, adr);
+            void* arg = ready->arg;
+            dprintLine("going to resume adr: %p, sp: %p, arg: %p\n", adr, sp, arg);
+            deqReadyQ(threadId);
+            switchAndJmpWithArg(sp, adr, arg);
         }
 
 	// already sent steal request, but not heard back yet
@@ -341,6 +346,7 @@ suspend(void)
 		lastReq = x;
 		StealReqMsg* msg = (StealReqMsg*)getMsg((callback_t)stealHandler);
 		msg->base.from = threadId;
+                dprintLine("SENDI - ask %d to help steal a seed\n", x);
 		SENDI((void*)msg, x);
 	    }
 	}
@@ -348,47 +354,48 @@ suspend(void)
 }
 
 // Yield to another thread.
-void
-yield(void)
-{
-    labelhack(Resume);
-
-    DEBUG_PRINT("Put self in readyQ and suspend\n");
-    Registers saveArea;
-    saveRegisters();
-    void* stackPointer;
-    getStackPointer(stackPointer);
-    enqReadyQ(&&Resume, stackPointer);
-
-    suspendStub();
-
-Resume:
-    restoreRegisters();
-    DEBUG_PRINT("Resumed a ready thread.\n");
-}
-
+//void
+//yield(void)
+//{
+//    labelhack(Resume);
+//
+//    DEBUG_PRINT("Put self in readyQ and suspend\n");
+//    Registers saveArea;
+//    saveRegisters();
+//    void* stackPointer;
+//    getStackPointer(stackPointer);
+//    enqReadyQ(&&Resume, stackPointer);
+//
+//    suspendStub();
+//
+//Resume:
+//    restoreRegisters();
+//    DEBUG_PRINT("Resumed a ready thread.\n");
+//}
 
 // enq a new stacklet which has already been created, but for which
 // the initial function has not been executed.  
-static void
-enQnewStacklet(void (*func)(void*), void* arg, void* stackletStub)
-{
-    labelhack(Resume);
-    Registers saveArea;
-    // put on readyQ
-
-    dprintLine("put forking stacklet on readyQ: %p will start at %p(%p)\n", stackletStub, func, arg);
-
-    saveRegisters();
-    void* stackPointer;
-    getStackPointer(stackPointer);
-    enqReadyQ(&&Resume, stackPointer);
-
- Resume:
-    restoreRegisters();
-    dprintLine("transfering control to stacklet: %p will start at %p(%p)\n", stackletStub, func, arg);
-    switchAndJmpWithArg(stackletStub, func, arg);
-}
+//void
+//enQnewStacklet(void (*func)(void*), void* arg, void* stackletStub)
+//{
+//    labelhack(Resume);
+//    Registers saveArea;
+//  // put on readyQ
+//
+//    dprintLine("put forking stacklet on readyQ: %p will start at %p(%p)\n", stackletStub, func, arg);
+//
+//    saveRegisters();
+//    void* stackPointer;
+//    getStackPointer(stackPointer);
+//    enqReadyQ(&&Resume, stackPointer, threadId);
+//    dprintLine("rsp is %p\n", stackPointer);
+//    return;
+//
+// Resume:
+//    restoreRegisters();
+//    dprintLine("transfering control to stacklet: %p will start at %p(%p)\n", _stackletStub, _func, _arg);
+//    switchAndJmpWithArg(_stackletStub, _func, _arg);
+//}
 
 // this allocates a stacklet for the base function and 
 // will return the instruction following this.
@@ -440,6 +447,7 @@ stealHandler(StealReqMsg* sysmsg)
 	myeui(8);
 	int src = msg->base.from;
 	setupMsgBuffer((BasicMessage* )msg, (callback_t)noWorkHandler);
+        dprintLine("SENDI - tell %d other threads steal the work already\n", src);
 	SENDI((void*)msg, src);
 	RETULI();
     }
@@ -458,6 +466,8 @@ stealHandler(StealReqMsg* sysmsg)
 static void
 forkHandler(ForkMsg* msg)
 {
+    dprintLine("In fork Handler\n");
+    dprintLine("forkHandler invoked  -> %d\n", msg->base.from);
     void* stackletBuf;
     int en = posix_memalign(&stackletBuf, STACKLET_ALIGNMENT, STACKLET_SIZE);
     myassert(en == 0, "Failed to allocate a stacklet");
@@ -466,7 +476,10 @@ forkHandler(ForkMsg* msg)
     stackletStub->parentPC = msg->parentPC;
     stackletStub->stubRoutine = returnFromStolenWorkRoutine;
     stackletStub->parentProc = msg->base.from;
-    enQnewStacklet(msg->func, msg->arg, stackletStub);
+    // have to enqueue here because we are on interrupt handler stack, we cannot
+    // resume from this stack
+    enqReadyQ(msg->func, stackletStub, msg->arg, threadId);
+    //enQnewStacklet(msg->func, msg->arg, stackletStub);
     freeMsgBuffer((BasicMessage*)msg);
     amStealing = 0;		/* indicate we are done stealing */
     RETULI();
@@ -487,14 +500,16 @@ static void
 returnInletHandler(ReturnMsg* msg)
 {
     dprintLine("returninlet:from=%d %p(%p)\n", msg->base.from, msg->parentPC, msg->parentSP);
+    setupULIret2();
     void* adr = msg->parentPC;
     void* sp = msg->parentSP;
-#if 0
-    need to free msg buffer
-    call adr with stack set to sp.
-    then on return switch back to system stack
-    then do retuli				   
-#endif
+
+    //need to free msg buffer
+    //call adr with stack set to sp.
+    //then on return switch back to system stack
+    //then do retuli				   
+    freeMsgBuffer((BasicMessage*)msg);
+    localSwitchAndJmp(sp, adr);
 }
 
 void
@@ -506,14 +521,14 @@ finishDoneWithStolenWork(void* oldsp, Stub* stub)
     myassert(0, "Should never get here in finishDoneWithStolenWork\n");
 }
 
-// this handler is run on a processor that had work stolen from it.
+// This routine is running on the processor that steals the work.
 // The child (the sender of this message) is returning to its parent
 // (on this processor) and thus we need to do the sync.
 // free msg buffer before running return inlet
 static void 
 returnFromStolenWorkRoutine(void)
 {
-    // get stackletstub for this tacklet
+    // get stackletstub for this stacklet
     Stub* ss;
     getStackletStub(ss);
     void* buf = (void*)( (
@@ -525,7 +540,8 @@ returnFromStolenWorkRoutine(void)
 			 ) & (-1LL<<(STACKLET_BUF_ZEROS))	
 		       );
     void* adjustedStub = (Stub *)((char *)buf + STACKLET_SIZE - sizeof(Stub));
-    myassert(ss == adjustedStub, "gss:%p doesn't give same address as adjusted:%p\n", ss, adjustedStub);
+    //myassert(ss == adjustedStub, "gss:%p doesn't give same address as adjusted:%p\n", ss, adjustedStub);
+    ss = adjustedStub;
 
     // send info back to invoking parent
     dprintLine("Returning result to parent:%p(%p) on another proc: %d\n", 
@@ -534,6 +550,7 @@ returnFromStolenWorkRoutine(void)
     msg->parentPC = ss->parentPC;
     msg->parentSP = ss->parentSP;
     msg->base.from = threadId;
+    dprintLine("SENDI - tell %d to go back to parent frame\n", ss->parentProc);
     SENDI((void*)msg, ss->parentProc);
 
     // switch to system stack and go back to suspend
@@ -544,24 +561,24 @@ returnFromStolenWorkRoutine(void)
 // should return to returnPC with SP setup to caller of this
 // function. Furthermore we are done with the inlet, so return to it.
 // this function is run on systemstack
-void
-finishEnQAndReturn(void* returnSP, void* returnPC)
-{
-    labelhack(Resume);
-    Registers saveArea;
-    saveRegisters();
-    void* stackPointer;
-    getStackPointer(stackPointer);
-    enqReadyQ(&&Resume, stackPointer);
-    // now return from handler
-    RETULI();
-    return;
-
- Resume:
-    restoreRegisters();
-    // manipulate stack ptr to return it to parent frame
-    localSwitchAndJmp(returnSP, returnPC);
-}
+//void
+//finishEnQAndReturn(void* returnSP, void* returnPC)
+//{
+//    labelhack(Resume);
+//    Registers saveArea;
+//    saveRegisters();
+//    void* stackPointer;
+//    getStackPointer(stackPointer);
+//    enqReadyQ(&&Resume, stackPointer, threadId);
+//    // now return from handler
+//    RETULI();
+//    return;
+//
+// Resume:
+//    restoreRegisters();
+//    // manipulate stack ptr to return it to parent frame
+//    localSwitchAndJmp(returnSP, returnPC);
+//}
 
 
 // Local Variables:

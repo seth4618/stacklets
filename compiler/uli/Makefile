@@ -1,6 +1,6 @@
 CC=gcc
-# -DDEBUG -DTRACKER -DBENCHMARK -DCLEAN
-CFLAGS=-g -O1 -DBENCHMARK -DTRACKER -I. -DULI -L../../sync
+# -DDEBUG -DTRACKER -DBENCHMARK -DCLEAN -DULI -DSEED_STACK
+CFLAGS=-g -O1 -DBENCHMARK -DTRACKER -I. -DULI -L../../sync -DDEBUG -DULI -DSEED_STACK
 LIBS = -lpthread -luli
 OBJ = myfib.o seedStack.o readyQ.o stacklet.o debug.o tracker.o myassert.o spinlock.o msgs.o
 

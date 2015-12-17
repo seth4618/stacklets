@@ -73,6 +73,18 @@ extern __thread void** sysStackPtr;
     goto skipthere;  rethere: asm volatile("#return here"); return; skipthere: asm volatile("#continue here"); \
  } while(0)
 
+#define setupULIret2() do { \
+	__label__ rethere2,skiphere2;		\
+    void* thisSP;			\
+    asm volatile("\t# return here to return from ULI\n" \
+                 "movq %%rsp, %[sp] \n"  \
+	     : [sp] "=r" (thisSP));	\
+    labelhack(rethere2); \
+    labelhack(skipthere2); \
+    *(sysStackPtr++) = && rethere2;	\
+    *(sysStackPtr++) = thisSP;		\
+    goto skipthere2;  rethere2: asm volatile("#return here"); return; skipthere2: asm volatile("#continue here"); \
+ } while(0)
 
 // Local Variables:
 // mode: c           
