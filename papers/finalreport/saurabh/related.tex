@@ -1,0 +1,11 @@
+\section{Related Work}
+Jaleel et al. \cite{jaleel2006line} performed an interesting experiment of
+inlining interrupt handler of the translation lookaside buffer (TLB), one of the
+most commonly occuring interrupts in the system, into the reorder buffer along
+with other currently executing instructions. They found out that inlining the
+interrupts reduced the cost of handling the interrupt significantly as they
+avoided the costly draining of the pipeline. Our completely user-level locking
+mechanism is inspired from the MCS lock \cite{mellor1991synchronization}.
+Stacklets originally were proposed by Goldstein et al. \cite{goldstein} where
+they developed the parallel-ready sequential call in order to efficiently
+utilize the existing parallelism.

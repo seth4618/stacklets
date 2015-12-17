@@ -1,0 +1,15 @@
+\begin{abstract}
+Programming for parallelism has always been extremely hard. Moreover, when the
+underlying degree of parallelism changes because of technological advancements,
+the existing parallel programs, on several occasions need to be changed to
+exploit fully the newly added power. Stacklets provide a convenient abstraction
+by introducing a parallel-ready sequential call to only invoke as much
+parallelism as is supported by the underlying architecture. Stacklets need to
+support significantly low-cost interrupt handling capavbilities to realize
+their full potential. Another interrupt-heavy operation in multi-core systems
+is synchronization.  In this work, we explore the power of user-level
+interrupts in multi-core architectures to reduce the costly user-kernel
+transition on every interrupt by handling it in user-space itself. Our
+experiments are aimed at speeding up stacklets and synchronization by having a
+completely user-space variant of the MCS lock.
+\end{abstract}

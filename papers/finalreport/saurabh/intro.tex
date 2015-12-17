@@ -1,0 +1,40 @@
+\section{Introduction}
+Simplifying programming for parallel architectures has been an on-going effort
+since the very introduction of multi-core architectures. Exploiting the
+underlying parallelism correctly has been the key to ensuring near-optimal
+performance. Current multi-threaded applications spawn threads without the
+knowledge of how much parallelism exists underneath. If fewer than needed
+threads are spawned, we underutilize potential parallelism leading to suboptimal
+performance. On the other hand, overutilization of parallelism tends to reveal
+that synchronization between the threads starts becoming the bottleneck. We are
+more concerned about the excessive parallelism.
+
+On careful observation, we notice that parallel calls (i.e. thread calls or
+synchronization) and sequential calls do not have the same cost. Parallel calls
+need to cross the user-kernel boundary with a much higher frequency than
+sequential calls need to. In fact, sequential calls may never need to enter the
+kernel space at all. In some sense, the lower bound for the cost of a parallel
+call is a sequential procedure call. Stacklets solve this problem by introducing
+a parallel ready sequential call that only introduces a truly parallel call when
+there exists unused parallelism that we can exploit. In the absence of needed
+parallelism we simply spawn a parallel ready sequential call in a custom
+\textit{stacklet} on the same core. When parallelism is available, CPUs steal
+parallel ready work from other processors in case it exists. Even wth stacklets,
+we can easily end up making a lot of user-kernel jumps for handling stacklet
+interrupts. We optimize stacklets by introducing user-level interrupts for
+handling relatively small interrupts handlers, viz. stacklet boundary checking
+and the likes.
+
+Synchronization, in the face of large number of threads, quickly becomes a
+bottleneck. Even though MCS locks try to reduce the inter-processor jumps by
+spinning on local variables, the user-kernel boundary switching costs still
+persist. In this work, an important experiment we conduct is to exploit
+user-level interrupts by designing a variant of the MCS lock, but entirely in
+user-space. The details of the lock can be found in Sec. \ref{sec:lock}. In a
+gist, the user-level interrupts remove the necessity to cross into kernel space
+for handling the functionality of which core to hand the lock over to, once the
+current core has finished executing the critical section.
+
+To summarize, the main contributions of this work are - architectural
+modifications to support user-level interrupts and two use cases of user-level
+interrupts, viz. stacklets and synchronization.
