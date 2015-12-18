@@ -1,6 +1,9 @@
 \section{Related Work}
 
-This work is an extension of Goldstein et al.'s work, which first brings upon the notion of lazy threads to reduce excessive parallelism by creating parallel calls when needed. Our work makes use of ULI to realize the work stealing mechanism, such that some idle cores could send interrupt to acquire jobs from other cores. Parker analysed a case of user-level interrupts for high-speed I/O devices, so that latency spent in kernel can be eliminated.
+This work is an extension of Goldstein et al.'s \cite{goldstein} thesis, which first brings upon the notion of lazy threads to reduce excessive parallelism by only creating parallel calls when needed. Our work makes use of ULI to realize the work stealing mechanism, such that some idle cores could send interrupt to acquire jobs from other cores.
 
-\lipsum[2-2]
+Parker \cite{parker} analyzed a case of using user-level interrupts for high-speed I/O devices, so that latency spent in kernel can be eliminated. Meanwhile, Leslie \cite{leslie} also proposed the idea of using user-level hardware drivers to achieve better flexibility, maintainability and efficiency.  Linux kernel provides a way for the programmers to specify hardware interrupts be handled by user process. In our paper, we focus more on the side of using user-level interrupt to perform inter-core communications.
+
+Crummy et al. \cite{mellor1991synchronization} originally designed, improved and evaluated several locking primitives. Their innovative MCS queuing lock design inspired our ULI-based locking mechanism. Lozi et al. \cite{lozi} adopts the combining technique and invented a so called "remote core locking" such that a server is chosen to perform all critical sections from clients in batch through RPC calls. Instead of using RPC, we have proposed a similar method by sending job requests through user-level interrupts.
+
 

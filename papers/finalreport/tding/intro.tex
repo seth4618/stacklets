@@ -10,5 +10,5 @@ Hence we introduce user-level interrupts which allows the interrupt to be direct
 
 In addition, it's unavoidable for parallel programs to spend a significant amount of the time in synchronization to ensure the mutual exclusion and correctness. Such latency may quickly become parallel bottleneck and therefore needs further optimization. Because inter-core communication by ULI is cheap, we claim that using ULI on thread synchronization could reduce the overhead. That said, we have implemented our ULI-based locks that reduce cache misses and achieve higher throughput. However, using such synchronization primitives does not put any extra burden on programmers writing their code.
 
-This paper is organized as the follows. In section 2, we discuss related works in terms of reducing parallelism, ULI and locks. In section 3, we present our ULI design on our machine. In section 4, we present two use cases of ULI. In section 5, we further demonstrate our architectural implications. In section 6, we run benchmark and evaluate the outcome. Finally, section 7 is the conclusion.
-\lipsum
+This paper is organized as the follows. In section 2, we discuss related works in terms of reducing parallelism, ULI and locks. We present our ULI design on our machine in section 3. In section 4, we present two use cases of ULI. We further demonstrate our architectural implications in section 5. In section 6, we run benchmark and evaluate the outcome. Finally, section 7 is the conclusion.
+

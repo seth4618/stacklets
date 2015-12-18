@@ -1,24 +1,23 @@
-\section{uli}
-Interrupts can be specialized into several types and we specifically focus on interrupts targeted at the user process. It has been demonstrated that interrupt overhead on high speed I/O devices has a negative impact on system performance because those user-level interrupts have to needlessly be trapped into the kernel every time. However, if those interrupts are delivered directly to the user process rather than to the kernel, such overhead could be reduced. In fact, there are situations where user-level interrupt does not need any kernel involvement. For example, user-level interrupt can be used to realize communications among processes or even cores. It also gives the programmers the ability to define their own interrupt handler for some self-defined interrupts. 
+\section{User-level Interrupt}
+Interrupts can be specialized into several types and we specifically focus on interrupts targeted at the user process. It has been demonstrated that interrupt overhead on high speed I/O devices has a negative impact on system performance because those user-level interrupts have to needlessly be trapped into the kernel every time. However, if those interrupts are delivered directly to the user process rather than to the kernel, such overhead could be reduced. In fact, there are situations where user-level interrupt does not need any kernel involvement. For example, user-level interrupt can be used to realize communications among processes or even cores. Programming user-level interrupts rewards the programmer with so many benefits such as enhanced flexibility, maintainability and resource management.
 
-Therefore we propose this user-level interrupt model on our machines, with works decently on both traditional shared memory machines and massage passing model on a loosely coupled multi-processor architecture. Our user-level interrupt is easy to use and flexible. Our architecture provides programmers with specialized instructions and routines so that they should not worry about defining their own interrupts and handlers. When sending an interrupt, they only need to provide the call-back function to be executed on the target, packet the pointer and target core into our message structure, and then send this interrupt to the target core. As a result, the target core is interrupted and will call the call-back function in the message without going into the kernel. As it appears, the cost of memory and scheduling overhead is fairly low. The cost of delivering an ULI is just the same as delivering a normal interrupt, such as page fault exception or system call traps. 
+Therefore we propose this user-level interrupt model on our specialized architecture. We argue that this model works decently on both traditional shared memory machines and massage passing model on a loosely coupled multi-processor architecture. Our user-level interrupt is easy to use and flexible and the architecture provides programmers with some specialized instructions and routines so that they could directly program their own interrupts and handlers. When sending an interrupt, they need to provide the call-back function to be executed on the target, packet that function pointer and target core number into our message structure, and then send this interrupt to the target core. As a result, the target core is interrupted before the instruction commit phase inside the pipeline, goes to the handler and calls the call-back function in the message, if that interrupt is not disabled. The whole process has no kernel or operating system involvement. As it shows, the cost of memory and scheduling overhead is fairly low. Generally speaking, delivering an ULI will not cost more than delivering a normal interrupt, such as page fault exception or system call traps. 
 
 We introduce several related instructions on our architecture as the follows:
 \begin{itemize}
-\item DUI
-\item EUI
-\item sendI
-\item GETCPUID
-\item RETULI
-\item SETUPULI
+\item \texttt{TOGGLEULI}
+\item \texttt{SENDI}
+\item \texttt{GETCPUID}
+\item \texttt{RETULI}
+\item \texttt{SETUPULI}
 \end{itemize}
-Explanations and details can be found in section 5.
+Detailed explanations and usage can be found in section 6.
 
-Because using ULI is so handy, we use it to implement work-stealing mechanism that turns eager parallel calls into parallel ready sequential calls. We also implemented 2 queuing locks using ULI. Detailed descriptions are provided in the following sections.
+Because using ULI is so handy, we come up with an innovative way of leveraging it. ULI can be used for inter-core communications besides hardware interrupt processing. Hence, we implement the work-stealing mechanism that turns eager parallel calls into parallel ready sequential calls as well as two types of queuing locks. 
 
-Admittedly, there are some limitations of using user-level interrupts. One is that the handler can't be larger the processor pipeline. Second is that ULI could be potentially abused such that by sending too many interrupts to a target core, that core has to do many unnecessary work.
+Admittedly, there are some limitations of using user-level interrupts. One is that the handler can't be larger the processor pipeline otherwise much latency could be introduced. Second is that ULI could be potentially abused such that by sending too many interrupts to a target core that does not disable certain interrupts, that core gets always interrupted and has to do so many extraneous work. As a result, it is ``preempted'' and can not execute its own business. The situation maybe even worse if the call-back function is huge.
 
-Use cases not limited to what we've presented here. For example, ULI can be used to detect stack overflows when a thread tries to expand its stack. Such specialized page fault does not have to be handled by the kernel, but the user process instead. In addition, Parker points out that ULI can be implemented by I/O hardware such at coalesced interrupts and efficient interrupt handler can significantly reduce kernel involvement overhead and cache misses.
+General use cases are not limited to what we have presented in this paper. For example, ULI can be used to detect stack overflow when a thread tries to expand its stack. Such specialized page fault does not have to be handled by the kernel, but the user process instead. 
 
-In the following section, we present our use cases to investigate how we would leverage ULI to achieve high efficiency. 
+In the following section, we present our architecture and use cases to investigate how we would leverage ULI to achieve higher efficiency. 
 
