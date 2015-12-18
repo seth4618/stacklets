@@ -17,7 +17,7 @@ Because using ULI is so handy, we come up with an innovative way of leveraging i
 
 Admittedly, there are some limitations of using user-level interrupts. One is that the handler can't be larger the processor pipeline otherwise much latency could be introduced. Second is that ULI could be potentially abused such that by sending too many interrupts to a target core that does not disable certain interrupts, that core gets always interrupted and has to do so many extraneous work. As a result, it is ``preempted'' and can not execute its own business. The situation maybe even worse if the call-back function is huge.
 
-General use cases are not limited to what we have presented in this paper. For example, ULI can be used to detect stack overflow when a thread tries to expand its stack. Such specialized page fault does not have to be handled by the kernel, but the user process instead. 
+General use cases are not limited to what we have presented in this paper. For example, ULI can be used to detect stack overflow when a thread tries to expand its stack. Such specialized page fault does not have to be handled by the kernel, but the user process can take over instead. 
 
 In the following section, we present our architecture and use cases to investigate how we would leverage ULI to achieve higher efficiency. 
 
